@@ -67,6 +67,10 @@ public final class ProviderPreferences {
             value.addProperty("allow_fallbacks", allow);
             return this;
         }
+        public Builder requireParameters(boolean require) {
+            value.addProperty("require_parameters", require);
+            return this;
+        }
         public Builder dataCollection(String policy) {
             requireOneOf("dataCollection", policy, "allow", "deny");
             value.addProperty("data_collection", policy.toLowerCase(Locale.ROOT));
@@ -91,6 +95,17 @@ public final class ProviderPreferences {
         public Builder jurisdiction(String jurisdiction) {
             requireOneOf("jurisdiction", jurisdiction, "us");
             value.addProperty("jurisdiction", "us");
+            return this;
+        }
+        public Builder quantizations(List<String> quantizations) {
+            value.add("quantizations", TrustedRouter.stringArray(quantizations));
+            return this;
+        }
+        public Builder maxPrice(JsonObject maxPrice) {
+            if (maxPrice == null) {
+                throw new IllegalArgumentException("maxPrice must not be null");
+            }
+            value.add("max_price", maxPrice.deepCopy());
             return this;
         }
         public ProviderPreferences build() { return new ProviderPreferences(this); }

@@ -29,27 +29,56 @@ final class RequestBuilderTest {
     }
 
     @Test void confidentialProviderPreferencesAreExactAndFailClosed() {
+        JsonObject maxPrice = new JsonObject();
+        maxPrice.addProperty("prompt", 1.25);
+        maxPrice.addProperty("completion", 4.50);
         ProviderPreferences preferences = ProviderPreferences.builder()
                 .order("tinfoil", "phala")
                 .only(Arrays.asList("tinfoil", "phala"))
                 .ignore("unknown-disabled-provider")
                 .allowFallbacks(false)
+                .requireParameters(true)
                 .dataCollection("deny")
                 .minimumPrivacy("confidential")
                 .sort("throughput")
                 .usage("credits")
                 .jurisdiction("us")
+                .quantizations(Arrays.asList("fp8"))
+                .maxPrice(maxPrice)
                 .build();
         JsonObject value = preferences.toJson();
         assertThat(value.get("min_privacy").getAsString()).isEqualTo("confidential");
         assertThat(value.get("data_collection").getAsString()).isEqualTo("deny");
         assertThat(value.getAsJsonArray("order")).hasSize(2);
         assertThat(value.get("allow_fallbacks").getAsBoolean()).isFalse();
+        assertThat(value.get("require_parameters").getAsBoolean()).isTrue();
+        assertThat(value.getAsJsonArray("quantizations").get(0).getAsString()).isEqualTo("fp8");
+        assertThat(value.getAsJsonObject("max_price").get("prompt").getAsDouble())
+                .isEqualTo(1.25);
 
         assertThatThrownBy(() -> ProviderPreferences.builder().minimumPrivacy("probably").build())
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ProviderPreferences.builder().jurisdiction("eu").build())
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test void stableAliasesAndEveryAtomicOrchestrationToolAreExposed() {
+        assertThat(TrustedRouter.ZDR_MODEL).isEqualTo("trustedrouter/zdr");
+        assertThat(TrustedRouter.E2E_MODEL).isEqualTo("trustedrouter/e2e");
+        assertThat(TrustedRouter.CONFIDENTIAL_MODEL).isEqualTo("trustedrouter/confidential");
+        assertThat(TrustedRouter.SUBAGENT_MODEL).isEqualTo("trustedrouter/subagent");
+
+        JsonObject parameters = new JsonObject();
+        parameters.add("analysis_models", TrustedRouter.stringArray(Arrays.asList("a", "b")));
+        assertThat(TrustedRouter.selectorTool(parameters).get("type").getAsString())
+                .isEqualTo("trustedrouter:selector");
+        assertThat(TrustedRouter.mapReduceTool(parameters).get("type").getAsString())
+                .isEqualTo("trustedrouter:mapreduce");
+        assertThat(TrustedRouter.subagentTool(parameters).get("type").getAsString())
+                .isEqualTo("trustedrouter:subagent");
+        parameters.addProperty("mutated_after_build", true);
+        assertThat(TrustedRouter.selectorTool(new JsonObject())
+                .getAsJsonObject("parameters").size()).isZero();
     }
 
     @Test void providerPreferencesWorkAcrossResponsesAndDoNotMutateAfterBuild() {
@@ -83,7 +112,10 @@ final class RequestBuilderTest {
         assertThat(parameters.getAsJsonArray("analysis_models")).hasSize(2);
         assertThat(parameters.get("selection_strategy").getAsString())
                 .isEqualTo("synthesize_non_refusals");
-        assertThat(body.get("panel_prompt").getAsString()).isEqualTo("Focus on correctness");
+        assertThat(parameters.get("panel_prompt").getAsString()).isEqualTo("Focus on correctness");
+        assertThat(parameters.get("synthesis_prompt").getAsString()).isEqualTo("Return one answer");
+        assertThat(body.has("panel_prompt")).isFalse();
+        assertThat(body.has("synthesis_prompt")).isFalse();
         assertThat(request.toChatRequest().getCallOptions().getTimeoutMillis())
                 .isEqualTo(TrustedRouter.DEFAULT_FUSION_TIMEOUT_MILLIS);
     }

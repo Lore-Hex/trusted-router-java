@@ -56,6 +56,9 @@ public final class FusionRequest {
         }
         public Builder message(JsonObject value) { messages.add(value.deepCopy()); return this; }
         public Builder tool(JsonObject value) { tools.add(value.deepCopy()); return this; }
+        public Builder enabled(boolean value) {
+            fusionParameters.addProperty("enabled", value); return this;
+        }
         public Builder analysisModels(List<String> values) {
             fusionParameters.add("analysis_models", TrustedRouter.stringArray(values)); return this;
         }
@@ -82,13 +85,13 @@ public final class FusionRequest {
             fusionParameters.addProperty("preset", value); return this;
         }
         public Builder panelPrompt(String value) {
-            topLevel.addProperty("panel_prompt", value); return this;
+            fusionParameters.addProperty("panel_prompt", value); return this;
         }
         public Builder synthesisPrompt(String value) {
-            topLevel.addProperty("synthesis_prompt", value); return this;
+            fusionParameters.addProperty("synthesis_prompt", value); return this;
         }
         public Builder finalPrompt(String value) {
-            topLevel.addProperty("final_prompt", value); return this;
+            fusionParameters.addProperty("final_prompt", value); return this;
         }
         public Builder parameter(String name, JsonElement value) {
             if ("model".equals(name) || "messages".equals(name) || "tools".equals(name)

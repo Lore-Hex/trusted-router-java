@@ -94,7 +94,8 @@ final class ClientTransportTest {
     @Test void typedErrorsExposeLayerSourceAndRetryAfter() throws Exception {
         inference.enqueue(new MockResponse().setResponseCode(429).setHeader("Retry-After", "2.5")
                 .setBody("{\"error\":{\"message\":\"limited\",\"layer\":\"provider\","
-                        + "\"source\":\"cerebras\"}}"));
+                        + "\"source\":\"upstream\",\"provider\":\"cerebras\","
+                        + "\"request_id\":\"req_123\"}}"));
         assertThatThrownBy(() -> client(0).chatCompletions(
                 ChatRequest.builder().message("user", "hi").build()))
                 .isInstanceOf(RateLimitException.class)
@@ -102,7 +103,9 @@ final class ClientTransportTest {
                     RateLimitException rate = (RateLimitException) error;
                     assertThat(rate.getRetryAfterSeconds()).isEqualTo(2.5d);
                     assertThat(rate.getLayer()).isEqualTo("provider");
-                    assertThat(rate.getSource()).isEqualTo("cerebras");
+                    assertThat(rate.getSource()).isEqualTo("upstream");
+                    assertThat(rate.getProvider()).isEqualTo("cerebras");
+                    assertThat(rate.getRequestId()).isEqualTo("req_123");
                 });
     }
 
