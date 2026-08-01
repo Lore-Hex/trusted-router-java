@@ -11,8 +11,8 @@ The SDK provides:
 - OpenAI compatible chat completions and streaming
 - OpenAI Responses API and typed Responses SSE events
 - Anthropic Messages and embeddings
-- Synth, Advisor, Selector, and MapReduce orchestration tools
-- Explicit ZDR, confidential, US, provider order, price, latency, and throughput routing
+- Synth, Advisor, Selector, MapReduce, and Subagent orchestration tools
+- Explicit ZDR, confidential/E2E, US, EU-alias, provider-order, price, latency, and throughput routing
 - Typed errors that distinguish router failures from provider failures
 - Billing, credits, activity, models, providers, and Broadcast destinations
 - OAuth credit delegation with PKCE and Android deep link validation
@@ -29,7 +29,7 @@ Gradle:
 
 ```kotlin
 dependencies {
-    implementation("com.trustedrouter:trusted-router:0.1.0")
+    implementation("com.trustedrouter:trusted-router:0.2.1")
 }
 ```
 
@@ -39,7 +39,7 @@ Maven:
 <dependency>
   <groupId>com.trustedrouter</groupId>
   <artifactId>trusted-router</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
