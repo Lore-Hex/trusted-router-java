@@ -11,6 +11,8 @@ public class TrustedRouterException extends IOException {
     private final JsonElement payload;
     private final String layer;
     private final String source;
+    private final String provider;
+    private final String requestId;
 
     public TrustedRouterException(int statusCode, String message, JsonElement payload) {
         this(statusCode, message, payload, null);
@@ -23,6 +25,8 @@ public class TrustedRouterException extends IOException {
         this.payload = payload;
         this.layer = nestedString(payload, "layer");
         this.source = nestedString(payload, "source");
+        this.provider = nestedString(payload, "provider");
+        this.requestId = nestedString(payload, "request_id");
     }
 
     public int getStatusCode() {
@@ -41,6 +45,16 @@ public class TrustedRouterException extends IOException {
     /** Error source supplied by the gateway or provider adapter, when present. */
     public String getSource() {
         return source;
+    }
+
+    /** Attempted provider supplied by the gateway, when present. */
+    public String getProvider() {
+        return provider;
+    }
+
+    /** Request identifier used to correlate metadata-only logs. */
+    public String getRequestId() {
+        return requestId;
     }
 
     private static String nestedString(JsonElement payload, String key) {

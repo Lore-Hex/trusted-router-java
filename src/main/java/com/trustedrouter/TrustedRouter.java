@@ -21,11 +21,21 @@ public final class TrustedRouter {
 
     public static final String AUTO_MODEL = "trustedrouter/auto";
     public static final String FAST_MODEL = "trustedrouter/fast";
+    public static final String ZDR_MODEL = "trustedrouter/zdr";
+    public static final String E2E_MODEL = "trustedrouter/e2e";
+    public static final String CONFIDENTIAL_MODEL = "trustedrouter/confidential";
+    public static final String EU_MODEL = "trustedrouter/eu";
+    public static final String US_MODEL = "trustedrouter/us";
     public static final String FUSION_MODEL = "trustedrouter/fusion";
     public static final String SYNTH_MODEL = "trustedrouter/synth";
     public static final String ADVISOR_MODEL = "trustedrouter/advisor";
     public static final String SELECTOR_MODEL = "trustedrouter/selector";
     public static final String MAP_REDUCE_MODEL = "trustedrouter/mapreduce";
+    public static final String SUBAGENT_MODEL = "trustedrouter/subagent";
+    public static final String SOCRATES_MODEL = "trustedrouter/socrates-1.1";
+    public static final String PROMETHEUS_MODEL = "trustedrouter/prometheus-2.0";
+    public static final String ZEUS_MODEL = "trustedrouter/zeus-1.0";
+    public static final String ATHENA_MODEL = "trustedrouter/athena";
 
     public static final List<String> FUSION_FREEDOM_PANEL = immutableList(
             "minimax/minimax-m3",
@@ -59,6 +69,21 @@ public final class TrustedRouter {
     /** Builds a {@code trustedrouter:advisor} tool from gateway-native parameters. */
     public static JsonObject advisorTool(JsonObject parameters) {
         return orchestrationTool("trustedrouter:advisor", parameters);
+    }
+
+    /** Builds a {@code trustedrouter:selector} tool from gateway-native parameters. */
+    public static JsonObject selectorTool(JsonObject parameters) {
+        return orchestrationTool("trustedrouter:selector", parameters);
+    }
+
+    /** Builds a {@code trustedrouter:mapreduce} tool from gateway-native parameters. */
+    public static JsonObject mapReduceTool(JsonObject parameters) {
+        return orchestrationTool("trustedrouter:mapreduce", parameters);
+    }
+
+    /** Builds a {@code trustedrouter:subagent} tool from gateway-native parameters. */
+    public static JsonObject subagentTool(JsonObject parameters) {
+        return orchestrationTool("trustedrouter:subagent", parameters);
     }
 
     /** Builds a TrustedRouter orchestration tool without changing its parameters. */

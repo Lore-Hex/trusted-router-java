@@ -95,6 +95,15 @@ public final class ChatRequest {
         public Builder advisor(JsonObject parameters) {
             return tool(TrustedRouter.advisorTool(parameters));
         }
+        public Builder selector(JsonObject parameters) {
+            return tool(TrustedRouter.selectorTool(parameters));
+        }
+        public Builder mapReduce(JsonObject parameters) {
+            return tool(TrustedRouter.mapReduceTool(parameters));
+        }
+        public Builder subagent(JsonObject parameters) {
+            return tool(TrustedRouter.subagentTool(parameters));
+        }
         public Builder parameter(String name, JsonElement value) {
             body.add(name, value == null ? JsonNull.INSTANCE : value.deepCopy());
             return this;
