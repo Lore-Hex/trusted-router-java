@@ -157,8 +157,9 @@ public final class AttestationVerifier {
         JsonObject container = object(submods, "container");
         String digest = string(container, "image_digest");
         String reference = string(container, "image_reference");
-        requireMatch("image_digest", digest, options.policy().getExpectedImageDigest());
-        requireMatch("image_reference", reference, options.policy().getExpectedImageReference());
+        requireOneOf("image_digest", digest, options.policy().getExpectedImageDigests());
+        requireOneOf("image_reference", reference,
+                options.policy().getExpectedImageReferences());
 
         List<String> nonces = strings(claims.has("eat_nonce")
                 ? claims.get("eat_nonce") : claims.get("nonces"));
@@ -258,6 +259,15 @@ public final class AttestationVerifier {
         if (expected != null && !expected.isEmpty() && !safeEquals(empty(actual), expected)) {
             throw failure(field + " mismatch", null);
         }
+    }
+
+    private static void requireOneOf(String field, String actual, List<String> expected)
+            throws AttestationVerificationException {
+        if (expected == null || expected.isEmpty()) { return; }
+        for (String value : expected) {
+            if (value != null && !value.isEmpty() && safeEquals(empty(actual), value)) { return; }
+        }
+        throw failure(field + " mismatch", null);
     }
 
     private static boolean containsIgnoreCase(List<String> values, String expected) {

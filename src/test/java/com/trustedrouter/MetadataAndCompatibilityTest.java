@@ -2,6 +2,7 @@ package com.trustedrouter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.trustedrouter.attestation.AttestationPolicy;
 import com.trustedrouter.models.TrustRelease;
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -17,7 +18,10 @@ final class MetadataAndCompatibilityTest {
         try (MockWebServer server = new MockWebServer()) {
             server.enqueue(json("{\"state\":\"up\"}"));
             server.enqueue(json("{\"image_digest\":\"sha256:abc\","
-                    + "\"image_reference\":\"image:release\",\"source_commit\":\"abc123\"}"));
+                    + "\"accepted_image_digests\":[\"sha256:old\",\"sha256:abc\"],"
+                    + "\"image_reference\":\"image:release\","
+                    + "\"accepted_image_references\":[\"image:old\",\"image:release\"],"
+                    + "\"source_commit\":\"abc123\"}"));
             TrustedRouterClient client = new TrustedRouterClient(TrustedRouterOptions.builder()
                     .apiKey("sk-secret")
                     .workspaceId("ws-secret")
@@ -33,6 +37,14 @@ final class MetadataAndCompatibilityTest {
             assertThat(client.status().get("state").getAsString()).isEqualTo("up");
             TrustRelease release = client.trustRelease();
             assertThat(release.getImageDigest()).isEqualTo("sha256:abc");
+            assertThat(release.getAcceptedImageDigests())
+                    .containsExactly("sha256:old", "sha256:abc");
+            assertThat(AttestationPolicy.fromTrustRelease(release).getExpectedImageDigests())
+                    .containsExactly("sha256:old", "sha256:abc");
+            assertThat(release.getAcceptedImageReferences())
+                    .containsExactly("image:old", "image:release");
+            assertThat(AttestationPolicy.fromTrustRelease(release).getExpectedImageReferences())
+                    .containsExactly("image:old", "image:release");
             for (int i = 0; i < 2; i++) {
                 RecordedRequest request = server.takeRequest();
                 assertThat(request.getHeader("Authorization")).isNull();
