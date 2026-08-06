@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -87,6 +88,19 @@ final class AttestationVerifierTest {
         assertThatThrownBy(() -> verify(claims, AttestationPolicy.builder().build()))
                 .isInstanceOf(AttestationVerificationException.class)
                 .hasMessageContaining("debug");
+    }
+
+    @Test void acceptsAnyDigestAndReferenceInPublishedRolloutSet() throws Exception {
+        AttestationPolicy policy = AttestationPolicy.builder()
+                .expectedImageDigest("sha256:new")
+                .expectedImageDigests(Arrays.asList("sha256:trusted", "sha256:new"))
+                .expectedImageReference("us-docker.pkg.dev/project/image:new")
+                .expectedImageReferences(Arrays.asList(
+                        "us-docker.pkg.dev/project/image:release",
+                        "us-docker.pkg.dev/project/image:new"))
+                .build();
+        GatewayAttestation verified = verify(claims, policy);
+        assertThat(verified.getImageDigest()).isEqualTo("sha256:trusted");
     }
 
     @Test void rejectsMissingExpiryAndAmbiguousDebugState() throws Exception {
