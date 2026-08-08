@@ -356,6 +356,25 @@ Workspace overrides are sent as `X-TrustedRouter-Workspace`, never in the prompt
 SDK operations receive an automatic idempotency key when the caller does not provide one. Retries
 use exponential backoff with jitter and honor numeric `Retry-After` values.
 
+## Domain failover
+
+`DEFAULT_API_BASE_URL` is one name on one DNS provider, and the domain sits above every cloud
+behind it. A zone that stops answering, a registrar lock, or a resolver handing out a stale record
+takes the API down no matter how many regions are healthy.
+
+`ALIAS_API_BASE_URLS` — `api.allyrouter.com` and `api.uptimerouter.com` — are exact aliases of the
+primary, on separate domains served by separate DNS providers, resolving to the same attested
+enclaves. The transport walks them in order after the primary, so a healthy deployment never
+touches them. Nothing to configure; it is on by default.
+
+Failover changes host only on connection failures and on `502`, `503`, or `504`. A `500` means a
+server received and processed the request, and inference is not idempotent, so re-sending it to
+another domain risks being billed twice; a 500 is retried on the same host.
+
+Aliases are used only for the default `baseUrl`. A custom one — a private deployment, a test
+server, a regional pin — is never rewritten. Call `.regionalFailover(false)` to keep every attempt
+on a single host. The control plane always uses the single configured `controlBaseUrl`.
+
 ## Errors
 
 ```java
