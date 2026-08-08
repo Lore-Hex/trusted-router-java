@@ -12,6 +12,21 @@ public final class TrustedRouter {
     public static final String VERSION = "0.1.0";
     public static final String DEFAULT_API_BASE_URL = "https://api.trustedrouter.com/v1";
     public static final String DEFAULT_CONTROL_BASE_URL = "https://trustedrouter.com/v1";
+
+    /**
+     * Exact aliases of {@link #DEFAULT_API_BASE_URL}, on separate domains served
+     * by separate DNS providers (trustedrouter.com from Google Cloud DNS, these
+     * two from Route 53).
+     *
+     * <p>The domain is a single point of failure sitting above the whole
+     * deployment: a zone that stops answering, a registrar lock, or a resolver
+     * handing out a stale record takes the API down no matter how many clouds
+     * are behind it. These names resolve to the same attested enclaves, so
+     * falling back to one costs nothing and is invisible to callers.
+     */
+    public static final List<String> ALIAS_API_BASE_URLS = immutableList(
+            "https://api.allyrouter.com/v1",
+            "https://api.uptimerouter.com/v1");
     public static final String DEFAULT_TRUST_RELEASE_URL =
             "https://trust.trustedrouter.com/trust/gcp-release.json";
     public static final String DEFAULT_STATUS_URL =

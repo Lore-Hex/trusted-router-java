@@ -14,6 +14,9 @@ import com.trustedrouter.errors.RateLimitException;
 import com.trustedrouter.errors.TrustedRouterException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +35,7 @@ public final class Transport {
 
     private final String apiKey;
     private final String baseUrl;
+    private final List<String> inferenceBaseUrls;
     private final String controlBaseUrl;
     private final OkHttpClient client;
     private final Long timeoutMillis;
@@ -51,6 +55,7 @@ public final class Transport {
         this.workspaceId = options.getWorkspaceId();
         this.maxRetries = options.getMaxRetries();
         this.regionalFailover = options.isRegionalFailover();
+        this.inferenceBaseUrls = inferenceBaseUrls(this.baseUrl, this.regionalFailover);
     }
 
     public String getBaseUrl() {
@@ -61,6 +66,48 @@ public final class Transport {
         return controlBaseUrl;
     }
 
+    /**
+     * Primary first, then the alias domains.
+     *
+     * <p>This list must have MORE THAN ONE entry or failover cannot engage at
+     * all: every advance below is guarded by {@code baseIndex + 1 < size}. Until
+     * the aliases existed there was only ever one candidate, so the retry loop
+     * could do nothing but re-send to the host that had just failed —
+     * {@code regionalFailover} widened which statuses were retried, never where.
+     *
+     * <p>Aliases are appended only for the default API host. A caller who passed
+     * a base URL of their own — a private deployment, a test server, a regional
+     * pin — gets exactly that; silently redirecting their traffic to a public
+     * alias would be worse than failing.
+     */
+    public static List<String> inferenceBaseUrls(
+            String primaryBaseUrl, boolean regionalFailover) {
+        // Both sides go through the same normalization: comparing a stored base
+        // URL against the raw constant is how this silently degrades to one entry.
+        String primary = withoutTrailingSlashes(primaryBaseUrl);
+        List<String> urls = new ArrayList<String>();
+        urls.add(primary);
+        if (!regionalFailover
+                || !primary.equals(withoutTrailingSlashes(TrustedRouter.DEFAULT_API_BASE_URL))) {
+            return Collections.unmodifiableList(urls);
+        }
+        for (String alias : TrustedRouter.ALIAS_API_BASE_URLS) {
+            String normalized = withoutTrailingSlashes(alias);
+            if (!urls.contains(normalized)) {
+                urls.add(normalized);
+            }
+        }
+        return Collections.unmodifiableList(urls);
+    }
+
+    private static String withoutTrailingSlashes(String value) {
+        String normalized = value == null ? "" : value.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
+
     public Response execute(
             Plane plane,
             String method,
@@ -68,19 +115,23 @@ public final class Transport {
             JsonElement body,
             CallOptions options,
             boolean streaming) throws TrustedRouterException {
-        String base = plane == Plane.INFERENCE ? baseUrl : controlBaseUrl;
-        return executeUrl(
-                joinUrl(base, path), method, body, normalize(options), streaming,
-                plane == Plane.INFERENCE ? regionalFailover : true, true);
+        boolean inference = plane == Plane.INFERENCE;
+        List<String> bases = inference
+                ? inferenceBaseUrls : Collections.singletonList(controlBaseUrl);
+        return executeUrls(
+                joinAll(bases, path), method, body, normalize(options), streaming,
+                inference ? regionalFailover : true, true);
     }
 
     public Response executeAbsolute(String url, String method, boolean streaming)
             throws TrustedRouterException {
-        return executeUrl(url, method, null, CallOptions.NONE, streaming, true, false);
+        return executeUrls(
+                Collections.singletonList(url), method, null, CallOptions.NONE, streaming,
+                true, false);
     }
 
-    private Response executeUrl(
-            String url,
+    private Response executeUrls(
+            List<String> urls,
             String method,
             JsonElement body,
             CallOptions options,
@@ -88,16 +139,22 @@ public final class Transport {
             boolean allowRegionalFailover,
             boolean includeCredentials) throws TrustedRouterException {
         int attempt = 0;
+        int baseIndex = 0;
         while (true) {
+            String url = urls.get(baseIndex);
             try {
                 Response response = requestClient(options, streaming)
                         .newCall(buildRequest(url, method, body, options, includeCredentials))
                         .execute();
-                if (attempt >= maxRetries || !retryable(response.code(), allowRegionalFailover)) {
+                int status = response.code();
+                if (attempt >= maxRetries || !retryable(status, allowRegionalFailover)) {
                     return response;
                 }
                 Double retryAfter = retryAfterSeconds(response);
                 response.close();
+                if (failoverable(status) && baseIndex + 1 < urls.size()) {
+                    baseIndex++;
+                }
                 sleepBeforeRetry(attempt, retryAfter);
                 attempt++;
             } catch (IOException error) {
@@ -107,6 +164,11 @@ public final class Transport {
                             "TrustedRouter endpoint unavailable: " + error.getMessage(),
                             null,
                             error);
+                }
+                // A connection failure means no server read the request, so
+                // another domain cannot double-execute it.
+                if (baseIndex + 1 < urls.size()) {
+                    baseIndex++;
                 }
                 sleepBeforeRetry(attempt, null);
                 attempt++;
@@ -258,6 +320,17 @@ public final class Transport {
         return new TrustedRouterException(status, message, payload);
     }
 
+    /**
+     * Which statuses may move a request to a different domain. Deliberately
+     * narrower than {@link #retryable}: a 500 means a server accepted the
+     * request and failed inside it, so an inference call may already have run
+     * and been billed. Re-sending that to a second domain risks charging twice.
+     * Only statuses that mean "nothing processed this" move hosts.
+     */
+    private static boolean failoverable(int status) {
+        return status == 502 || status == 503 || status == 504;
+    }
+
     private static boolean retryable(int status, boolean regionalFailover) {
         if (status == 429) {
             return true;
@@ -296,6 +369,16 @@ public final class Transport {
             interrupted.initCause(error);
             throw new InternalException(503, interrupted.getMessage(), null, interrupted);
         }
+    }
+
+    private static List<String> joinAll(List<String> baseUrls, String path) {
+        List<String> urls = new ArrayList<String>(baseUrls.size());
+        for (String base : baseUrls) {
+            // Validates the path against every candidate before a byte is sent,
+            // so a rejected path is rejected outright and never half-attempted.
+            urls.add(joinUrl(base, path));
+        }
+        return urls;
     }
 
     private static String joinUrl(String base, String path) {
