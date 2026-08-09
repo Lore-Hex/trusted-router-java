@@ -325,7 +325,9 @@ public final class Transport {
      * Which statuses may move a request to a different domain. Deliberately
      * narrower than {@link #retryable}: a 500 means a server accepted the
      * request and failed inside it, so an inference call may already have run
-     * and been billed. Re-sending that to a second domain risks charging twice.
+     * and been billed. Re-sending that to a second domain runs the work again:
+     * not a double charge to the caller, but a second upstream generation
+     * TrustedRouter pays for, and possibly a different answer.
      * Only statuses that mean "nothing processed this" move hosts.
      */
     /**
