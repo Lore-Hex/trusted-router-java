@@ -147,18 +147,19 @@ public final class Transport {
                         .newCall(buildRequest(url, method, body, options, includeCredentials))
                         .execute();
                 int status = response.code();
-                if (attempt >= maxRetries || !retryable(status, allowRegionalFailover)) {
+                if (attempt >= maxRetries || !retryable(status, response)) {
                     return response;
                 }
                 Double retryAfter = retryAfterSeconds(response);
                 response.close();
-                if (failoverable(status) && baseIndex + 1 < urls.size()) {
+                if (allowRegionalFailover && failoverable(status, response)
+                        && baseIndex + 1 < urls.size()) {
                     baseIndex++;
                 }
                 sleepBeforeRetry(attempt, retryAfter);
                 attempt++;
             } catch (IOException error) {
-                if (attempt >= maxRetries || !allowRegionalFailover) {
+                if (attempt >= maxRetries) {
                     throw new InternalException(
                             503,
                             "TrustedRouter endpoint unavailable: " + error.getMessage(),
@@ -167,7 +168,7 @@ public final class Transport {
                 }
                 // A connection failure means no server read the request, so
                 // another domain cannot double-execute it.
-                if (baseIndex + 1 < urls.size()) {
+                if (allowRegionalFailover && baseIndex + 1 < urls.size()) {
                     baseIndex++;
                 }
                 sleepBeforeRetry(attempt, null);
@@ -327,21 +328,74 @@ public final class Transport {
      * and been billed. Re-sending that to a second domain risks charging twice.
      * Only statuses that mean "nothing processed this" move hosts.
      */
-    private static boolean failoverable(int status) {
+    /**
+     * The gateway's explicit verdict, which overrides every heuristic below.
+     *
+     * <p>A status code cannot say whether a provider already ran. A 502 from
+     * "could not reach the provider" and a 502 from "the generation succeeded
+     * and then settlement failed" are indistinguishable here, and only the
+     * second is dangerous to re-send. The gateway knows and says so, using the
+     * same header OpenAI's clients honour.
+     *
+     * <p>Returns null when the server did not say, leaving behaviour unchanged
+     * for older gateways and for deliberately unlabelled paths.
+     */
+    private static Boolean shouldRetryVerdict(Response response) {
+        String raw = response.header("x-should-retry");
+        if (raw == null) {
+            return null;
+        }
+        String value = raw.trim().toLowerCase(java.util.Locale.ROOT);
+        if ("true".equals(value)) {
+            return Boolean.TRUE;
+        }
+        if ("false".equals(value)) {
+            return Boolean.FALSE;
+        }
+        return null;
+    }
+
+    /**
+     * Whether this response may move to a DIFFERENT domain. An explicit
+     * {@code x-should-retry: false} forbids it outright.
+     */
+    private static boolean failoverable(int status, Response response) {
+        if (Boolean.FALSE.equals(shouldRetryVerdict(response))) {
+            return false;
+        }
         return status == 502 || status == 503 || status == 504;
     }
 
-    private static boolean retryable(int status, boolean regionalFailover) {
-        if (status == 429) {
-            return true;
+    /**
+     * Whether we may send this again — independent of WHERE.
+     *
+     * <p>This used to take {@code regionalFailover} and return it for
+     * 502/503/504, so pinning to one host ALSO stopped retrying the gateway
+     * statuses entirely: one switch answering two questions. The flag now
+     * governs only the destination.
+     */
+    private static boolean retryable(int status, Response response) {
+        Boolean verdict = shouldRetryVerdict(response);
+        if (verdict != null) {
+            return verdict.booleanValue();
         }
-        if (status == 502 || status == 503 || status == 504) {
-            return regionalFailover;
-        }
-        return status >= 500;
+        return status == 429 || status >= 500;
     }
 
     private static Double retryAfterSeconds(Response response) {
+        // retry-after-ms wins when both are present: it is the more precise of
+        // the two, and a server that sends it means the sub-second value.
+        String millis = response.header("retry-after-ms");
+        if (millis != null) {
+            try {
+                double parsed = Double.parseDouble(millis.trim());
+                if (parsed >= 0.0d) {
+                    return Double.valueOf(parsed / 1000.0d);
+                }
+            } catch (NumberFormatException ignored) {
+                // Fall through to Retry-After rather than poison the backoff.
+            }
+        }
         String value = response.header("Retry-After");
         if (value == null) {
             return null;
