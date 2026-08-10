@@ -3,11 +3,11 @@ package com.trustedrouter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.trustedrouter.attestation.AttestationPolicy;
-import com.trustedrouter.attestation.AttestationVerificationOptions;
-import com.trustedrouter.attestation.AttestationVerifier;
 import com.trustedrouter.attestation.GatewayAttestation;
 import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.errors.TrustedRouterException;
+import com.trustedrouter.internal.AttestationHttp;
+import com.trustedrouter.internal.RequestFactory;
 import com.trustedrouter.internal.ResponseInputStream;
 import com.trustedrouter.internal.Transport;
 import com.trustedrouter.models.ActivityResponse;
@@ -49,10 +49,7 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
-import java.security.cert.Certificate;
 import java.util.Map;
-import java.util.UUID;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -381,20 +378,7 @@ public final class TrustedRouterClient {
 
     public byte[] attestation() throws TrustedRouterException { return attestation(null); }
     public byte[] attestation(String nonceHex) throws TrustedRouterException {
-        String root = transport.getBaseUrl();
-        if (root.endsWith("/v1")) { root = root.substring(0, root.length() - 3); }
-        String url = root + "/attestation";
-        if (nonceHex != null && !nonceHex.isEmpty()) { url += "?nonce=" + encode(nonceHex); }
-        Response response = transport.executeAbsolute(url, "GET", false);
-        try {
-            Transport.requireSuccess(response);
-            ResponseBody body = response.body();
-            return body == null ? new byte[0] : body.bytes();
-        } catch (IOException error) {
-            throw new InternalException(503, error.getMessage(), null, error);
-        } finally {
-            response.close();
-        }
+        return AttestationHttp.fetchAttestation(transport, transport.getBaseUrl(), nonceHex);
     }
 
     /**
@@ -403,35 +387,13 @@ public final class TrustedRouterClient {
      */
     public GatewayAttestation verifyGatewayAttestation(AttestationPolicy policy)
             throws TrustedRouterException, GeneralSecurityException {
-        byte[] nonceBytes = new byte[16];
-        new SecureRandom().nextBytes(nonceBytes);
-        return verifyGatewayAttestation(policy, hex(nonceBytes));
+        return verifyGatewayAttestation(policy, AttestationHttp.randomNonceHex());
     }
 
     public GatewayAttestation verifyGatewayAttestation(AttestationPolicy policy, String nonceHex)
             throws TrustedRouterException, GeneralSecurityException {
-        String root = transport.getBaseUrl();
-        if (root.endsWith("/v1")) { root = root.substring(0, root.length() - 3); }
-        Response response = transport.executeAbsolute(
-                root + "/attestation?nonce=" + encode(nonceHex), "GET", false);
-        try {
-            Transport.requireSuccess(response);
-            if (response.handshake() == null || response.handshake().peerCertificates().isEmpty()) {
-                throw new GeneralSecurityException("attestation response had no TLS peer certificate");
-            }
-            Certificate certificate = response.handshake().peerCertificates().get(0);
-            ResponseBody body = response.body();
-            if (body == null) { throw new GeneralSecurityException("attestation response was empty"); }
-            return AttestationVerifier.verify(body.bytes(),
-                    AttestationVerificationOptions.builder(policy)
-                            .nonceHex(nonceHex)
-                            .tlsCertificateDer(certificate.getEncoded())
-                            .build());
-        } catch (IOException error) {
-            throw new InternalException(503, error.getMessage(), null, error);
-        } finally {
-            response.close();
-        }
+        return AttestationHttp.verifyGatewayAttestation(
+                transport, transport.getBaseUrl(), policy, nonceHex);
     }
 
     public TrustRelease trustRelease() throws TrustedRouterException {
@@ -454,15 +416,9 @@ public final class TrustedRouterClient {
     }
 
     private static CallOptions idempotent(CallOptions options) {
-        CallOptions value = options == null ? CallOptions.NONE : options;
-        if (value.getIdempotencyKey() != null && !value.getIdempotencyKey().isEmpty()) {
-            return value;
-        }
-        return value.toBuilder().idempotencyKey(newIdempotencyKey()).build();
-    }
-
-    private static String newIdempotencyKey() {
-        return "tr-req-" + UUID.randomUUID().toString().replace("-", "");
+        // Minted once per logical call, BEFORE the transport loop, so every
+        // attempt and every domain move replays the same key verbatim.
+        return RequestFactory.ensureIdempotencyKey(options);
     }
 
     private static String destinationPath(String id) {
@@ -484,16 +440,5 @@ public final class TrustedRouterClient {
         } catch (UnsupportedEncodingException impossible) {
             throw new IllegalStateException("UTF-8 unavailable", impossible);
         }
-    }
-
-    private static String hex(byte[] value) {
-        char[] digits = "0123456789abcdef".toCharArray();
-        char[] output = new char[value.length * 2];
-        for (int i = 0; i < value.length; i++) {
-            int item = value[i] & 0xff;
-            output[i * 2] = digits[item >>> 4];
-            output[i * 2 + 1] = digits[item & 0x0f];
-        }
-        return new String(output);
     }
 }

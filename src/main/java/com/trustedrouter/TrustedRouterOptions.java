@@ -1,5 +1,6 @@
 package com.trustedrouter;
 
+import com.trustedrouter.internal.RetryPolicy;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -78,7 +79,7 @@ public final class TrustedRouterOptions {
         private Long timeoutMillis = Long.valueOf(TrustedRouter.DEFAULT_REQUEST_TIMEOUT_MILLIS);
         private final Map<String, String> headers = new LinkedHashMap<String, String>();
         private String workspaceId;
-        private int maxRetries = 2;
+        private int maxRetries = RetryPolicy.DEFAULT_MAX_RETRIES;
         private boolean regionalFailover = true;
         private Executor asyncExecutor;
 

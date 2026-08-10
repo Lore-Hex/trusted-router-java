@@ -54,6 +54,13 @@ public final class AttestationVerifier {
         return verifyClaims(claims, options);
     }
 
+    /**
+     * Flagged transport BYPASS, by design: a documented single-shot,
+     * credential-free metadata fetch against Google's JWKS endpoint that
+     * deliberately stays outside the SDK's transport engine (no retries, no
+     * candidate list, no failover). Callers who need control inject their own
+     * {@code httpClient} or pre-fetched {@code jwks} via the options.
+     */
     private static JsonObject fetchJwks(AttestationVerificationOptions options)
             throws AttestationVerificationException {
         String url = options.jwksUrl() == null ? GCP_JWKS_URL : options.jwksUrl();
