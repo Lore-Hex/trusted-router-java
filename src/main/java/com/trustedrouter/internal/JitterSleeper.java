@@ -24,9 +24,17 @@ public final class JitterSleeper implements Sleeper {
                 RetryPolicy.MAX_BACKOFF_MILLIS, RetryPolicy.BASE_BACKOFF_MILLIS * (1L << bounded));
         long delay = ceiling == 0L ? 0L : ThreadLocalRandom.current().nextLong(ceiling + 1L);
         if (retryAfterSeconds != null) {
-            delay = Math.max(delay, (long) (retryAfterSeconds.doubleValue() * 1000.0d));
+            // Re-clamp rather than trusting the caller: delayMillis is public
+            // and reachable independently of ErrorClassifier, and the
+            // double->long narrowing below SATURATES per JLS 5.1.3 rather than
+            // throwing, so an unbounded hint lands as Long.MAX_VALUE
+            // milliseconds — roughly 292 million years — with nothing to notice.
+            Double boundedHint = ErrorClassifier.boundedRetryAfter(retryAfterSeconds.doubleValue());
+            if (boundedHint != null) {
+                delay = Math.max(delay, (long) (boundedHint.doubleValue() * 1000.0d));
+            }
         }
-        return delay;
+        return Math.min(delay, (long) (ErrorClassifier.MAX_RETRY_AFTER_SECONDS * 1000.0d));
     }
 
     @Override
