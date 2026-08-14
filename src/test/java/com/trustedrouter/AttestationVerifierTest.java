@@ -24,6 +24,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class AttestationVerifierTest {
+
+    /** A policy pinning the image the fixture claims attest to.
+     *
+     * Verification refuses a policy that pins no image identity at all, so
+     * tests aimed at some other check still have to pin one. Defaulting to the
+     * digest the fixture carries keeps those tests reaching their target. */
+    private static AttestationPolicy pinnedPolicy() {
+        return AttestationPolicy.builder().expectedImageDigest("sha256:trusted").build();
+    }
     private KeyPair keyPair;
     private byte[] certificate;
     private String certificateHash;
@@ -85,7 +94,7 @@ final class AttestationVerifierTest {
 
     @Test void rejectsDebugWorkloadByDefault() throws Exception {
         claims.addProperty("dbgstat", "enabled");
-        assertThatThrownBy(() -> verify(claims, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(claims, pinnedPolicy()))
                 .isInstanceOf(AttestationVerificationException.class)
                 .hasMessageContaining("debug");
     }
@@ -106,40 +115,40 @@ final class AttestationVerifierTest {
     @Test void rejectsMissingExpiryAndAmbiguousDebugState() throws Exception {
         JsonObject missingExpiry = claims.deepCopy();
         missingExpiry.remove("exp");
-        assertThatThrownBy(() -> verify(missingExpiry, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(missingExpiry, pinnedPolicy()))
                 .hasMessageContaining("expiration");
 
         JsonObject missingDebugState = claims.deepCopy();
         missingDebugState.remove("dbgstat");
-        assertThatThrownBy(() -> verify(missingDebugState, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(missingDebugState, pinnedPolicy()))
                 .hasMessageContaining("disabled-since-boot");
 
         JsonObject unknownDebugState = claims.deepCopy();
         unknownDebugState.addProperty("dbgstat", "unknown");
-        assertThatThrownBy(() -> verify(unknownDebugState, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(unknownDebugState, pinnedPolicy()))
                 .hasMessageContaining("disabled-since-boot");
     }
 
     @Test void rejectsNonConfidentialOrInsecureRuntimeClaims() throws Exception {
         JsonObject wrongSoftware = claims.deepCopy();
         wrongSoftware.addProperty("swname", "GCE");
-        assertThatThrownBy(() -> verify(wrongSoftware, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(wrongSoftware, pinnedPolicy()))
                 .hasMessageContaining("not running Confidential Space");
 
         JsonObject insecureBoot = claims.deepCopy();
         insecureBoot.addProperty("secboot", false);
-        assertThatThrownBy(() -> verify(insecureBoot, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(insecureBoot, pinnedPolicy()))
                 .hasMessageContaining("Secure Boot");
 
         JsonObject wrongHardware = claims.deepCopy();
         wrongHardware.addProperty("hwmodel", "GCP_SHIELDED_VM");
-        assertThatThrownBy(() -> verify(wrongHardware, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(wrongHardware, pinnedPolicy()))
                 .hasMessageContaining("hardware model");
     }
 
     @Test void rejectsWrongLengthTlsExporter() throws Exception {
         assertThatThrownBy(() -> AttestationVerifier.verify(jwt(claims),
-                AttestationVerificationOptions.builder(AttestationPolicy.builder().build())
+                AttestationVerificationOptions.builder(pinnedPolicy())
                         .nonceHex("fresh-nonce").tlsCertificateDer(certificate)
                         .tlsExporter(new byte[31]).jwks(jwks).build()))
                 .hasMessageContaining("32 bytes");
@@ -148,14 +157,15 @@ final class AttestationVerifierTest {
     @Test void explicitlyAllowsDebugOnlyForDevelopmentPolicy() throws Exception {
         claims.addProperty("dbgstat", "enabled");
         GatewayAttestation verified = verify(
-                claims, AttestationPolicy.builder().allowDebug(true).build());
+                claims, AttestationPolicy.builder().expectedImageDigest("sha256:trusted")
+                        .allowDebug(true).build());
         assertThat(verified.getIssuer()).isEqualTo(AttestationVerifier.GCP_ISSUER);
     }
 
     @Test void rejectsExpiredWrongImageWrongNonceAndWrongCertificate() throws Exception {
         JsonObject expired = claims.deepCopy();
         expired.addProperty("exp", 1);
-        assertThatThrownBy(() -> verify(expired, AttestationPolicy.builder().build()))
+        assertThatThrownBy(() -> verify(expired, pinnedPolicy()))
                 .hasMessageContaining("expired");
 
         assertThatThrownBy(() -> verify(claims,
@@ -163,12 +173,12 @@ final class AttestationVerifierTest {
                 .hasMessageContaining("image_digest mismatch");
 
         assertThatThrownBy(() -> AttestationVerifier.verify(jwt(claims),
-                AttestationVerificationOptions.builder(AttestationPolicy.builder().build())
+                AttestationVerificationOptions.builder(pinnedPolicy())
                         .nonceHex("replayed").tlsCertificateDer(certificate).jwks(jwks).build()))
                 .hasMessageContaining("nonce");
 
         assertThatThrownBy(() -> AttestationVerifier.verify(jwt(claims),
-                AttestationVerificationOptions.builder(AttestationPolicy.builder().build())
+                AttestationVerificationOptions.builder(pinnedPolicy())
                         .nonceHex("fresh-nonce").tlsCertificateDer(new byte[] {1, 2, 3})
                         .jwks(jwks).build()))
                 .hasMessageContaining("certificate");
@@ -198,7 +208,7 @@ final class AttestationVerifierTest {
     }
 
     private AttestationVerificationOptions options() {
-        return AttestationVerificationOptions.builder(AttestationPolicy.builder().build())
+        return AttestationVerificationOptions.builder(pinnedPolicy())
                 .nonceHex("fresh-nonce").tlsCertificateDer(certificate).jwks(jwks).build();
     }
 
