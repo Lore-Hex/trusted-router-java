@@ -41,10 +41,42 @@ public final class AttestationPolicy {
     public static Builder builder() { return new Builder(); }
     public static AttestationPolicy fromTrustRelease(TrustRelease release) {
         if (release == null) { throw new NullPointerException("release"); }
-        return builder().expectedImageDigest(release.getImageDigest())
+        AttestationPolicy policy = builder().expectedImageDigest(release.getImageDigest())
                 .expectedImageDigests(release.getAcceptedImageDigests())
                 .expectedImageReference(release.getImageReference())
                 .expectedImageReferences(release.getAcceptedImageReferences()).build();
+        if (!policy.pinsImageIdentity()) {
+            // A truncated body, an error page that happens to parse as JSON, or
+            // a schema change all land here. Returning the policy anyway would
+            // leave the caller believing it verified a specific build while
+            // both image checks silently no-op, so refuse where the degraded
+            // input is still visible.
+            throw new IllegalArgumentException(
+                    "trust release pins no image identity (none of image_digest, "
+                    + "accepted_image_digests, image_reference, accepted_image_references); "
+                    + "refusing to build a policy that would accept any "
+                    + "Confidential Space workload");
+        }
+        return policy;
+    }
+
+    /**
+     * Whether this policy constrains <em>which</em> workload image is acceptable.
+     *
+     * <p>Both image checks in the verifier go through {@code requireOneOf}, which
+     * returns immediately on an empty accepted list, so a policy pinning neither
+     * a digest nor a reference accepts any genuinely-attested Confidential Space
+     * workload &mdash; it proves "some CSP VM" rather than "the gateway build we
+     * published". Policy construction and verification both refuse that state
+     * rather than silently downgrading the guarantee.
+     *
+     * @return true when the policy pins at least one image digest or reference
+     */
+    public boolean pinsImageIdentity() {
+        return !expectedImageDigests.isEmpty()
+                || (expectedImageDigest != null && !expectedImageDigest.isEmpty())
+                || !expectedImageReferences.isEmpty()
+                || (expectedImageReference != null && !expectedImageReference.isEmpty());
     }
     public String getAudience() { return audience; }
     public String getExpectedCertSha256() { return expectedCertSha256; }

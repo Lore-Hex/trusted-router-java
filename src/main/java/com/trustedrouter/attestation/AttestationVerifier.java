@@ -164,6 +164,14 @@ public final class AttestationVerifier {
         JsonObject container = object(submods, "container");
         String digest = string(container, "image_digest");
         String reference = string(container, "image_reference");
+        if (!options.policy().pinsImageIdentity()) {
+            // Defence in depth for hand-built policies: requireOneOf returns
+            // immediately on an empty accepted list, so reaching it with
+            // nothing pinned would accept any attested workload.
+            throw failure("attestation policy pins no image identity; refusing to verify "
+                    + "against a policy that cannot distinguish the gateway from any "
+                    + "other workload", null);
+        }
         requireOneOf("image_digest", digest, options.policy().getExpectedImageDigests());
         requireOneOf("image_reference", reference,
                 options.policy().getExpectedImageReferences());
