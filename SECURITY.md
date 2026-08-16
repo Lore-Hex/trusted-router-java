@@ -1,17 +1,32 @@
-# Security
+# Security Policy
 
-Report SDK or TrustedRouter security issues privately to `security@trustedrouter.com`. Do not open
-a public issue containing credentials, prompts, outputs, exploit details, or unpublished findings.
+## Reporting a vulnerability
 
-## SDK boundaries
+Email **security@trustedrouter.com**. Please do not open a public issue for a
+security report.
 
-- The SDK sends inference only to the configured API-plane URL.
-- Control-plane operations use a distinct configured URL.
-- Absolute URLs are rejected by authenticated low-level request methods.
-- Status and trust metadata are fetched without API-key, cookie, workspace, or idempotency headers.
-- The SDK does not install request-body logging.
-- Android applications must not embed reusable server API keys; use OAuth credit delegation and
-  platform-backed secret storage.
+Include what you can — affected version or commit, reproduction steps, and the
+impact you believe it has. A partial report sent early is more useful than a
+complete one sent late.
 
-Dependency and source reports should include the affected SDK version and a minimal reproducer that
-does not contain live credentials.
+## What to expect
+
+- **Acknowledgement within 72 hours.**
+- An assessment of severity and affected components within 5 business days.
+- Notification when a fix ships, and credit if you would like it.
+
+We treat any suspected exposure of customer content as the highest severity by
+default, and we notify affected users without waiting for a root-cause analysis
+to finish.
+
+## Scope
+
+This policy covers the code in this repository. TrustedRouter's hosted service
+runs inside hardware-attested confidential computing environments; the published
+measurements and how to verify them are at https://trustedrouter.com/trust
+
+## Safe harbour
+
+We will not pursue or support legal action against anyone who reports a
+vulnerability in good faith, avoids privacy violations and service degradation,
+and gives us reasonable time to respond before disclosing.
