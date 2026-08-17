@@ -68,9 +68,19 @@ final class TelemetryUnitTest {
         assertThat(Telemetry.classifyTransportError(
                 new BindException("Address already in use")))
                 .isEqualTo("connect_error");
+        // Classification is by TYPE only. A bare SocketException can carry the
+        // same "unreachable" text AFTER the connection is established, where
+        // the phase is not proven and the Python oracle's analogous
+        // httpx.ReadError maps to io_error, so the message must not promote it
+        // to the connect phase.
         assertThat(Telemetry.classifyTransportError(
                 new SocketException("Network is unreachable")))
-                .isEqualTo("connect_error");
+                .isEqualTo("io_error");
+        // PortUnreachableException is an ICMP reply on a connected datagram,
+        // not TCP connection setup, so it is not connect-phase evidence.
+        assertThat(Telemetry.classifyTransportError(
+                new java.net.PortUnreachableException("Network is unreachable")))
+                .isEqualTo("io_error");
         // Wrapped the way OkHttp surfaces it, through the cause chain.
         assertThat(Telemetry.classifyTransportError(
                 new IOException("unexpected end of stream",

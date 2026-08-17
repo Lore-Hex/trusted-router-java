@@ -32,9 +32,14 @@ import okhttp3.Response;
  *
  * <p>This runs as a NETWORK interceptor appended last, so it is the final
  * word before the socket: it drops any inbound {@code x-tr-client} (whatever
- * put it there), then re-stamps the engine's validated value on exactly the
- * FIRST wire request of each engine attempt, and only when the wire host is
- * still a TrustedRouter host.
+ * put it there), then re-stamps the engine's validated value on exactly ONE
+ * ANSWERED wire request per engine attempt, and only while the wire host is
+ * still a TrustedRouter host and the value is still in grammar.
+ *
+ * <p>The engine's value travels as a request TAG rather than being trusted
+ * from the inbound header, because OkHttp preserves tags across its follow-up
+ * rebuilds. The tag type is public but only this package can MINT one, so an
+ * interceptor on an injected client cannot forge a stamp either.
  *
  * <p>Telemetry never fails a request (&sect;2.2): every branch here is wrapped
  * so a failure degrades to sending no header rather than breaking the call.
@@ -55,25 +60,51 @@ public final class ReservedHeader implements Interceptor {
      */
     public static final class Stamp {
         private final String value;
-        private int wireRequests;
+        private boolean committed;
 
-        public Stamp(String value) {
+        /**
+         * Engine-only: deliberately NOT public. A public constructor would
+         * just move the forgery channel from the header to the tag — an
+         * interceptor on an injected client could attach its own Stamp and
+         * have the enforcer emit it, even for an opted-out client. Only
+         * {@code RequestFactory}, in this package, mints one.
+         */
+        Stamp(String value) {
             this.value = value;
         }
 
         /**
-         * The value for the next wire request: the engine's value for the
-         * first one, then null for every OkHttp-internal follow-up, which the
-         * engine's attempt accounting does not cover.
+         * The value for a wire request that is about to be attempted, or null
+         * once this attempt has already been labelled on a request that got an
+         * answer.
+         *
+         * <p>Deliberately NOT a pass counter. OkHttp re-runs the whole
+         * interceptor chain for a recoverable failure that happened BEFORE the
+         * request was written — a pooled connection found dead on acquisition
+         * is the common case — and a counter would spend the label on that
+         * phantom pass and leave the request that actually reaches the server
+         * unlabelled. So the label is only spent when a response comes back
+         * ({@link #commit()}); a pass that throws leaves it available for the
+         * retry.
          */
-        synchronized String claim() {
-            wireRequests++;
-            return wireRequests == 1 ? value : null;
+        synchronized String offer() {
+            return committed ? null : value;
         }
 
-        /** How many wire requests this attempt actually produced; for tests. */
-        public synchronized int wireRequests() {
-            return wireRequests;
+        /**
+         * Marks the label spent, called once a response has come back and the
+         * request is therefore known to have been sent. Every later wire
+         * request in this attempt — OkHttp's 503/408 re-send, a redirect — is
+         * a follow-up the engine's accounting does not cover, so it carries
+         * nothing rather than repeating this attempt's index.
+         */
+        synchronized void commit() {
+            committed = true;
+        }
+
+        /** Whether this attempt's label has been spent; for tests. */
+        public synchronized boolean isCommitted() {
+            return committed;
         }
     }
 
@@ -87,7 +118,22 @@ public final class ReservedHeader implements Interceptor {
             // Telemetry never fails a request (§2.2).
             enforced = request;
         }
-        return chain.proceed(enforced);
+        Response response = chain.proceed(enforced);
+        // A response came back, so this request was really sent: spend the
+        // label. Reached only on the success path — if proceed() throws,
+        // nothing is committed and OkHttp's own pre-send recovery gets to
+        // label the request that actually makes it out.
+        try {
+            if (enforced.header(NAME) != null) {
+                Stamp stamp = enforced.tag(Stamp.class);
+                if (stamp != null) {
+                    stamp.commit();
+                }
+            }
+        } catch (RuntimeException impossible) {
+            // Telemetry never fails a request (§2.2).
+        }
+        return response;
     }
 
     private static Request enforce(Request request) {
@@ -98,13 +144,19 @@ public final class ReservedHeader implements Interceptor {
         if (stamp == null) {
             return builder.build();
         }
-        String value = stamp.claim();
+        String value = stamp.offer();
         if (value == null) {
             return builder.build();
         }
         // A redirect can move the wire request off TrustedRouter entirely; a
         // self-hosted gateway is not TrustedRouter's to measure (§3.2).
         if ("custom".equals(Telemetry.hostEnum(request.url().toString()))) {
+            return builder.build();
+        }
+        // The wire's own grammar check, independent of whatever produced the
+        // value: content-free by construction is only true if it is in
+        // grammar, so anything else sends nothing (§2.1, §2.2).
+        if (!Telemetry.isWellFormedHeader(value)) {
             return builder.build();
         }
         builder.header(NAME, value);

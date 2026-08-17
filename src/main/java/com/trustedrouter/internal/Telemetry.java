@@ -264,14 +264,21 @@ public final class Telemetry {
             // connect_error and Java must agree. ConnectException covers a
             // generic connect failure; NoRouteToHostException (EHOSTUNREACH)
             // and BindException (a local bind/EADDRINUSE before any packet)
-            // are siblings of it, not subtypes, and an unreachable network
-            // surfaces as a bare SocketException. Refusal stays above this:
-            // connect_refused needs proven syscall-level refusal.
+            // are siblings of it, not subtypes, so an instanceof
+            // ConnectException test alone misses them. Refusal stays above
+            // this: connect_refused needs proven syscall-level refusal.
+            //
+            // Deliberately TYPES ONLY, no message matching. A bare
+            // SocketException("Network is unreachable") can also be thrown
+            // AFTER the connection is established, where the phase is not
+            // proven and the Python oracle's analogous httpx.ReadError maps to
+            // io_error; classifying on the substring would overclaim the
+            // connect phase. PortUnreachableException is likewise excluded —
+            // Java defines it for an ICMP reply on a connected datagram, not
+            // for TCP connection setup.
             if (item instanceof ConnectException
                     || item instanceof NoRouteToHostException
-                    || item instanceof BindException
-                    || (item instanceof SocketException
-                            && messageContains(item, "unreachable"))) {
+                    || item instanceof BindException) {
                 return "connect_error";
             }
         }
@@ -306,6 +313,42 @@ public final class Telemetry {
             if (item instanceof InterruptedIOException && messageContains(item, "timeout")) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a whole {@code x-tr-client} value is in grammar (&sect;3.2): a
+     * non-empty {@code ;}-separated list of {@code key=value} pairs, every
+     * value matching the anchored token regex, within the byte cap. Every
+     * grammar character is one byte, so length is the byte count.
+     *
+     * <p>The recorder already validates what it produces; this is the wire's
+     * independent check, so a value that reached the enforcer by any other
+     * route cannot put free text on the header.
+     */
+    public static boolean isWellFormedHeader(String header) {
+        if (header == null || header.isEmpty() || header.length() > MAX_HEADER_BYTES) {
+            return false;
+        }
+        int start = 0;
+        while (start <= header.length()) {
+            int end = header.indexOf(';', start);
+            if (end < 0) {
+                end = header.length();
+            }
+            String pair = header.substring(start, end);
+            int equals = pair.indexOf('=');
+            if (equals <= 0) {
+                return false;
+            }
+            if (!HEADER_VALUE.matcher(pair.substring(equals + 1)).matches()) {
+                return false;
+            }
+            if (end == header.length()) {
+                return true;
+            }
+            start = end + 1;
         }
         return false;
     }
