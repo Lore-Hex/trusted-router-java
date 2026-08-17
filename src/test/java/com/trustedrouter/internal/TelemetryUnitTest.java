@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.BindException;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -49,6 +51,42 @@ final class TelemetryUnitTest {
                 new IOException("canceled"))).isEqualTo("io_error");
         assertThat(Telemetry.classifyTransportError(
                 new RuntimeException("not io at all"))).isEqualTo("unknown");
+    }
+
+    @Test void everyProvenConnectPhaseFailureIsConnectErrorNotIoError() {
+        // httpx raises a single ConnectError for all of these, so the Python
+        // reference classifies them connect_error; io_error is the catch-all
+        // for failures with no proven phase and must not absorb them. These
+        // are siblings of ConnectException, not subtypes, so an instanceof
+        // ConnectException test alone misses every one.
+        assertThat(new NoRouteToHostException("x")).isNotInstanceOf(ConnectException.class);
+        assertThat(new BindException("x")).isNotInstanceOf(ConnectException.class);
+
+        assertThat(Telemetry.classifyTransportError(
+                new NoRouteToHostException("No route to host")))
+                .isEqualTo("connect_error");
+        assertThat(Telemetry.classifyTransportError(
+                new BindException("Address already in use")))
+                .isEqualTo("connect_error");
+        assertThat(Telemetry.classifyTransportError(
+                new SocketException("Network is unreachable")))
+                .isEqualTo("connect_error");
+        // Wrapped the way OkHttp surfaces it, through the cause chain.
+        assertThat(Telemetry.classifyTransportError(
+                new IOException("unexpected end of stream",
+                        new NoRouteToHostException("No route to host"))))
+                .isEqualTo("connect_error");
+        // Refusal still outranks the generic connect phase (ruling: refused
+        // requires proven syscall-level refusal).
+        assertThat(Telemetry.classifyTransportError(
+                new ConnectException("Connection refused")))
+                .isEqualTo("connect_refused");
+        // A reset is a real conversation cut short, not a connect failure.
+        assertThat(Telemetry.classifyTransportError(
+                new SocketException("Connection reset"))).isEqualTo("reset");
+        // A plain socket error with no proven phase stays io_error.
+        assertThat(Telemetry.classifyTransportError(
+                new SocketException("Broken pipe"))).isEqualTo("io_error");
     }
 
     @Test void walksTheCauseChainTheWayOkHttpWrapsFailures() {

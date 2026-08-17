@@ -40,7 +40,13 @@ public final class RequestFactory {
     public RequestFactory(TrustedRouterOptions options) {
         this.apiKey = options.getApiKey();
         OkHttpClient configured = options.getHttpClient();
-        this.client = configured == null ? new OkHttpClient() : configured;
+        OkHttpClient base = configured == null ? new OkHttpClient() : configured;
+        // The reserved-header invariant is enforced at the wire, appended LAST
+        // so it runs after every caller interceptor and on every OkHttp
+        // follow-up. Done once here, so no per-call client is built.
+        this.client = base.newBuilder()
+                .addNetworkInterceptor(new ReservedHeader())
+                .build();
         this.timeoutMillis = options.getTimeoutMillis();
         this.headers = options.getHeaders();
         this.workspaceId = options.getWorkspaceId();
@@ -117,9 +123,14 @@ public final class RequestFactory {
         // names are case-insensitive), so the opt-out, custom-host,
         // control-plane, and absolute-fetch exclusions are unconditional.
         // Only an active recorder's validated value may ride the wire.
-        request.removeHeader("x-tr-client");
+        request.removeHeader(ReservedHeader.NAME);
         if (telemetryHeader != null) {
-            request.header("x-tr-client", telemetryHeader);
+            request.header(ReservedHeader.NAME, telemetryHeader);
+            // The same value travels as a tag so the wire-level enforcer can
+            // re-assert it after any caller interceptor, and can withhold it
+            // from OkHttp's own follow-ups and from non-TrustedRouter hosts.
+            request.tag(ReservedHeader.Stamp.class,
+                    new ReservedHeader.Stamp(telemetryHeader));
         }
 
         String idempotencyKey = options.getIdempotencyKey();

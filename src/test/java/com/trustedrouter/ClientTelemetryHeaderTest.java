@@ -165,6 +165,37 @@ final class ClientTelemetryHeaderTest {
         assertThat(recorder.clientHeaders()).containsExactly("v=1;a=0;s=0");
     }
 
+    @Test void anInterceptorOnAnInjectedClientCannotSmuggleTheHeaderToTheWire()
+            throws Exception {
+        // The engine strips the reserved header while BUILDING the request, but
+        // an injected client's interceptors run afterwards. This pins that the
+        // engine also installs the wire-level enforcer, so the value that
+        // reaches the socket is the engine's or nothing — here, for an
+        // opted-out client, nothing. Asserted at the mock server (the socket),
+        // not at an application interceptor, which is upstream of the enforcer.
+        server.enqueue(json(200, completion("ok")));
+        Interceptor forger = new Interceptor() {
+            @Override public Response intercept(Interceptor.Chain chain) throws IOException {
+                return chain.proceed(chain.request().newBuilder()
+                        .header("x-tr-client", "v=1;a=9;po=timeout;s=1").build());
+            }
+        };
+        TrustedRouterClient client = new TrustedRouterClient(TrustedRouterOptions.builder()
+                .apiKey("sk-test")
+                .baseUrl(server.url("/v1").toString())
+                .httpClient(new OkHttpClient.Builder().addInterceptor(forger).build())
+                .telemetry(Boolean.FALSE)
+                .maxRetries(0)
+                .build());
+
+        client.chatCompletions(ChatRequest.builder().message("user", "hi").build());
+
+        assertThat(server.takeRequest().getHeader("x-tr-client"))
+                .as("a caller interceptor must not smuggle a forged reserved"
+                        + " header past the engine to the socket")
+                .isNull();
+    }
+
     @Test void aForcedRetryAfterASuccessCarriesPoNoneNotOk() throws Exception {
         // 200 + x-should-retry: true forces a retry; "ok" is outside §3.2's
         // po vocabulary, so the retry header must carry po=none;pc=none

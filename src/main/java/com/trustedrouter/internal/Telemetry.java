@@ -3,7 +3,9 @@ package com.trustedrouter.internal;
 import com.trustedrouter.TrustedRouter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.BindException;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -256,7 +258,20 @@ public final class Telemetry {
             }
         }
         for (Throwable item : chain) {
-            if (item instanceof ConnectException) {
+            // Every remaining PROVEN connect-phase failure is connect_error,
+            // never the io_error catch-all: httpx raises one ConnectError for
+            // all of these, so the Python reference classifies them
+            // connect_error and Java must agree. ConnectException covers a
+            // generic connect failure; NoRouteToHostException (EHOSTUNREACH)
+            // and BindException (a local bind/EADDRINUSE before any packet)
+            // are siblings of it, not subtypes, and an unreachable network
+            // surfaces as a bare SocketException. Refusal stays above this:
+            // connect_refused needs proven syscall-level refusal.
+            if (item instanceof ConnectException
+                    || item instanceof NoRouteToHostException
+                    || item instanceof BindException
+                    || (item instanceof SocketException
+                            && messageContains(item, "unreachable"))) {
                 return "connect_error";
             }
         }
