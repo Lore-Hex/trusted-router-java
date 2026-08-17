@@ -44,9 +44,7 @@ public final class RequestFactory {
         // The reserved-header invariant is enforced at the wire, appended LAST
         // so it runs after every caller interceptor and on every OkHttp
         // follow-up. Done once here, so no per-call client is built.
-        this.client = base.newBuilder()
-                .addNetworkInterceptor(new ReservedHeader())
-                .build();
+        this.client = ReservedHeader.install(base);
         this.timeoutMillis = options.getTimeoutMillis();
         this.headers = options.getHeaders();
         this.workspaceId = options.getWorkspaceId();
@@ -94,14 +92,28 @@ public final class RequestFactory {
     }
 
     /**
-     * Assembles one attempt's request; pure function of its arguments.
+     * Assembles one request without engine telemetry. This is the public
+     * pre-telemetry signature retained for source and binary compatibility;
+     * only the package-private overload can mint the opaque engine stamp.
+     */
+    public Request buildRequest(
+            String url,
+            String method,
+            JsonElement body,
+            CallOptions options,
+            boolean includeCredentials) {
+        return buildRequest(url, method, body, options, includeCredentials, null);
+    }
+
+    /**
+     * Assembles one engine attempt; pure function of its arguments.
      *
      * @param telemetryHeader the per-attempt {@code x-tr-client} value from
      *     the engine's recorder, or null to send no telemetry header — the
      *     engine passes null for control-plane calls, absolute fetches,
      *     custom hosts, opted-out clients, and out-of-grammar values
      */
-    public Request buildRequest(
+    Request buildRequest(
             String url,
             String method,
             JsonElement body,
@@ -129,8 +141,7 @@ public final class RequestFactory {
             // The same value travels as a tag so the wire-level enforcer can
             // re-assert it after any caller interceptor, and can withhold it
             // from OkHttp's own follow-ups and from non-TrustedRouter hosts.
-            request.tag(ReservedHeader.Stamp.class,
-                    new ReservedHeader.Stamp(telemetryHeader));
+            ReservedHeader.stamp(request, telemetryHeader);
         }
 
         String idempotencyKey = options.getIdempotencyKey();

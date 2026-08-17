@@ -11,6 +11,7 @@ import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLHandshakeException;
@@ -209,6 +210,88 @@ final class TelemetryUnitTest {
     }
 
     // --- §3.2 header assembly: golden vector, grammar guard, byte cap ---
+
+    @Test void theWireValidatorAcceptsOnlyTheTwoExactOrderedShapes() {
+        assertThat(Telemetry.isWellFormedHeader("v=1;a=0;s=0")).isTrue();
+        assertThat(Telemetry.isWellFormedHeader("v=1;a=0;s=1")).isTrue();
+        assertThat(Telemetry.isWellFormedHeader(
+                "v=1;a=99;po=stream_broken;pc=stream_stalled;ph=europe_west4"
+                        + ";pm=3600000;sm=3600000;s=1;fo=1")).isTrue();
+
+        String[] invalidShapes = {
+            "v=1;a=0",                                      // mandatory s
+            "v=1;s=0;a=0",                                  // exact order
+            "a=0;v=1;s=0",                                  // v first
+            "v=1;a=0;s=0;fo=0",                             // retry-only fo
+            "v=1;a=1;s=0",                                  // mandatory retry context
+            "v=1;a=1;pc=none;po=none;ph=none;pm=0;sm=0;s=0;fo=0",
+            "v=1;a=1;po=none;pc=none;ph=none;pm=0;sm=0;fo=0;s=0",
+            "v=1;a=1;po=none;pc=none;ph=none;pm=0;sm=0;s=0", // mandatory fo
+            "v=1;a=1;po=none;pc=none;ph=none;pm=0;sm=0;s=0;fo=0;note=x",
+            "v=1;a=0;a=0;s=0",                              // duplicate key
+        };
+        for (String header : invalidShapes) {
+            assertThat(Telemetry.isWellFormedHeader(header))
+                    .as("invalid key set/order: %s", header).isFalse();
+        }
+    }
+
+    @Test void everyAdversarialTokenShapeExampleFromTheGateIsRejected() {
+        // These all passed the old validator because it checked only that each
+        // value looked like a lower-case token. None implements §3.2.
+        String[] invalid = {
+            "v=2",
+            "note=secret",
+            "v=1;v=1",
+            "v=1;a=999;s=7",
+            "anything=lowercase_text",
+        };
+        for (String header : invalid) {
+            assertThat(Telemetry.isWellFormedHeader(header))
+                    .as("gate example: %s", header).isFalse();
+        }
+    }
+
+    @Test void theWireValidatorEnforcesEverySemanticRangeAndVocabulary() {
+        String retry = "v=1;a=1;po=timeout;pc=connect_timeout;ph=apex"
+                + ";pm=12;sm=34;s=0;fo=1";
+        assertThat(Telemetry.isWellFormedHeader(retry)).isTrue();
+
+        String[] invalid = {
+            "v=1;a=100;po=timeout;pc=connect_timeout;ph=apex;pm=12;sm=34;s=0;fo=1",
+            retry.replace("po=timeout", "po=ok"),
+            retry.replace("pc=connect_timeout", "pc=made_up"),
+            retry.replace("ph=apex", "ph=made_up"),
+            retry.replace("pm=12", "pm=3600001"),
+            retry.replace("sm=34", "sm=3600001"),
+            retry.replace("s=0", "s=2"),
+            retry.replace("fo=1", "fo=2"),
+            retry.replace("pm=12", "pm=-1"),
+            retry.replace("pm=12", "pm=999999999999999999999999"),
+        };
+        for (String header : invalid) {
+            assertThat(Telemetry.isWellFormedHeader(header))
+                    .as("invalid semantic value: %s", header).isFalse();
+        }
+    }
+
+    @Test void theWireValidatorUsesAsciiAndUtf8BytesNotUtf16CodeUnits() {
+        StringBuilder multibyte = new StringBuilder("v=1;a=0;s=0;");
+        while (multibyte.length() <= 90) {
+            multibyte.append('\u00e9');
+        }
+        String header = multibyte.toString();
+        assertThat(header.length()).isLessThan(160);
+        assertThat(header.getBytes(StandardCharsets.UTF_8).length).isGreaterThan(160);
+        assertThat(Telemetry.isWellFormedHeader(header)).isFalse();
+
+        StringBuilder ascii = new StringBuilder();
+        while (ascii.length() <= 160) {
+            ascii.append('a');
+        }
+        assertThat(ascii.toString().getBytes(StandardCharsets.UTF_8)).hasSize(161);
+        assertThat(Telemetry.isWellFormedHeader(ascii.toString())).isFalse();
+    }
 
     @Test void theDocumentedRetryExampleSerializesByteForByte() {
         // The contract's §3.2 retry example, as corrected upstream

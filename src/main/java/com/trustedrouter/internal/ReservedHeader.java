@@ -1,7 +1,10 @@
 package com.trustedrouter.internal;
 
 import java.io.IOException;
+import okhttp3.Call;
+import okhttp3.EventListener;
 import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -32,34 +35,46 @@ import okhttp3.Response;
  *
  * <p>This runs as a NETWORK interceptor appended last, so it is the final
  * word before the socket: it drops any inbound {@code x-tr-client} (whatever
- * put it there), then re-stamps the engine's validated value on exactly ONE
- * ANSWERED wire request per engine attempt, and only while the wire host is
+ * put it there), then re-stamps the engine's validated value on at most one
+ * header-write attempt per engine attempt, and only while the wire host is
  * still a TrustedRouter host and the value is still in grammar.
  *
  * <p>The engine's value travels as a request TAG rather than being trusted
  * from the inbound header, because OkHttp preserves tags across its follow-up
- * rebuilds. The tag type is public but only this package can MINT one, so an
- * interceptor on an injected client cannot forge a stamp either.
+ * rebuilds. Both the enforcer and its tag type are inaccessible outside this
+ * internal package, and {@link RequestFactory}'s minting path is package-only,
+ * so an interceptor on an injected client cannot forge a stamp either.
+ *
+ * <p>OkHttp's {@link EventListener#requestHeadersStart(Call)} is the last
+ * public phase signal before its codec starts writing request headers. The
+ * listener spends an armed stamp there, not only after a response: if a peer
+ * resets after some request bytes but before response headers, OkHttp may
+ * recover inside the same {@code Call}, and the recovered exchange must not
+ * repeat the same attempt index. A failure before this callback (DNS,
+ * connect, or exchange setup) leaves the stamp available. The SDK listener
+ * is composed with, rather than substituted for, the injected client's
+ * listener.
  *
  * <p>Telemetry never fails a request (&sect;2.2): every branch here is wrapped
  * so a failure degrades to sending no header rather than breaking the call.
  */
-public final class ReservedHeader implements Interceptor {
+final class ReservedHeader implements Interceptor {
     /** The SDK-reserved header name, matched case-insensitively by OkHttp. */
-    public static final String NAME = "x-tr-client";
+    static final String NAME = "x-tr-client";
 
     /**
      * The engine's intended header value for one attempt, carried as a request
-     * tag so it survives OkHttp's follow-up rebuilds, plus a claim counter so
-     * only the first wire request of that attempt is stamped.
+     * tag so it survives OkHttp's follow-up rebuilds, plus synchronized state
+     * so only the first header-write attempt is stamped.
      *
      * <p>OkHttp re-sends a {@code 503}/{@code 408} by handing back the very
      * same {@code Request} instance and builds a redirect with
      * {@code request.newBuilder()}; both preserve tags, so one instance sees
      * every wire request derived from one engine attempt.
      */
-    public static final class Stamp {
+    private static final class Stamp {
         private final String value;
+        private boolean offered;
         private boolean committed;
 
         /**
@@ -69,42 +84,108 @@ public final class ReservedHeader implements Interceptor {
          * have the enforcer emit it, even for an opted-out client. Only
          * {@code RequestFactory}, in this package, mints one.
          */
-        Stamp(String value) {
+        private Stamp(String value) {
             this.value = value;
         }
 
         /**
-         * The value for a wire request that is about to be attempted, or null
-         * once this attempt has already been labelled on a request that got an
-         * answer.
+         * The value for a wire request that is about to write headers, or null
+         * once this attempt has already spent its label.
          *
-         * <p>Deliberately NOT a pass counter. OkHttp re-runs the whole
-         * interceptor chain for a recoverable failure that happened BEFORE the
-         * request was written — a pooled connection found dead on acquisition
-         * is the common case — and a counter would spend the label on that
-         * phantom pass and leave the request that actually reaches the server
-         * unlabelled. So the label is only spent when a response comes back
-         * ({@link #commit()}); a pass that throws leaves it available for the
-         * retry.
+         * <p>Deliberately not a network-interceptor pass counter: OkHttp can
+         * re-run that interceptor for a recoverable failure before request
+         * writing starts. Offering only arms the stamp; the event listener
+         * commits it at the write boundary.
          */
         synchronized String offer() {
-            return committed ? null : value;
+            if (committed) {
+                return null;
+            }
+            offered = true;
+            return value;
         }
 
         /**
-         * Marks the label spent, called once a response has come back and the
-         * request is therefore known to have been sent. Every later wire
-         * request in this attempt — OkHttp's 503/408 re-send, a redirect — is
-         * a follow-up the engine's accounting does not cover, so it carries
-         * nothing rather than repeating this attempt's index.
+         * Marks an offered label spent. Called immediately before OkHttp asks
+         * its codec to write request headers; also called idempotently after a
+         * response as a defensive fallback for direct interceptor chains.
          */
-        synchronized void commit() {
-            committed = true;
+        synchronized void commitOffered() {
+            if (offered) {
+                committed = true;
+            }
+        }
+    }
+
+    /**
+     * Installs the wire enforcer and composes its phase marker with the
+     * caller's listener factory. Installation is idempotent for a client that
+     * already came from another {@code RequestFactory}; per-call clients copy
+     * both pieces through {@code newBuilder()}.
+     */
+    static OkHttpClient install(OkHttpClient base) {
+        boolean hasEnforcer = false;
+        for (Interceptor interceptor : base.networkInterceptors()) {
+            if (interceptor instanceof ReservedHeader) {
+                hasEnforcer = true;
+                break;
+            }
+        }
+        boolean hasMarker = base.eventListenerFactory() instanceof StampListenerFactory;
+        if (hasEnforcer && hasMarker) {
+            return base;
+        }
+        OkHttpClient.Builder builder = base.newBuilder();
+        if (!hasMarker) {
+            builder.eventListenerFactory(
+                    new StampListenerFactory(base.eventListenerFactory()));
+        }
+        if (!hasEnforcer) {
+            builder.addNetworkInterceptor(new ReservedHeader());
+        }
+        return builder.build();
+    }
+
+    /** Mints the opaque engine-only request tag. */
+    static void stamp(Request.Builder request, String value) {
+        request.tag(Stamp.class, new Stamp(value));
+    }
+
+    private static final class StampListenerFactory implements EventListener.Factory {
+        private final EventListener.Factory callerFactory;
+
+        private StampListenerFactory(EventListener.Factory callerFactory) {
+            this.callerFactory = callerFactory;
         }
 
-        /** Whether this attempt's label has been spent; for tests. */
-        public synchronized boolean isCommitted() {
-            return committed;
+        @Override
+        public EventListener create(Call call) {
+            EventListener caller = callerFactory.create(call);
+            Stamp stamp = call.request().tag(Stamp.class);
+            if (stamp == null) {
+                return caller;
+            }
+            // Marker first: even a broken caller callback cannot reopen the
+            // duplicate-index window. The caller still receives the callback
+            // with exactly the same aggregate semantics OkHttp documents.
+            return new StampEventListener(stamp).plus(caller);
+        }
+    }
+
+    private static final class StampEventListener extends EventListener {
+        private final Stamp stamp;
+
+        private StampEventListener(Stamp stamp) {
+            this.stamp = stamp;
+        }
+
+        @Override
+        public void requestHeadersStart(Call call) {
+            try {
+                stamp.commitOffered();
+            } catch (RuntimeException impossible) {
+                // Telemetry never fails a request (§2.2).
+            }
         }
     }
 
@@ -115,19 +196,22 @@ public final class ReservedHeader implements Interceptor {
         try {
             enforced = enforce(request);
         } catch (RuntimeException impossible) {
-            // Telemetry never fails a request (§2.2).
-            enforced = request;
+            // Telemetry never fails a request (§2.2), and a failed telemetry
+            // path must fail closed rather than forwarding a caller-forged
+            // reserved value.
+            enforced = request.newBuilder().removeHeader(NAME).build();
         }
         Response response = chain.proceed(enforced);
-        // A response came back, so this request was really sent: spend the
-        // label. Reached only on the success path — if proceed() throws,
-        // nothing is committed and OkHttp's own pre-send recovery gets to
-        // label the request that actually makes it out.
+        // Defensive fallback for direct/custom interceptor chains that do not
+        // drive OkHttp's EventListener. On a real Call the write-start event
+        // already committed this idempotently; if proceed() throws before
+        // that event, this path is not reached and pre-send recovery keeps the
+        // label.
         try {
             if (enforced.header(NAME) != null) {
                 Stamp stamp = enforced.tag(Stamp.class);
                 if (stamp != null) {
-                    stamp.commit();
+                    stamp.commitOffered();
                 }
             }
         } catch (RuntimeException impossible) {
@@ -144,10 +228,6 @@ public final class ReservedHeader implements Interceptor {
         if (stamp == null) {
             return builder.build();
         }
-        String value = stamp.offer();
-        if (value == null) {
-            return builder.build();
-        }
         // A redirect can move the wire request off TrustedRouter entirely; a
         // self-hosted gateway is not TrustedRouter's to measure (§3.2).
         if ("custom".equals(Telemetry.hostEnum(request.url().toString()))) {
@@ -156,7 +236,11 @@ public final class ReservedHeader implements Interceptor {
         // The wire's own grammar check, independent of whatever produced the
         // value: content-free by construction is only true if it is in
         // grammar, so anything else sends nothing (§2.1, §2.2).
-        if (!Telemetry.isWellFormedHeader(value)) {
+        if (!Telemetry.isWellFormedHeader(stamp.value)) {
+            return builder.build();
+        }
+        String value = stamp.offer();
+        if (value == null) {
             return builder.build();
         }
         builder.header(NAME, value);

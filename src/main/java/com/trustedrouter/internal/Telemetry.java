@@ -10,6 +10,7 @@ import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -318,39 +319,109 @@ public final class Telemetry {
     }
 
     /**
-     * Whether a whole {@code x-tr-client} value is in grammar (&sect;3.2): a
-     * non-empty {@code ;}-separated list of {@code key=value} pairs, every
-     * value matching the anchored token regex, within the byte cap. Every
-     * grammar character is one byte, so length is the byte count.
+     * Whether a whole {@code x-tr-client} value implements the exact v1
+     * grammar (&sect;3.2), including the closed key set and order, conditional
+     * retry fields, per-key vocabularies and numeric ranges, ASCII-only wire
+     * representation, and the 160-byte UTF-8 cap.
      *
      * <p>The recorder already validates what it produces; this is the wire's
      * independent check, so a value that reached the enforcer by any other
-     * route cannot put free text on the header.
+     * route cannot add a field, repeat a key, smuggle free text, or claim an
+     * out-of-range semantic value.
      */
     public static boolean isWellFormedHeader(String header) {
         if (header == null || header.isEmpty() || header.length() > MAX_HEADER_BYTES) {
             return false;
         }
-        int start = 0;
-        while (start <= header.length()) {
-            int end = header.indexOf(';', start);
-            if (end < 0) {
-                end = header.length();
-            }
-            String pair = header.substring(start, end);
-            int equals = pair.indexOf('=');
-            if (equals <= 0) {
-                return false;
-            }
-            if (!HEADER_VALUE.matcher(pair.substring(equals + 1)).matches()) {
-                return false;
-            }
-            if (end == header.length()) {
-                return true;
-            }
-            start = end + 1;
+        if (header.getBytes(StandardCharsets.UTF_8).length > MAX_HEADER_BYTES) {
+            return false;
         }
-        return false;
+        for (int index = 0; index < header.length(); index++) {
+            if (header.charAt(index) > 0x7f) {
+                return false;
+            }
+        }
+
+        String[] pairs = header.split(";", -1);
+        String version = pairValue(pairs, 0, "v");
+        String attemptValue = pairValue(pairs, 1, "a");
+        if (!"1".equals(version) || !isBoundedInteger(attemptValue, 0L, 99L)) {
+            return false;
+        }
+        if (isZeroInteger(attemptValue)) {
+            return pairs.length == 3 && isBit(pairValue(pairs, 2, "s"));
+        }
+        return pairs.length == 9
+                && isPreviousOutcome(pairValue(pairs, 2, "po"))
+                && isPreviousErrorClass(pairValue(pairs, 3, "pc"))
+                && isPreviousHost(pairValue(pairs, 4, "ph"))
+                && isBoundedInteger(pairValue(pairs, 5, "pm"), 0L, MAX_DURATION_MS)
+                && isBoundedInteger(pairValue(pairs, 6, "sm"), 0L, MAX_DURATION_MS)
+                && isBit(pairValue(pairs, 7, "s"))
+                && isBit(pairValue(pairs, 8, "fo"));
+    }
+
+    private static String pairValue(String[] pairs, int index, String key) {
+        if (index >= pairs.length) {
+            return null;
+        }
+        String prefix = key + "=";
+        String pair = pairs[index];
+        if (!pair.startsWith(prefix)) {
+            return null;
+        }
+        String value = pair.substring(prefix.length());
+        return HEADER_VALUE.matcher(value).matches() ? value : null;
+    }
+
+    private static boolean isBoundedInteger(String value, long minimum, long maximum) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        long parsed = 0L;
+        for (int index = 0; index < value.length(); index++) {
+            char c = value.charAt(index);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+            parsed = parsed * 10L + (c - '0');
+            if (parsed > maximum) {
+                return false;
+            }
+        }
+        return parsed >= minimum;
+    }
+
+    private static boolean isBit(String value) {
+        return "0".equals(value) || "1".equals(value);
+    }
+
+    private static boolean isZeroInteger(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        for (int index = 0; index < value.length(); index++) {
+            if (value.charAt(index) != '0') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isPreviousOutcome(String value) {
+        return "none".equals(value)
+                || "http_error".equals(value)
+                || "transport_error".equals(value)
+                || "timeout".equals(value)
+                || "stream_broken".equals(value);
+    }
+
+    private static boolean isPreviousErrorClass(String value) {
+        return "none".equals(value) || ERROR_CLASSES.contains(value);
+    }
+
+    private static boolean isPreviousHost(String value) {
+        return "none".equals(value) || HOSTS.contains(value);
     }
 
     /**
