@@ -101,6 +101,12 @@ final class AliasDomainFailoverTest {
         assertThat(recorder.hosts().get(0)).isEqualTo(PRIMARY_HOST);
         assertThat(recorder.hosts()).as("never reached an alias")
                 .contains("api.allyrouter.com");
+        // Client telemetry contract v1 (§3.2/§6.4): the alias attempt tells
+        // the gateway what it is recovering from — a failed HTTP attempt on
+        // the apex, with the candidate index advanced.
+        assertThat(recorder.clientHeaders().get(0)).isEqualTo("v=1;a=0;s=0");
+        assertThat(recorder.clientHeaders().get(1)).matches(
+                "^v=1;a=1;po=http_error;pc=none;ph=apex;pm=\\d{1,7};sm=\\d{1,7};s=0;fo=1$");
     }
 
     @Test void a500DoesNotMoveToAnotherDomain() {
@@ -142,10 +148,14 @@ final class AliasDomainFailoverTest {
 
     private TrustedRouterClient client(DomainRecorder recorder, int retries) {
         // No baseUrl: the default host is what activates the alias list, and it
-        // is the configuration every real caller uses.
+        // is the configuration every real caller uses. Telemetry is forced on
+        // so the x-tr-client assertions cannot be skewed by ambient opt-out
+        // env vars (DO_NOT_TRACK etc.); default resolution is covered by
+        // ClientTelemetryHeaderTest and the injected-environment matrix.
         return new TrustedRouterClient(TrustedRouterOptions.builder()
                 .apiKey("sk-test")
                 .httpClient(new OkHttpClient.Builder().addInterceptor(recorder).build())
+                .telemetry(Boolean.TRUE)
                 .maxRetries(retries)
                 .build());
     }
@@ -164,6 +174,7 @@ final class AliasDomainFailoverTest {
      */
     private static final class DomainRecorder implements Interceptor {
         private final List<String> seen = new ArrayList<String>();
+        private final List<String> clientHeaders = new ArrayList<String>();
         private final Set<String> unreachable;
         private final HttpUrl target;
 
@@ -177,6 +188,7 @@ final class AliasDomainFailoverTest {
             Request request = chain.request();
             String host = request.url().host();
             seen.add(host);
+            clientHeaders.add(request.header("x-tr-client"));
             if (unreachable.contains(host)) {
                 throw new IOException("simulated DNS failure for " + host);
             }
@@ -191,6 +203,10 @@ final class AliasDomainFailoverTest {
 
         List<String> hosts() {
             return Collections.unmodifiableList(seen);
+        }
+
+        List<String> clientHeaders() {
+            return Collections.unmodifiableList(clientHeaders);
         }
     }
 }
