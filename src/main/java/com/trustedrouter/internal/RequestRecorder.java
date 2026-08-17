@@ -110,8 +110,26 @@ public final class RequestRecorder {
                 AttemptRecord previous = attempts.get(attempts.size() - 1);
                 long sinceFirstMs = Telemetry.clampDurationMs(
                         (attemptStartedNanos - firstStartedNanos) / 1_000_000L);
-                values.add("po=" + previous.outcome);
-                values.add("pc=" + (previous.errorClass == null ? "none" : previous.errorClass));
+                // §3.2 closes po over {none, http_error, transport_error,
+                // timeout, stream_broken}. A forced retry after a sub-400
+                // response (x-should-retry: true) records outcome "ok",
+                // which is OUTSIDE that vocabulary — the enclave would drop
+                // the whole header. Cross-SDK ruling: map any out-of-vocab
+                // previous outcome to po=none with pc=none. (The Python
+                // reference shares the po=ok bug; upstream issue filed.)
+                String previousOutcome = previous.outcome;
+                String previousErrorClass =
+                        previous.errorClass == null ? "none" : previous.errorClass;
+                boolean inVocabulary = "http_error".equals(previousOutcome)
+                        || "transport_error".equals(previousOutcome)
+                        || "timeout".equals(previousOutcome)
+                        || "stream_broken".equals(previousOutcome);
+                if (!inVocabulary) {
+                    previousOutcome = "none";
+                    previousErrorClass = "none";
+                }
+                values.add("po=" + previousOutcome);
+                values.add("pc=" + previousErrorClass);
                 values.add("ph=" + previous.host);
                 values.add("pm=" + previous.elapsedMs);
                 values.add("sm=" + sinceFirstMs);

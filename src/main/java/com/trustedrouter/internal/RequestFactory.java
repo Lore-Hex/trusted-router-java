@@ -112,6 +112,12 @@ public final class RequestFactory {
             }
         }
         request.header("User-Agent", userAgent());
+        // x-tr-client is SDK-reserved across all six TrustedRouter SDKs: a
+        // caller-supplied value is stripped on EVERY path (OkHttp header
+        // names are case-insensitive), so the opt-out, custom-host,
+        // control-plane, and absolute-fetch exclusions are unconditional.
+        // Only an active recorder's validated value may ride the wire.
+        request.removeHeader("x-tr-client");
         if (telemetryHeader != null) {
             request.header("x-tr-client", telemetryHeader);
         }

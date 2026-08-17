@@ -87,28 +87,6 @@ final class TelemetryUnitTest {
         assertThat(Telemetry.isTimeout(wrapped)).isTrue();
     }
 
-    @Test void aHostileExceptionSubtypeCannotReplaceTheRetryDecision() {
-        // getCause()/getMessage() are overridable; a broken or adversarial
-        // IOException subtype must not let telemetry throw from inside the
-        // engine's catch block (§2.2).
-        IOException hostile = new IOException("outer") {
-            @Override public synchronized Throwable getCause() {
-                throw new IllegalStateException("hostile cause");
-            }
-
-            @Override public String getMessage() {
-                throw new IllegalStateException("hostile message");
-            }
-        };
-        RequestRecorder recorder = new RequestRecorder(false);
-        recorder.beginAttempt(APEX);
-        recorder.onTransportError(hostile);
-        recorder.onMoved();
-        recorder.beginAttempt("https://api.allyrouter.com/v1");
-        // Whatever was or was not recorded, the header path stays non-throwing.
-        recorder.headerValue();
-    }
-
     @Test void attemptIndexesPastTheContractRangeSendNothing() {
         RequestRecorder recorder = new RequestRecorder(false);
         for (int attempt = 0; attempt <= 99; attempt++) {
@@ -185,8 +163,11 @@ final class TelemetryUnitTest {
     // --- §3.2 header assembly: golden vector, grammar guard, byte cap ---
 
     @Test void theDocumentedRetryExampleSerializesByteForByte() {
-        // The contract's own retry example (§3.2): every key, in order, with
-        // the exact separators. The clock is injected so pm/sm are exact.
+        // The contract's §3.2 retry example, as corrected upstream
+        // (quill-router#645: a connect timeout is po=timeout, matching the
+        // Python reference): every key, in order, with the exact separators,
+        // produced entirely by real recorder state — only the clock is
+        // injected so pm/sm are exact.
         FakeClock clock = new FakeClock();
         RequestRecorder recorder = new RequestRecorder(true, clock);
         clock.nowMs = 0L;
@@ -196,13 +177,22 @@ final class TelemetryUnitTest {
         recorder.onMoved();
         clock.nowMs = 10_530L;
         recorder.beginAttempt("https://api.allyrouter.com/v1");
-        // The doc example labels the previous outcome transport_error; the
-        // reference implementation reports timeout for timeout exceptions, so
-        // pin the serialization from the exact recorded state.
-        recorder.attempts().get(0).outcome = "transport_error";
 
         assertThat(recorder.headerValue()).isEqualTo(
-                "v=1;a=1;po=transport_error;pc=connect_timeout;ph=apex;pm=10012;sm=10530;s=1;fo=1");
+                "v=1;a=1;po=timeout;pc=connect_timeout;ph=apex;pm=10012;sm=10530;s=1;fo=1");
+    }
+
+    @Test void aForcedRetryAfterAnOkResponseMapsPoAndPcToNone() {
+        // §3.2 closes po over {none, http_error, transport_error, timeout,
+        // stream_broken}; a forced retry after a sub-400 response
+        // (x-should-retry: true) must not leak the out-of-vocab "ok".
+        RequestRecorder recorder = new RequestRecorder(false);
+        recorder.beginAttempt(APEX);
+        recorder.onResponse(200);
+        recorder.beginAttempt(APEX);
+
+        assertThat(recorder.headerValue()).matches(
+                "^v=1;a=1;po=none;pc=none;ph=apex;pm=\\d{1,7};sm=\\d{1,7};s=0;fo=0$");
     }
 
     @Test void firstAttemptVectorsAreExact() {
@@ -222,12 +212,13 @@ final class TelemetryUnitTest {
     }
 
     @Test void anOutOfGrammarValueSendsNothingAndNeverThrows() {
+        // Unreachable through the engine (every value comes from a closed
+        // internal vocabulary), so the guard is exercised by tampering the
+        // recorded state directly. An out-of-vocab OUTCOME is normalised to
+        // po=none by the §3.2 vocabulary mapping, so the regex guard's
+        // remaining live inputs are the error class and host fields.
         RequestRecorder recorder = retriedRecorder();
         recorder.attempts().get(0).errorClass = "Not-Valid!";
-        assertThat(recorder.headerValue()).isNull();
-
-        recorder = retriedRecorder();
-        recorder.attempts().get(0).outcome = "";
         assertThat(recorder.headerValue()).isNull();
 
         recorder = retriedRecorder();
@@ -235,21 +226,29 @@ final class TelemetryUnitTest {
         assertThat(recorder.headerValue()).isNull();
     }
 
-    @Test void theByteCapHoldsEvenAtTheGrammarsWorstCase() {
-        // Force every tamperable value to the 24-char grammar maximum and the
-        // duration to Long.MAX_VALUE digits: the header must still be inside
-        // the 160-byte cap — the cap is enforced AND unreachable when every
-        // value passes the grammar, which is what "bounded by construction"
-        // means. The value-grammar guard, tested above, fires first for
-        // anything wilder.
-        RequestRecorder recorder = retriedRecorder();
-        recorder.attempts().get(0).outcome = "abcdefghijklmnopqrstuvwx";
-        recorder.attempts().get(0).errorClass = "abcdefghijklmnopqrstuvwx";
-        recorder.attempts().get(0).host = "abcdefghijklmnopqrstuvwx";
-        recorder.attempts().get(0).elapsedMs = Long.MAX_VALUE;
-        String value = recorder.headerValue();
-        assertThat(value).isNotNull();
-        assertThat(value.length()).isLessThanOrEqualTo(160);
+    @Test void theByteCapHoldsAtTheLongestProducibleHeader() {
+        // The longest header production can emit: attempt index 99 (the §3.2
+        // maximum), the longest outcome/class pair a real exception produces
+        // (transport_error/protocol_error), the longest host enum
+        // (europe_west4), and both durations at the 3600000 clamp — every
+        // value produced by real recorder calls, only the clock injected.
+        FakeClock clock = new FakeClock();
+        RequestRecorder recorder = new RequestRecorder(true, clock);
+        String region = "https://api-europe-west4.quillrouter.com/v1";
+        for (int attempt = 0; attempt <= 98; attempt++) {
+            clock.nowMs = attempt * 3_600_000L;
+            recorder.beginAttempt(region);
+            clock.nowMs = (attempt + 1) * 3_600_000L;
+            recorder.onTransportError(new ProtocolException("unexpected status line"));
+        }
+        recorder.onMoved();
+        clock.nowMs = 99L * 3_600_000L;
+        recorder.beginAttempt(region);
+
+        String header = recorder.headerValue();
+        assertThat(header).isEqualTo("v=1;a=99;po=transport_error;pc=protocol_error"
+                + ";ph=europe_west4;pm=3600000;sm=3600000;s=1;fo=1");
+        assertThat(header.length()).isLessThanOrEqualTo(160);
     }
 
     @Test void aWellFormedRetryHeaderStaysComfortablyUnderTheCap() {

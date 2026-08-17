@@ -148,10 +148,14 @@ final class AliasDomainFailoverTest {
 
     private TrustedRouterClient client(DomainRecorder recorder, int retries) {
         // No baseUrl: the default host is what activates the alias list, and it
-        // is the configuration every real caller uses.
+        // is the configuration every real caller uses. Telemetry is forced on
+        // so the x-tr-client assertions cannot be skewed by ambient opt-out
+        // env vars (DO_NOT_TRACK etc.); default resolution is covered by
+        // ClientTelemetryHeaderTest and the injected-environment matrix.
         return new TrustedRouterClient(TrustedRouterOptions.builder()
                 .apiKey("sk-test")
                 .httpClient(new OkHttpClient.Builder().addInterceptor(recorder).build())
+                .telemetry(Boolean.TRUE)
                 .maxRetries(retries)
                 .build());
     }

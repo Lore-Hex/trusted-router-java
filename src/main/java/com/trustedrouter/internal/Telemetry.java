@@ -212,6 +212,16 @@ public final class Telemetry {
      * "connect"; read stalls raise {@link SocketTimeoutException} without it;
      * peer resets are {@link SocketException} with "reset" in the message;
      * malformed responses raise {@link ProtocolException}.
+     *
+     * <p>DOCUMENTED APPROXIMATION: OkHttp surfaces a stalled request-body
+     * upload as the same generic {@code SocketTimeoutException("timeout")}
+     * as a read stall, so a write stall classifies as {@code read_timeout}
+     * rather than {@code write_timeout} (the outcome is {@code timeout}
+     * either way). Distinguishing them would need a per-call
+     * {@code EventListener} chained onto the caller's own OkHttp client —
+     * request-path machinery this header-only phase deliberately avoids
+     * (&sect;2.2). Pinned by
+     * {@code ClientTelemetryHeaderTest.aStalledUploadClassifiesAsTimeout}.
      */
     public static String classifyTransportError(Throwable error) {
         List<Throwable> chain = causeChain(error);
