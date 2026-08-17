@@ -123,6 +123,41 @@ final class ReservedHeaderWireTest {
         assertThat(atSocket).containsExactly((String) null);
     }
 
+    @Test void theEnforcerIsInstalledExactlyOncePerClient() {
+        // Installed once in the RequestFactory constructor; requestClient()
+        // derives per-call clients with newBuilder(), which COPIES the
+        // interceptor list rather than appending to it. Exactly one matters in
+        // both directions: none and a forged value reaches the socket; twice
+        // and the second pass claims the Stamp, gets null and strips the
+        // header, silently disabling the whole channel.
+        RequestFactory factory = new RequestFactory(
+                com.trustedrouter.TrustedRouterOptions.builder()
+                        .apiKey("sk-test")
+                        .build());
+        assertThat(countEnforcers(factory.requestClient(
+                com.trustedrouter.CallOptions.NONE, false)))
+                .as("no per-call timeout: the client is reused as-is")
+                .isEqualTo(1);
+        assertThat(countEnforcers(factory.requestClient(
+                com.trustedrouter.CallOptions.builder().timeoutMillis(500L).build(), false)))
+                .as("buffered call with a timeout: newBuilder() must not re-add it")
+                .isEqualTo(1);
+        assertThat(countEnforcers(factory.requestClient(
+                com.trustedrouter.CallOptions.builder().timeoutMillis(500L).build(), true)))
+                .as("stream open with a timeout: newBuilder() must not re-add it")
+                .isEqualTo(1);
+    }
+
+    private static int countEnforcers(OkHttpClient client) {
+        int found = 0;
+        for (Interceptor interceptor : client.networkInterceptors()) {
+            if (interceptor instanceof ReservedHeader) {
+                found++;
+            }
+        }
+        return found;
+    }
+
     private static Request stamped(String url, String value) {
         return new Request.Builder().url(url)
                 .header(ReservedHeader.NAME, value)
