@@ -21,6 +21,7 @@ public final class TrustedRouterOptions {
     final String workspaceId;
     final int maxRetries;
     final boolean regionalFailover;
+    final Boolean telemetry;
     final Executor asyncExecutor;
 
     private TrustedRouterOptions(Builder builder) {
@@ -37,6 +38,7 @@ public final class TrustedRouterOptions {
         this.workspaceId = builder.workspaceId;
         this.maxRetries = builder.maxRetries;
         this.regionalFailover = builder.regionalFailover;
+        this.telemetry = builder.telemetry;
         this.asyncExecutor = builder.asyncExecutor;
     }
 
@@ -55,6 +57,8 @@ public final class TrustedRouterOptions {
     public String getWorkspaceId() { return workspaceId; }
     public int getMaxRetries() { return maxRetries; }
     public boolean isRegionalFailover() { return regionalFailover; }
+    /** Tri-state client-telemetry override; null means resolve from env and hosts. */
+    public Boolean getTelemetry() { return telemetry; }
     public Executor getAsyncExecutor() { return asyncExecutor; }
 
     private static String normalizeBaseUrl(String value, String fallback) {
@@ -81,6 +85,7 @@ public final class TrustedRouterOptions {
         private String workspaceId;
         private int maxRetries = RetryPolicy.DEFAULT_MAX_RETRIES;
         private boolean regionalFailover = true;
+        private Boolean telemetry;
         private Executor asyncExecutor;
 
         private Builder() {}
@@ -163,6 +168,20 @@ public final class TrustedRouterOptions {
 
         public Builder regionalFailover(boolean value) {
             this.regionalFailover = value;
+            return this;
+        }
+
+        /**
+         * Explicitly enables or disables client reliability telemetry (the
+         * content-free {@code x-tr-client} request header). Overrides the
+         * {@code TRUSTEDROUTER_TELEMETRY} and {@code DO_NOT_TRACK}
+         * environment variables. Left unset (null), telemetry follows those
+         * variables and otherwise defaults on only when both the inference
+         * base and the control host are TrustedRouter's own; custom base
+         * URLs default off and are never measured.
+         */
+        public Builder telemetry(Boolean value) {
+            this.telemetry = value;
             return this;
         }
 

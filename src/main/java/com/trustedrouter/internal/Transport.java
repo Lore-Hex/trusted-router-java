@@ -75,6 +75,7 @@ public final class Transport {
     private final List<String> inferenceBaseUrls;
     private final String controlBaseUrl;
     private final boolean regionalFailover;
+    private final boolean telemetryEnabled;
     private final RetryPolicy retryPolicy;
     private final RequestFactory requestFactory;
     private final Sleeper sleeper;
@@ -84,6 +85,8 @@ public final class Transport {
         this.controlBaseUrl = options.getControlBaseUrl();
         this.regionalFailover = options.isRegionalFailover();
         this.inferenceBaseUrls = CandidateUrls.inferenceBaseUrls(this.baseUrl, this.regionalFailover);
+        this.telemetryEnabled = Telemetry.resolveEnabled(
+                options.getTelemetry(), this.baseUrl, this.controlBaseUrl);
         this.retryPolicy = new RetryPolicy(options.getMaxRetries());
         this.requestFactory = new RequestFactory(options);
         this.sleeper = new JitterSleeper();
@@ -113,18 +116,23 @@ public final class Transport {
         boolean inference = plane == Plane.INFERENCE;
         List<String> bases = inference
                 ? inferenceBaseUrls : Collections.singletonList(controlBaseUrl);
+        // Telemetry records INFERENCE calls only: control-plane calls get no
+        // x-tr-client header and no recorder activity at all (contract §3.2).
+        RequestRecorder recorder = inference && telemetryEnabled
+                ? new RequestRecorder(streaming) : null;
         return executeUrls(
                 CandidateUrls.joinAll(bases, path), method, body, normalize(options), streaming,
-                inference ? regionalFailover : true, true);
+                inference ? regionalFailover : true, true, recorder);
     }
 
     public Response executeAbsolute(String url, String method, boolean streaming)
             throws TrustedRouterException {
         // A singleton URL list: the structural gate below makes failover
         // impossible for absolute fetches no matter what the flag says.
+        // Absolute metadata fetches are never telemetered: no recorder.
         return executeUrls(
                 Collections.singletonList(url), method, null, CallOptions.NONE, streaming,
-                true, false);
+                true, false, null);
     }
 
     /**
@@ -132,6 +140,12 @@ public final class Transport {
      * the outcome (before closing any response), asks the L1 kernel for a
      * {@code RetryDecision}, and executes it. The candidate index advances
      * in exactly ONE place, gated structurally by the list length.
+     *
+     * <p>This is also the SDK's single telemetry emit point (contract §6.1):
+     * a non-null {@code recorder} observes each attempt here and derives the
+     * next attempt's {@code x-tr-client} header, which the request factory
+     * stamps. A null recorder — control plane, absolute fetches, telemetry
+     * off — means no header and no recorder activity anywhere.
      */
     private Response executeUrls(
             List<String> urls,
@@ -140,18 +154,25 @@ public final class Transport {
             CallOptions options,
             boolean streaming,
             boolean allowRegionalFailover,
-            boolean includeCredentials) throws TrustedRouterException {
+            boolean includeCredentials,
+            RequestRecorder recorder) throws TrustedRouterException {
         int attempt = 0;
         int baseIndex = 0;
         while (true) {
             String url = urls.get(baseIndex);
+            String telemetryHeader = null;
+            if (recorder != null) {
+                recorder.beginAttempt(url);
+                telemetryHeader = recorder.headerValue();
+            }
             Response response = null;
             IOException failure = null;
             RetryPolicy.AttemptFacts facts;
             try {
                 response = requestFactory.requestClient(options, streaming)
                         .newCall(requestFactory.buildRequest(
-                                url, method, body, options, includeCredentials))
+                                url, method, body, options, includeCredentials,
+                                telemetryHeader))
                         .execute();
                 // All facts are read while the response is still open.
                 facts = RetryPolicy.AttemptFacts.httpResponse(
@@ -159,9 +180,18 @@ public final class Transport {
                         response.header("x-should-retry"),
                         ErrorClassifier.retryAfterSeconds(response),
                         allowRegionalFailover);
+                if (recorder != null) {
+                    recorder.onResponse(response.code());
+                }
             } catch (IOException error) {
                 failure = error;
                 facts = RetryPolicy.AttemptFacts.ioFailure(allowRegionalFailover);
+                if (recorder != null) {
+                    // Classified HERE, from the live exception type and cause
+                    // chain: the THROW branch below flattens it into an
+                    // InternalException message string (contract §6.1).
+                    recorder.onTransportError(error);
+                }
             }
             RetryPolicy.RetryDecision decision = retryPolicy.decide(attempt, facts);
             if (decision.getKind() == RetryPolicy.RetryDecision.Kind.RETURN_RESPONSE) {
@@ -180,6 +210,9 @@ public final class Transport {
             // THE single advance site: the only place a candidate index moves.
             if (decision.isMoveHost() && baseIndex + 1 < urls.size()) {
                 baseIndex++;
+                if (recorder != null) {
+                    recorder.onMoved();
+                }
             }
             sleeper.sleep(attempt, decision.getRetryAfterSeconds());
             attempt++;

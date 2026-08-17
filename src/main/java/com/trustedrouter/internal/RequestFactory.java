@@ -87,13 +87,21 @@ public final class RequestFactory {
         return builder.build();
     }
 
-    /** Assembles one attempt's request; pure function of its arguments. */
+    /**
+     * Assembles one attempt's request; pure function of its arguments.
+     *
+     * @param telemetryHeader the per-attempt {@code x-tr-client} value from
+     *     the engine's recorder, or null to send no telemetry header — the
+     *     engine passes null for control-plane calls, absolute fetches,
+     *     custom hosts, opted-out clients, and out-of-grammar values
+     */
     public Request buildRequest(
             String url,
             String method,
             JsonElement body,
             CallOptions options,
-            boolean includeCredentials) {
+            boolean includeCredentials,
+            String telemetryHeader) {
         Request.Builder request = new Request.Builder().url(url);
         if (includeCredentials) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -104,6 +112,9 @@ public final class RequestFactory {
             }
         }
         request.header("User-Agent", userAgent());
+        if (telemetryHeader != null) {
+            request.header("x-tr-client", telemetryHeader);
+        }
 
         String idempotencyKey = options.getIdempotencyKey();
         if (idempotencyKey != null && !idempotencyKey.isEmpty()) {
@@ -153,9 +164,41 @@ public final class RequestFactory {
                 || "PATCH".equalsIgnoreCase(method);
     }
 
-    private static String userAgent() {
-        return "trusted-router-java/" + TrustedRouter.VERSION
-                + " java/" + System.getProperty("java.version", "unknown")
-                + " " + System.getProperty("os.name", "unknown");
+    /**
+     * The User-Agent the telemetry contract's enclave parser accepts
+     * (contract §3.1): {@code trusted-router-java/SEMVER( runtime/ver)?}.
+     * The previous form appended {@code os.name} ("Mac OS X"), which fails
+     * that grammar and downgraded every request's identity to unparsed;
+     * OS/arch never belonged in the UA (§3.2: static identity is UA-only,
+     * and the closed OS enum is beacon vocabulary).
+     */
+    static String userAgent() {
+        String runtime = runtimeToken(System.getProperty("java.version", ""));
+        if (runtime.isEmpty()) {
+            return "trusted-router-java/" + TrustedRouter.VERSION;
+        }
+        return "trusted-router-java/" + TrustedRouter.VERSION + " java/" + runtime;
+    }
+
+    /**
+     * Sanitizes {@code java.version} into the contract's runtime grammar
+     * {@code [0-9A-Za-z.+-]{1,24}} — legacy versions like {@code 1.8.0_452}
+     * carry an underscore, which the grammar forbids.
+     */
+    static String runtimeToken(String version) {
+        String value = version == null ? "" : version;
+        StringBuilder token = new StringBuilder();
+        for (int index = 0; index < value.length() && token.length() < 24; index++) {
+            char c = value.charAt(index);
+            if (c == '_') {
+                c = '-';
+            }
+            boolean allowed = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
+                    || (c >= 'a' && c <= 'z') || c == '.' || c == '+' || c == '-';
+            if (allowed) {
+                token.append(c);
+            }
+        }
+        return token.toString();
     }
 }
