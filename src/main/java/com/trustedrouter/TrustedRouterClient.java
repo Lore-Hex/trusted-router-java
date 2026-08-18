@@ -236,7 +236,8 @@ public final class TrustedRouterClient {
             throws TrustedRouterException {
         return ModelDecoder.decode(
                 json(Transport.Plane.INFERENCE, "POST", "/responses/input_tokens",
-                        request.toJson(false), request.getCallOptions()), ResponseInputTokens.class);
+                        request.toJson(false), idempotent(request.getCallOptions())),
+                ResponseInputTokens.class);
     }
 
     public BroadcastDestinationList broadcastDestinations(CallOptions options)
@@ -269,13 +270,15 @@ public final class TrustedRouterClient {
     public BroadcastDestination updateBroadcastDestination(
             String id, JsonObject patch, CallOptions options) throws TrustedRouterException {
         return ModelDecoder.decode(
-                json(Transport.Plane.CONTROL, "PATCH", destinationPath(id), patch, options),
+                json(Transport.Plane.CONTROL, "PATCH", destinationPath(id), patch,
+                        idempotent(options)),
                 BroadcastDestination.class);
     }
 
     public JsonElement deleteBroadcastDestination(String id, CallOptions options)
             throws TrustedRouterException {
-        return json(Transport.Plane.CONTROL, "DELETE", destinationPath(id), null, options);
+        return json(Transport.Plane.CONTROL, "DELETE", destinationPath(id), null,
+                idempotent(options));
     }
     public JsonElement deleteBroadcastDestination(String id) throws TrustedRouterException {
         return deleteBroadcastDestination(id, null);
@@ -283,7 +286,8 @@ public final class TrustedRouterClient {
 
     public JsonElement testBroadcastDestination(String id, CallOptions options)
             throws TrustedRouterException {
-        return json(Transport.Plane.CONTROL, "POST", destinationPath(id) + "/test", null, options);
+        return json(Transport.Plane.CONTROL, "POST", destinationPath(id) + "/test", null,
+                idempotent(options));
     }
     public JsonElement testBroadcastDestination(String id) throws TrustedRouterException {
         return testBroadcastDestination(id, null);
@@ -313,7 +317,8 @@ public final class TrustedRouterClient {
 
     public LogoutResponse logout() throws TrustedRouterException {
         return ModelDecoder.decode(
-                json(Transport.Plane.CONTROL, "POST", "/auth/logout", null, null),
+                json(Transport.Plane.CONTROL, "POST", "/auth/logout", null,
+                        idempotent(null)),
                 LogoutResponse.class);
     }
 
@@ -350,8 +355,8 @@ public final class TrustedRouterClient {
             body.addProperty("code_challenge_method", codeChallengeMethod);
         }
         return ModelDecoder.decode(
-                json(Transport.Plane.CONTROL, "POST", "/auth/keys", body,
-                        CallOptions.builder().withoutApiKey().build()), OAuthToken.class);
+                Transport.decodeJson(transport.executeCredentialFreeControl(
+                        "POST", "/auth/keys", body, false)), OAuthToken.class);
     }
 
     public ActivityResponse activity(Map<String, String> parameters) throws TrustedRouterException {

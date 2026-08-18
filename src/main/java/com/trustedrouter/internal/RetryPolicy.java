@@ -30,8 +30,9 @@ import java.util.Locale;
  *       forces retry, absent or unparseable keeps the status heuristics —
  *       {@code ShouldRetryHeaderTest.aLabelledSpent502IsNotRetriedAndDoesNotMoveDomains},
  *       {@code ShouldRetryHeaderTest.aLabelledRetryable400IsRetriedEvenThoughTheStatusSaysOtherwise}.</li>
- *   <li>The idempotency key is minted once per logical call before the loop
- *       and re-sent verbatim across every attempt and domain move —
+ *   <li>High-level mutations mint one idempotency key before the loop; generic
+ *       mutations replay only when the caller supplies one. Any key is re-sent
+ *       verbatim across every attempt and domain move —
  *       {@code ClientTransportTest.retriesRateLimitAndPreservesIdempotencyKey}.</li>
  *   <li>Retries happen only before any body bytes are surfaced; a broken open
  *       stream propagates and never reconnects —
@@ -39,9 +40,8 @@ import java.util.Locale;
  *   <li>The failover flag governs WHERE, never WHETHER: a pinned client still
  *       retries in place —
  *       {@code ShouldRetryHeaderTest.aPinnedClientStillRetriesInPlace}.</li>
- *   <li>Transport errors (no server saw the request) may always move hosts
- *       within the flag gating; HTTP moves additionally require a
- *       failoverable status —
+ *   <li>Replay-safe transport errors may move hosts within the flag gating;
+ *       HTTP moves additionally require a failoverable status —
  *       {@code AliasDomainFailoverTest.aDeadPrimaryDomainReachesAnAlias}.</li>
  *   <li>Terminal asymmetry is contract: exhausted-status attempts RETURN the
  *       response for the caller to classify, IO exhaustion THROWS —
@@ -76,6 +76,11 @@ public final class RetryPolicy {
      * merely executes the decision.
      */
     public RetryDecision decide(int attempt, AttemptFacts facts) {
+        if (!facts.isReplayable()) {
+            return facts.isIoFailure()
+                    ? RetryDecision.throwUnavailable()
+                    : RetryDecision.returnResponse();
+        }
         if (facts.isIoFailure()) {
             if (attempt >= maxRetries) {
                 return RetryDecision.throwUnavailable();
@@ -171,18 +176,21 @@ public final class RetryPolicy {
         private final Boolean shouldRetryVerdict;
         private final Double retryAfterSeconds;
         private final boolean failoverAllowed;
+        private final boolean replayable;
 
         private AttemptFacts(
                 boolean ioFailure,
                 int status,
                 Boolean shouldRetryVerdict,
                 Double retryAfterSeconds,
-                boolean failoverAllowed) {
+                boolean failoverAllowed,
+                boolean replayable) {
             this.ioFailure = ioFailure;
             this.status = status;
             this.shouldRetryVerdict = shouldRetryVerdict;
             this.retryAfterSeconds = retryAfterSeconds;
             this.failoverAllowed = failoverAllowed;
+            this.replayable = replayable;
         }
 
         /** Facts for an attempt that produced an HTTP response. */
@@ -191,17 +199,34 @@ public final class RetryPolicy {
                 String rawShouldRetryHeader,
                 Double retryAfterSeconds,
                 boolean failoverAllowed) {
+            return httpResponse(
+                    status, rawShouldRetryHeader, retryAfterSeconds, failoverAllowed, true);
+        }
+
+        /** Facts for an HTTP response, including whether replay is safe. */
+        public static AttemptFacts httpResponse(
+                int status,
+                String rawShouldRetryHeader,
+                Double retryAfterSeconds,
+                boolean failoverAllowed,
+                boolean replayable) {
             return new AttemptFacts(
                     false,
                     status,
                     shouldRetryVerdict(rawShouldRetryHeader),
                     retryAfterSeconds,
-                    failoverAllowed);
+                    failoverAllowed,
+                    replayable);
         }
 
         /** Facts for an attempt where the HTTP client threw before a response. */
         public static AttemptFacts ioFailure(boolean failoverAllowed) {
-            return new AttemptFacts(true, 0, null, null, failoverAllowed);
+            return ioFailure(failoverAllowed, true);
+        }
+
+        /** Facts for an I/O failure, including whether replay is safe. */
+        public static AttemptFacts ioFailure(boolean failoverAllowed, boolean replayable) {
+            return new AttemptFacts(true, 0, null, null, failoverAllowed, replayable);
         }
 
         public boolean isIoFailure() { return ioFailure; }
@@ -209,6 +234,7 @@ public final class RetryPolicy {
         public Boolean getShouldRetryVerdict() { return shouldRetryVerdict; }
         public Double getRetryAfterSeconds() { return retryAfterSeconds; }
         public boolean isFailoverAllowed() { return failoverAllowed; }
+        public boolean isReplayable() { return replayable; }
     }
 
     /**

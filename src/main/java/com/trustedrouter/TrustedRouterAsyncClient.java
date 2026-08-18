@@ -36,6 +36,7 @@ import com.trustedrouter.requests.ModelFilters;
 import com.trustedrouter.requests.ResponsesRequest;
 import com.trustedrouter.streaming.EventStream;
 import com.trustedrouter.streaming.TextStream;
+import com.trustedrouter.internal.Transport;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -195,13 +196,54 @@ public final class TrustedRouterAsyncClient {
     }
 
     private <T> CompletableFuture<T> submit(CheckedSupplier<T> supplier) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return supplier.get();
-            } catch (Exception error) {
-                throw new CompletionException(error);
+        Transport.CancellationToken token = new Transport.CancellationToken();
+        CancellableFuture<T> future = new CancellableFuture<T>(token);
+        executor.execute(() -> {
+            if (future.isCancelled()) {
+                return;
             }
-        }, executor);
+            future.setRunner(Thread.currentThread());
+            Transport.bindCancellation(token);
+            try {
+                future.complete(supplier.get());
+            } catch (Exception error) {
+                future.completeExceptionally(new CompletionException(error));
+            } finally {
+                // Transport returns as soon as response headers arrive, but
+                // buffered endpoint suppliers decode the body afterwards.
+                // Release the physical Call only after that entire supplier
+                // is done so future.cancel() can still close a stalled body.
+                token.clear();
+                Transport.clearCancellation();
+                future.clearRunner();
+            }
+        });
+        return future;
+    }
+
+    private static final class CancellableFuture<T> extends CompletableFuture<T> {
+        private final Transport.CancellationToken token;
+        private volatile Thread runner;
+
+        private CancellableFuture(Transport.CancellationToken token) {
+            this.token = token;
+        }
+
+        void setRunner(Thread value) { runner = value; }
+        void clearRunner() { runner = null; }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            boolean cancelled = super.cancel(mayInterruptIfRunning);
+            if (cancelled) {
+                token.cancel();
+                Thread active = runner;
+                if (mayInterruptIfRunning && active != null) {
+                    active.interrupt();
+                }
+            }
+            return cancelled;
+        }
     }
 
     private interface CheckedSupplier<T> { T get() throws Exception; }

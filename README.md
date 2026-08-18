@@ -176,7 +176,8 @@ try (EventStream<ChatCompletionChunk> stream = client.chatCompletionsChunks(requ
 ```
 
 The parser requires the final `[DONE]` marker. A truncated or empty SSE connection raises an
-`InternalException` instead of looking like a successful empty answer.
+`InternalException` instead of looking like a successful empty answer. Each SSE line and complete
+frame is capped at 1 MiB before a Java `String` is allocated.
 
 ## Responses API
 
