@@ -17,12 +17,11 @@ import okhttp3.Response;
  * own, because three things happen to a request AFTER the SDK has built it:
  *
  * <ol>
- *   <li><b>OkHttp's own follow-ups.</b> {@code RetryAndFollowUpInterceptor}
- *       re-sends a request inside a single {@code Call} — a {@code 503} or
- *       {@code 408} carrying {@code Retry-After: 0}, and any redirect. The
- *       engine's attempt loop never sees those, so a naive stamp puts the SAME
- *       {@code a=0} on two different wire requests and the enclave counts one
- *       logical attempt twice.</li>
+ *   <li><b>OkHttp's own follow-ups.</b> Its private follow-up engine can re-send
+ *       a request inside a single {@code Call} for selected statuses and
+ *       redirects. {@link PhysicalAttemptGuard} now suppresses those sends,
+ *       while this layer still fails closed if a future transport path builds
+ *       another derived request.</li>
  *   <li><b>Redirects to somebody else's host.</b> OkHttp strips
  *       {@code Authorization} across a cross-host redirect but forwards every
  *       other header, so per-attempt reliability facts would ride to a host
@@ -67,10 +66,10 @@ final class ReservedHeader implements Interceptor {
      * tag so it survives OkHttp's follow-up rebuilds, plus synchronized state
      * so only the first header-write attempt is stamped.
      *
-     * <p>OkHttp re-sends a {@code 503}/{@code 408} by handing back the very
-     * same {@code Request} instance and builds a redirect with
-     * {@code request.newBuilder()}; both preserve tags, so one instance sees
-     * every wire request derived from one engine attempt.
+     * <p>OkHttp's status/redirect rebuilds preserve tags, so one instance sees
+     * every request derived from one engine attempt. The physical-attempt guard
+     * prevents those rebuilds from reaching the wire; retaining this state is
+     * defense in depth against future transport changes.
      */
     private static final class Stamp {
         private final String value;

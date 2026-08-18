@@ -96,6 +96,37 @@ final class StreamingTest {
         }
     }
 
+    @Test void oversizedSseLineFailsBeforeItCanBeMaterializedUnbounded() throws Exception {
+        try (MockWebServer server = new MockWebServer()) {
+            String body = "data: " + repeat('x', EventStream.MAXIMUM_FRAME_BYTES) + "\n\n";
+            server.enqueue(sse(body));
+            EventStream<ChatCompletionChunk> stream = client(server).chatCompletionsChunks(
+                    ChatRequest.builder().message("user", "hi").build());
+
+            assertThatThrownBy(stream::read)
+                    .isInstanceOf(InternalException.class)
+                    .hasMessageContaining("exceeded")
+                    .hasMessageContaining(String.valueOf(EventStream.MAXIMUM_FRAME_BYTES));
+            assertThat(stream.isFinished()).isTrue();
+        }
+    }
+
+    @Test void cumulativeSseFrameLimitCoversManyIndividuallyBoundedLines() throws Exception {
+        try (MockWebServer server = new MockWebServer()) {
+            int half = EventStream.MAXIMUM_FRAME_BYTES / 2;
+            String body = "data: " + repeat('x', half) + "\n"
+                    + "data: " + repeat('y', half) + "\n\n";
+            server.enqueue(sse(body));
+            EventStream<ChatCompletionChunk> stream = client(server).chatCompletionsChunks(
+                    ChatRequest.builder().message("user", "hi").build());
+
+            assertThatThrownBy(stream::read)
+                    .isInstanceOf(InternalException.class)
+                    .hasMessageContaining("line or frame exceeded");
+            assertThat(stream.isFinished()).isTrue();
+        }
+    }
+
     private static TrustedRouterClient client(MockWebServer server) {
         return new TrustedRouterClient(TrustedRouterOptions.builder()
                 .apiKey("sk-test").baseUrl(server.url("/v1").toString())
@@ -103,5 +134,13 @@ final class StreamingTest {
     }
     private static MockResponse sse(String body) {
         return new MockResponse().setHeader("Content-Type", "text/event-stream").setBody(body);
+    }
+
+    private static String repeat(char value, int count) {
+        StringBuilder result = new StringBuilder(count);
+        for (int index = 0; index < count; index++) {
+            result.append(value);
+        }
+        return result.toString();
     }
 }

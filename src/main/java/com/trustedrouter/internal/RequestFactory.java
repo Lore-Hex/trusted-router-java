@@ -7,6 +7,7 @@ import com.trustedrouter.TrustedRouterOptions;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import okhttp3.Authenticator;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,10 +49,22 @@ public final class RequestFactory {
         // built-in recovery and redirects otherwise create invisible sends
         // that do not consume maxRetries and can replay a prompt or its
         // credentials to another origin.
-        this.client = CredentialGuard.install(ReservedHeader.install(base)).newBuilder()
+        this.client = PhysicalAttemptGuard.install(
+                CredentialGuard.install(ReservedHeader.install(base))).newBuilder()
                 .followRedirects(false)
                 .followSslRedirects(false)
                 .retryOnConnectionFailure(false)
+                // A cached 408/421/503 bypasses network interceptors and can
+                // still enter OkHttp's private follow-up engine. The SDK clone
+                // therefore has no response cache; the caller-owned client's
+                // cache object and policy remain unchanged.
+                .cache(null)
+                // Authenticators are follow-up engines too: a caller's
+                // origin/proxy authenticator can otherwise turn one SDK
+                // attempt into a hidden second physical request after a
+                // 401/407, outside maxRetries and idempotency accounting.
+                .authenticator(Authenticator.NONE)
+                .proxyAuthenticator(Authenticator.NONE)
                 .build();
         this.timeoutMillis = options.getTimeoutMillis();
         this.headers = options.getHeaders();

@@ -209,6 +209,11 @@ public final class TrustedRouterAsyncClient {
             } catch (Exception error) {
                 future.completeExceptionally(new CompletionException(error));
             } finally {
+                // Transport returns as soon as response headers arrive, but
+                // buffered endpoint suppliers decode the body afterwards.
+                // Release the physical Call only after that entire supplier
+                // is done so future.cancel() can still close a stalled body.
+                token.clear();
                 Transport.clearCancellation();
                 future.clearRunner();
             }

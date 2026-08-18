@@ -4,23 +4,26 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.internal.JsonSupport;
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.Buffer;
+import okio.BufferedSource;
 
 /** Blocking, closeable SSE reader that works on the JVM and Android. */
 public final class EventStream<T> implements Closeable {
+    /** Maximum bytes in one SSE line or one not-yet-delimited frame. */
+    public static final int MAXIMUM_FRAME_BYTES = 1_048_576;
+
     /** Converts one SSE frame into a typed value. Return null to skip the frame. */
     public interface Mapper<T> {
         T map(String event, JsonObject data) throws IOException;
     }
 
     private final Response response;
-    private final BufferedReader reader;
+    private final BufferedSource source;
     private final Mapper<T> mapper;
     private boolean finished;
 
@@ -31,7 +34,7 @@ public final class EventStream<T> implements Closeable {
             response.close();
             throw new IOException("TrustedRouter stream had no response body");
         }
-        this.reader = new BufferedReader(body.charStream());
+        this.source = body.source();
         this.mapper = mapper;
     }
 
@@ -92,21 +95,29 @@ public final class EventStream<T> implements Closeable {
 
     private Frame readFrame() throws IOException {
         String event = null;
-        List<String> data = new ArrayList<String>();
+        StringBuilder data = new StringBuilder();
+        boolean hasData = false;
+        int frameBytes = 0;
         while (true) {
-            String line = reader.readLine();
-            if (line == null) {
-                if (event == null && data.isEmpty()) {
+            BoundedLine bounded = readBoundedLine(MAXIMUM_FRAME_BYTES - frameBytes);
+            if (bounded == null) {
+                if (event == null && !hasData) {
                     return null;
                 }
                 break;
             }
+            String line = bounded.value;
             if (line.isEmpty()) {
-                if (event == null && data.isEmpty()) {
+                if (event == null && !hasData) {
+                    // Comments and unknown fields form an ignorable frame;
+                    // their budget ends at the delimiter just like any
+                    // emitted frame rather than accumulating forever.
+                    frameBytes = 0;
                     continue;
                 }
                 break;
             }
+            frameBytes += bounded.byteCount;
             if (line.startsWith(":")) {
                 continue;
             }
@@ -119,20 +130,71 @@ public final class EventStream<T> implements Closeable {
             if ("event".equals(field)) {
                 event = value;
             } else if ("data".equals(field)) {
-                data.add(value);
+                if (hasData) {
+                    if (frameBytes == MAXIMUM_FRAME_BYTES) {
+                        throw oversizedFrame();
+                    }
+                    data.append('\n');
+                    frameBytes++;
+                }
+                data.append(value);
+                hasData = true;
             }
         }
-        String joined = joinLines(data);
+        String joined = data.toString();
         return new Frame(event, joined, "[DONE]".equals(joined.trim()));
     }
 
-    private static String joinLines(List<String> lines) {
-        StringBuilder value = new StringBuilder();
-        for (int i = 0; i < lines.size(); i++) {
-            if (i > 0) { value.append('\n'); }
-            value.append(lines.get(i));
+    /**
+     * Reads at most {@code remainingFrameBytes} before allocating a String.
+     * BufferedReader.readLine() cannot be used here because it allocates an
+     * attacker-controlled line before the caller can inspect its length.
+     */
+    private BoundedLine readBoundedLine(int remainingFrameBytes) throws IOException {
+        Buffer bytes = new Buffer();
+        int limit = Math.min(MAXIMUM_FRAME_BYTES, Math.max(0, remainingFrameBytes));
+        while (!source.exhausted()) {
+            byte next = source.readByte();
+            if (next == (byte) '\n') {
+                byte[] value = bytes.readByteArray();
+                int length = value.length;
+                if (length > 0 && value[length - 1] == (byte) '\r') {
+                    length--;
+                }
+                return new BoundedLine(
+                        new String(value, 0, length, StandardCharsets.UTF_8), length);
+            }
+            if (bytes.size() >= limit) {
+                throw oversizedFrame();
+            }
+            bytes.writeByte(next & 0xff);
         }
-        return value.toString();
+        if (bytes.size() == 0L) {
+            return null;
+        }
+        byte[] value = bytes.readByteArray();
+        int length = value.length;
+        if (length > 0 && value[length - 1] == (byte) '\r') {
+            length--;
+        }
+        return new BoundedLine(new String(value, 0, length, StandardCharsets.UTF_8), length);
+    }
+
+    private static InternalException oversizedFrame() {
+        return new InternalException(
+                502,
+                "TrustedRouter SSE line or frame exceeded " + MAXIMUM_FRAME_BYTES + " bytes",
+                null);
+    }
+
+    private static final class BoundedLine {
+        private final String value;
+        private final int byteCount;
+
+        private BoundedLine(String value, int byteCount) {
+            this.value = value;
+            this.byteCount = byteCount;
+        }
     }
 
     private static final class Frame {

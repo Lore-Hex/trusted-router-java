@@ -98,7 +98,14 @@ public final class Transport {
                 value.cancel();
             }
         }
-        void detach(Call value) { call.compareAndSet(value, null); }
+
+        /**
+         * Releases the last physical call after the complete high-level
+         * supplier has finished consuming (or handing off) its response.
+         * Keeping the call attached beyond {@code Call.execute()} is what
+         * lets cancellation close a socket while a buffered body is read.
+         */
+        public void clear() { call.set(null); }
     }
 
     /** Binds a token to requests made on the current worker thread. */
@@ -255,10 +262,6 @@ public final class Transport {
                     // chain: the THROW branch below flattens it into an
                     // InternalException message string (contract §6.1).
                     recorder.onTransportError(error);
-                }
-            } finally {
-                if (cancellation != null && call != null) {
-                    cancellation.detach(call);
                 }
             }
             RetryPolicy.RetryDecision decision = retryPolicy.decide(attempt, facts);
