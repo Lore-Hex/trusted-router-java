@@ -8,6 +8,10 @@ import com.trustedrouter.errors.TrustedRouterException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.Call;
 import okhttp3.Response;
 
 /**
@@ -43,8 +47,9 @@ import okhttp3.Response;
  *   <li>{@code x-should-retry} overrides both predicates in both directions —
  *       {@code ShouldRetryHeaderTest.aLabelledSpent502IsNotRetriedAndDoesNotMoveDomains},
  *       {@code ShouldRetryHeaderTest.aLabelledRetryable400IsRetriedEvenThoughTheStatusSaysOtherwise}.</li>
- *   <li>The idempotency key is minted once per logical call before the loop
- *       and re-sent verbatim across every attempt and domain move —
+ *   <li>High-level mutations mint one idempotency key before the loop; generic
+ *       mutations replay only when the caller supplies one. Any key is re-sent
+ *       verbatim across every attempt and domain move —
  *       {@code ClientTransportTest.retriesRateLimitAndPreservesIdempotencyKey}.</li>
  *   <li>Retries happen only before any body bytes are surfaced; a broken
  *       open stream propagates, never reconnects ({@code EventStream} has no
@@ -53,9 +58,8 @@ import okhttp3.Response;
  *   <li>The failover flag governs WHERE, never WHETHER — a pinned client
  *       still retries in place —
  *       {@code ShouldRetryHeaderTest.aPinnedClientStillRetriesInPlace}.</li>
- *   <li>Transport errors (no server saw the request) may always move hosts
- *       within the flag gating; HTTP moves additionally require a
- *       failoverable status —
+ *   <li>Replay-safe transport errors may move hosts within the flag gating;
+ *       HTTP moves additionally require a failoverable status —
  *       {@code AliasDomainFailoverTest.aDeadPrimaryDomainReachesAnAlias}.</li>
  *   <li>Terminal asymmetry is contract: exhausted-status attempts RETURN the
  *       response for the caller to classify, IO exhaustion THROWS
@@ -70,6 +74,42 @@ import okhttp3.Response;
 public final class Transport {
     /** Which base URL family a request routes through. */
     public enum Plane { INFERENCE, CONTROL }
+
+    private static final ThreadLocal<CancellationToken> CANCELLATION =
+            new ThreadLocal<CancellationToken>();
+
+    /** Internal cancellation bridge used by the CompletableFuture facade. */
+    public static final class CancellationToken {
+        private final AtomicBoolean cancelled = new AtomicBoolean();
+        private final AtomicReference<Call> call = new AtomicReference<Call>();
+
+        public void cancel() {
+            cancelled.set(true);
+            Call active = call.get();
+            if (active != null) {
+                active.cancel();
+            }
+        }
+
+        boolean isCancelled() { return cancelled.get(); }
+        void attach(Call value) {
+            call.set(value);
+            if (cancelled.get()) {
+                value.cancel();
+            }
+        }
+        void detach(Call value) { call.compareAndSet(value, null); }
+    }
+
+    /** Binds a token to requests made on the current worker thread. */
+    public static void bindCancellation(CancellationToken token) {
+        CANCELLATION.set(token);
+    }
+
+    /** Clears the current worker's cancellation token. */
+    public static void clearCancellation() {
+        CANCELLATION.remove();
+    }
 
     private final String baseUrl;
     private final List<String> inferenceBaseUrls;
@@ -135,6 +175,15 @@ public final class Transport {
                 true, false, null);
     }
 
+    /** Executes a credential-free, single-origin control-plane request. */
+    public Response executeCredentialFreeControl(
+            String method, String path, JsonElement body, boolean streaming)
+            throws TrustedRouterException {
+        return executeUrls(
+                Collections.singletonList(CandidateUrls.joinUrl(controlBaseUrl, path)),
+                method, body, CallOptions.NONE, streaming, false, false, null);
+    }
+
     /**
      * The single loop. Per iteration it extracts {@code AttemptFacts} from
      * the outcome (before closing any response), asks the L1 kernel for a
@@ -158,7 +207,12 @@ public final class Transport {
             RequestRecorder recorder) throws TrustedRouterException {
         int attempt = 0;
         int baseIndex = 0;
+        boolean replayable = isReplayable(method, options);
         while (true) {
+            CancellationToken cancellation = CANCELLATION.get();
+            if (cancellation != null && cancellation.isCancelled()) {
+                throw new InternalException(499, "TrustedRouter request cancelled", null);
+            }
             String url = urls.get(baseIndex);
             String telemetryHeader = null;
             if (recorder != null) {
@@ -168,29 +222,43 @@ public final class Transport {
             Response response = null;
             IOException failure = null;
             RetryPolicy.AttemptFacts facts;
+            Call call = null;
             try {
-                response = requestFactory.requestClient(options, streaming)
+                call = requestFactory.requestClient(options, streaming)
                         .newCall(requestFactory.buildRequest(
                                 url, method, body, options, includeCredentials,
-                                telemetryHeader))
-                        .execute();
+                                telemetryHeader));
+                if (cancellation != null) {
+                    cancellation.attach(call);
+                }
+                response = call.execute();
                 // All facts are read while the response is still open.
                 facts = RetryPolicy.AttemptFacts.httpResponse(
                         response.code(),
                         response.header("x-should-retry"),
                         ErrorClassifier.retryAfterSeconds(response),
-                        allowRegionalFailover);
+                        allowRegionalFailover,
+                        replayable);
                 if (recorder != null) {
                     recorder.onResponse(response.code());
                 }
             } catch (IOException error) {
+                if (cancellation != null && cancellation.isCancelled()) {
+                    throw new InternalException(
+                            499, "TrustedRouter request cancelled", null, error);
+                }
                 failure = error;
-                facts = RetryPolicy.AttemptFacts.ioFailure(allowRegionalFailover);
+                facts = RetryPolicy.AttemptFacts.ioFailure(
+                        allowRegionalFailover, replayable);
                 if (recorder != null) {
                     // Classified HERE, from the live exception type and cause
                     // chain: the THROW branch below flattens it into an
                     // InternalException message string (contract §6.1).
                     recorder.onTransportError(error);
+                }
+            } finally {
+                if (cancellation != null && call != null) {
+                    cancellation.detach(call);
                 }
             }
             RetryPolicy.RetryDecision decision = retryPolicy.decide(attempt, facts);
@@ -231,5 +299,15 @@ public final class Transport {
 
     private static CallOptions normalize(CallOptions options) {
         return options == null ? CallOptions.NONE : options;
+    }
+
+    private static boolean isReplayable(String method, CallOptions options) {
+        String normalized = method == null ? "" : method.toUpperCase(Locale.ROOT);
+        if ("GET".equals(normalized) || "HEAD".equals(normalized)
+                || "OPTIONS".equals(normalized)) {
+            return true;
+        }
+        String key = options.getIdempotencyKey();
+        return key != null && !key.isEmpty();
     }
 }

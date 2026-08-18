@@ -43,8 +43,16 @@ public final class RequestFactory {
         OkHttpClient base = configured == null ? new OkHttpClient() : configured;
         // The reserved-header invariant is enforced at the wire, appended LAST
         // so it runs after every caller interceptor and on every OkHttp
-        // follow-up. Done once here, so no per-call client is built.
-        this.client = ReservedHeader.install(base);
+        // physical call. Done once here, so no per-call client is built.
+        // The SDK loop is the sole owner of physical attempts. OkHttp's
+        // built-in recovery and redirects otherwise create invisible sends
+        // that do not consume maxRetries and can replay a prompt or its
+        // credentials to another origin.
+        this.client = CredentialGuard.install(ReservedHeader.install(base)).newBuilder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .retryOnConnectionFailure(false)
+                .build();
         this.timeoutMillis = options.getTimeoutMillis();
         this.headers = options.getHeaders();
         this.workspaceId = options.getWorkspaceId();
@@ -170,6 +178,7 @@ public final class RequestFactory {
             request.removeHeader("Cookie");
             request.removeHeader("X-TrustedRouter-Workspace");
             request.removeHeader("Idempotency-Key");
+            CredentialGuard.markCredentialFree(request);
         }
 
         RequestBody requestBody = body == null

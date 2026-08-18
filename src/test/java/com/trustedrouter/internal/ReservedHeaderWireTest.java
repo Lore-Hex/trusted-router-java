@@ -1,6 +1,7 @@
 package com.trustedrouter.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -191,7 +192,7 @@ final class ReservedHeaderWireTest {
         }
     }
 
-    @Test void aRealPostSendDisconnectCannotDuplicateTheAttemptIndex() throws Exception {
+    @Test void aRealPostSendDisconnectIsNeverRecoveredInsideOkHttp() throws Exception {
         HeldCertificate certificate = new HeldCertificate.Builder()
                 .commonName("api.trustedrouter.com")
                 .addSubjectAlternativeName("api.trustedrouter.com")
@@ -207,11 +208,10 @@ final class ReservedHeaderWireTest {
         server.setProtocols(Collections.singletonList(Protocol.HTTP_1_1));
         server.start();
         try {
-            // Duplicate DNS candidates make a second route selection
-            // deterministic without requiring a non-loopback interface. The
-            // peer reads the complete request and drops the first socket before
-            // response headers; OkHttp recovers the repeatable POST on a fresh
-            // socket inside this same Call. Only the first may be labelled.
+            // The peer reads the complete request and drops the socket before
+            // response headers. OkHttp recovery is disabled: the engine must
+            // decide whether replay is safe, consume retry budget, and assign
+            // the next attempt index rather than allowing a hidden send.
             server.enqueue(new MockResponse()
                     .setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST));
             server.enqueue(new MockResponse().setResponseCode(200).setBody("{}"));
@@ -243,14 +243,13 @@ final class ReservedHeaderWireTest {
             Request request = factory.buildRequest(
                     url.toString(), "POST", new com.google.gson.JsonObject(),
                     com.trustedrouter.CallOptions.NONE, true, VALUE);
-            Response response = factory.requestClient(
+            assertThatThrownBy(() -> factory.requestClient(
                     com.trustedrouter.CallOptions.NONE, false)
-                    .newCall(request).execute();
-            response.close();
+                    .newCall(request).execute())
+                    .isInstanceOf(IOException.class);
 
-            assertThat(server.getRequestCount()).isEqualTo(2);
+            assertThat(server.getRequestCount()).isEqualTo(1);
             assertThat(server.takeRequest().getHeader(ReservedHeader.NAME)).isEqualTo(VALUE);
-            assertThat(server.takeRequest().getHeader(ReservedHeader.NAME)).isNull();
         } finally {
             server.shutdown();
         }
