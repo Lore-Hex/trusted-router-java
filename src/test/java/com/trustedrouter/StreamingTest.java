@@ -3,6 +3,7 @@ package com.trustedrouter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.gson.JsonObject;
 import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.models.ChatCompletionChunk;
 import com.trustedrouter.models.ResponseEvent;
@@ -10,8 +11,16 @@ import com.trustedrouter.requests.ChatRequest;
 import com.trustedrouter.requests.ResponsesRequest;
 import com.trustedrouter.streaming.EventStream;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okio.Buffer;
+import okio.BufferedSource;
 import org.junit.jupiter.api.Test;
 
 final class StreamingTest {
@@ -127,6 +136,33 @@ final class StreamingTest {
         }
     }
 
+    @Test void invalidUtf8FailsTypedAndClosesWithoutEmittingAPartialEvent() throws Exception {
+        Buffer bytes = new Buffer()
+                .writeUtf8("data: {\"id\":\"c1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"")
+                .writeByte(0xff)
+                .writeUtf8("\"}}]}\n\ndata: [DONE]\n\n");
+        CloseTrackingResponseBody body = new CloseTrackingResponseBody(bytes);
+        Response response = new Response.Builder()
+                .request(new Request.Builder().url("https://example.test/v1/chat/completions").build())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(body)
+                .build();
+        AtomicInteger mappedEvents = new AtomicInteger();
+        EventStream<JsonObject> stream = new EventStream<JsonObject>(response, (event, data) -> {
+            mappedEvents.incrementAndGet();
+            return data;
+        });
+
+        assertThatThrownBy(stream::read)
+                .isInstanceOf(InternalException.class)
+                .hasMessageContaining("valid UTF-8");
+        assertThat(mappedEvents.get()).isZero();
+        assertThat(stream.isFinished()).isTrue();
+        assertThat(body.isClosed()).isTrue();
+    }
+
     private static TrustedRouterClient client(MockWebServer server) {
         return new TrustedRouterClient(TrustedRouterOptions.builder()
                 .apiKey("sk-test").baseUrl(server.url("/v1").toString())
@@ -142,5 +178,39 @@ final class StreamingTest {
             result.append(value);
         }
         return result.toString();
+    }
+
+    private static final class CloseTrackingResponseBody extends ResponseBody {
+        private static final MediaType EVENT_STREAM = MediaType.get("text/event-stream");
+
+        private final BufferedSource source;
+        private final long contentLength;
+        private boolean closed;
+
+        private CloseTrackingResponseBody(Buffer source) {
+            this.source = source;
+            this.contentLength = source.size();
+        }
+
+        @Override public MediaType contentType() {
+            return EVENT_STREAM;
+        }
+
+        @Override public long contentLength() {
+            return contentLength;
+        }
+
+        @Override public BufferedSource source() {
+            return source;
+        }
+
+        @Override public void close() {
+            closed = true;
+            super.close();
+        }
+
+        private boolean isClosed() {
+            return closed;
+        }
     }
 }

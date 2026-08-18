@@ -6,6 +6,9 @@ import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.internal.JsonSupport;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -161,8 +164,7 @@ public final class EventStream<T> implements Closeable {
                 if (length > 0 && value[length - 1] == (byte) '\r') {
                     length--;
                 }
-                return new BoundedLine(
-                        new String(value, 0, length, StandardCharsets.UTF_8), length);
+                return new BoundedLine(decodeUtf8(value, length), length);
             }
             if (bytes.size() >= limit) {
                 throw oversizedFrame();
@@ -177,7 +179,20 @@ public final class EventStream<T> implements Closeable {
         if (length > 0 && value[length - 1] == (byte) '\r') {
             length--;
         }
-        return new BoundedLine(new String(value, 0, length, StandardCharsets.UTF_8), length);
+        return new BoundedLine(decodeUtf8(value, length), length);
+    }
+
+    private static String decodeUtf8(byte[] value, int length) throws InternalException {
+        try {
+            return StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(value, 0, length))
+                    .toString();
+        } catch (CharacterCodingException error) {
+            throw new InternalException(
+                    502, "TrustedRouter SSE line was not valid UTF-8", null, error);
+        }
     }
 
     private static InternalException oversizedFrame() {
