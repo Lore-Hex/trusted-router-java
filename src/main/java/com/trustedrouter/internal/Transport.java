@@ -1,17 +1,20 @@
 package com.trustedrouter.internal;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.trustedrouter.CallOptions;
 import com.trustedrouter.TrustedRouterOptions;
 import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.errors.TrustedRouterException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Call;
+import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 /**
@@ -30,6 +33,17 @@ import okhttp3.Response;
  * {@link CandidateUrls}; the CONTROL plane and absolute fetches get a
  * singleton list, so failover is structurally impossible there — list
  * LENGTH is the gate, not a second flag.
+ *
+ * <p>Telemetry (client telemetry contract v1): INFERENCE-plane calls with
+ * telemetry enabled get a {@link RequestRecorder} that observes every
+ * attempt in {@link #executeUrls} (the single emit point, &sect;6.1) and is
+ * finished here for buffered calls, or handed to the stream wrapper by
+ * {@link #executeStream} so TTFT, mid-body failures, and caller aborts are
+ * observed before it finishes. The recorder's sink is the
+ * {@link TelemetryReporter} owned by this transport: created lazily on the
+ * first recorded call, never at construction, and never for control-plane
+ * calls, absolute fetches, or an opted-out client. The reporter's beacon
+ * POST uses its own single-shot client and NEVER enters this loop.
  *
  * <p>Invariants (each line names its enforcing test):
  * <ol>
@@ -118,6 +132,51 @@ public final class Transport {
         CANCELLATION.remove();
     }
 
+    /**
+     * A successfully opened stream plus the recorder its wrapper must drive
+     * to completion, or null when nothing is recorded (telemetry off, or
+     * the open failed and the recorder already finished).
+     */
+    public static final class OpenedStream {
+        private final Response response;
+        private final RequestRecorder recorder;
+
+        OpenedStream(Response response, RequestRecorder recorder) {
+            this.response = response;
+            this.recorder = recorder;
+        }
+
+        public Response response() {
+            return response;
+        }
+
+        public RequestRecorder recorder() {
+            return recorder;
+        }
+
+        /**
+         * Finishes the recorder for a stream the caller could not wrap:
+         * the attempt becomes {@code stream_broken} with the given cause.
+         */
+        public void abandon(IOException failure) {
+            if (recorder != null) {
+                recorder.onTransportError(failure, true, false);
+                recorder.finish();
+            }
+        }
+    }
+
+    private static final class Attempted {
+        private final Response response;
+        private final RequestRecorder recorder;
+
+        private Attempted(Response response, RequestRecorder recorder) {
+            this.response = response;
+            this.recorder = recorder;
+        }
+    }
+
+    private final TrustedRouterOptions options;
     private final String baseUrl;
     private final List<String> inferenceBaseUrls;
     private final String controlBaseUrl;
@@ -126,8 +185,11 @@ public final class Transport {
     private final RetryPolicy retryPolicy;
     private final RequestFactory requestFactory;
     private final Sleeper sleeper;
+    private final Object telemetryLock = new Object();
+    private volatile TelemetryReporter reporter;
 
     public Transport(TrustedRouterOptions options) {
+        this.options = options;
         this.baseUrl = options.getBaseUrl();
         this.controlBaseUrl = options.getControlBaseUrl();
         this.regionalFailover = options.isRegionalFailover();
@@ -153,7 +215,46 @@ public final class Transport {
         return CandidateUrls.inferenceBaseUrls(primaryBaseUrl, regionalFailover);
     }
 
+    /**
+     * Executes one logical call and finishes its telemetry record as soon as
+     * the attempt loop returns. Streaming callers that want TTFT, mid-body
+     * failure, and abort facts use {@link #executeStream} instead.
+     */
     public Response execute(
+            Plane plane,
+            String method,
+            String path,
+            JsonElement body,
+            CallOptions options,
+            boolean streaming) throws TrustedRouterException {
+        Attempted attempted = attempt(plane, method, path, body, options, streaming);
+        if (attempted.recorder != null) {
+            attempted.recorder.finish();
+        }
+        return attempted.response;
+    }
+
+    /**
+     * Opens a stream. A non-2xx open finishes the record here (the caller
+     * classifies the status); a 2xx hands the live recorder to the stream
+     * wrapper, which finishes it on [DONE], mid-body failure, or close.
+     */
+    public OpenedStream executeStream(
+            Plane plane,
+            String method,
+            String path,
+            JsonElement body,
+            CallOptions options) throws TrustedRouterException {
+        Attempted attempted = attempt(plane, method, path, body, options, true);
+        RequestRecorder recorder = attempted.recorder;
+        if (recorder != null && !attempted.response.isSuccessful()) {
+            recorder.finish();
+            recorder = null;
+        }
+        return new OpenedStream(attempted.response, recorder);
+    }
+
+    private Attempted attempt(
             Plane plane,
             String method,
             String path,
@@ -163,13 +264,134 @@ public final class Transport {
         boolean inference = plane == Plane.INFERENCE;
         List<String> bases = inference
                 ? inferenceBaseUrls : Collections.singletonList(controlBaseUrl);
+        CallOptions normalized = normalize(options);
         // Telemetry records INFERENCE calls only: control-plane calls get no
-        // x-tr-client header and no recorder activity at all (contract §3.2).
+        // x-tr-client header, no recorder activity, and no beacon (§3.2, §6.2).
         RequestRecorder recorder = inference && telemetryEnabled
-                ? new RequestRecorder(streaming) : null;
-        return executeUrls(
-                CandidateUrls.joinAll(bases, path), method, body, normalize(options), streaming,
-                inference ? regionalFailover : true, true, recorder);
+                ? newRecorder(method, path, body, normalized, streaming) : null;
+        try {
+            Response response = executeUrls(
+                    CandidateUrls.joinAll(bases, path), method, body, normalized, streaming,
+                    inference ? regionalFailover : true, true, recorder);
+            return new Attempted(response, recorder);
+        } catch (TrustedRouterException | RuntimeException error) {
+            if (recorder != null) {
+                if (isAbort(error)) {
+                    recorder.onAborted();
+                }
+                recorder.finish();
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Builds the recorder for one inference call. Never throws (&sect;2.2):
+     * an unbuildable recorder means the call simply goes unrecorded.
+     */
+    private RequestRecorder newRecorder(
+            String method, String path, JsonElement body, CallOptions options,
+            boolean streaming) {
+        try {
+            OkHttpClient client = requestFactory.requestClient(options, streaming);
+            RequestRecorder.ConfiguredTimeouts timeouts = new RequestRecorder.ConfiguredTimeouts(
+                    positive(client.connectTimeoutMillis()),
+                    positive(client.readTimeoutMillis()),
+                    positive(client.callTimeoutMillis()),
+                    requestFactory.sdkTimeoutMillis(options));
+            return new RequestRecorder(
+                    reporter(), Telemetry.endpointEnum(path), method, streaming,
+                    providerPinned(body), modelOf(body), timeouts, null);
+        } catch (RuntimeException impossible) {
+            return null;
+        }
+    }
+
+    /**
+     * The beacon reporter, created on the first recorded call and shared by
+     * every later one. Its worker thread starts on its own first record.
+     */
+    private TelemetryReporter reporter() {
+        TelemetryReporter current = reporter;
+        if (current == null) {
+            synchronized (telemetryLock) {
+                current = reporter;
+                if (current == null) {
+                    current = TelemetryReporter.builder()
+                            .controlBaseUrl(controlBaseUrl)
+                            .apiKey(options::getApiKey)
+                            .workspaceId(options.getWorkspaceId())
+                            .successSampleRate(options.getTelemetrySampleRate())
+                            .build();
+                    reporter = current;
+                }
+            }
+        }
+        return current;
+    }
+
+    /** The beacon reporter once an inference call was recorded, else null. */
+    public TelemetryReporter telemetryReporter() {
+        return reporter;
+    }
+
+    /**
+     * Flushes pending telemetry once, bounded by 2 s, and stops the beacon
+     * worker. Safe to call more than once and without any telemetry.
+     */
+    public void close() {
+        TelemetryReporter current = reporter;
+        if (current != null) {
+            current.close(Telemetry.FINAL_FLUSH_MS);
+        }
+    }
+
+    private static Long positive(int millis) {
+        return millis > 0 ? Long.valueOf(millis) : null;
+    }
+
+    /** Whether the body pinned a provider: {@code provider.allow_fallbacks == false} (as in Python). */
+    static boolean providerPinned(JsonElement body) {
+        if (body == null || !body.isJsonObject()) {
+            return false;
+        }
+        JsonElement provider = body.getAsJsonObject().get("provider");
+        if (provider == null || !provider.isJsonObject()) {
+            return false;
+        }
+        JsonElement allowFallbacks = provider.getAsJsonObject().get("allow_fallbacks");
+        return allowFallbacks != null && allowFallbacks.isJsonPrimitive()
+                && allowFallbacks.getAsJsonPrimitive().isBoolean()
+                && !allowFallbacks.getAsBoolean();
+    }
+
+    /** The body's model string, or null; the recorder applies the grammar. */
+    static String modelOf(JsonElement body) {
+        if (body == null || !body.isJsonObject()) {
+            return null;
+        }
+        JsonObject object = body.getAsJsonObject();
+        JsonElement model = object.get("model");
+        return model != null && model.isJsonPrimitive() && model.getAsJsonPrimitive().isString()
+                ? model.getAsString() : null;
+    }
+
+    /**
+     * Whether a failure is the caller's doing — cancellation through the
+     * async facade (status 499) or thread interruption during backoff —
+     * rather than the network's, so the attempt is {@code aborted}.
+     */
+    static boolean isAbort(Throwable error) {
+        if (error instanceof TrustedRouterException
+                && ((TrustedRouterException) error).getStatusCode() == 499) {
+            return true;
+        }
+        for (Throwable item : Telemetry.causeChain(error)) {
+            if (item instanceof InterruptedIOException && !Telemetry.isTimeout(item)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Response executeAbsolute(String url, String method, boolean streaming)
@@ -247,7 +469,7 @@ public final class Transport {
                         allowRegionalFailover,
                         replayable);
                 if (recorder != null) {
-                    recorder.onResponse(response.code());
+                    recorder.onResponse(response.code(), response);
                 }
             } catch (IOException error) {
                 if (cancellation != null && cancellation.isCancelled()) {
@@ -266,9 +488,20 @@ public final class Transport {
             }
             RetryPolicy.RetryDecision decision = retryPolicy.decide(attempt, facts);
             if (decision.getKind() == RetryPolicy.RetryDecision.Kind.RETURN_RESPONSE) {
+                // Exhausted (§5.3): a replayable retry beyond the first
+                // attempt ended retryable with no budget left. A
+                // non-replayable response returns before any retry question
+                // is asked, exactly as the Python reference.
+                if (recorder != null && attempt > 0 && facts.isReplayable()
+                        && RetryPolicy.retryable(facts.getStatus(), facts.getShouldRetryVerdict())) {
+                    recorder.markExhausted(true);
+                }
                 return response;
             }
             if (decision.getKind() == RetryPolicy.RetryDecision.Kind.THROW) {
+                if (recorder != null && attempt > 0 && facts.isReplayable()) {
+                    recorder.markExhausted(true);
+                }
                 throw new InternalException(
                         503,
                         "TrustedRouter endpoint unavailable: " + failure.getMessage(),

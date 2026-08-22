@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Client telemetry beacon channel (contract v1, §4/§5/§6.2–§6.4): a bounded, content-free
+  reporter posts exact per-minute counters and sampled request events to
+  `/v1/client-events` from its own single-shot HTTP client on a lazily started daemon thread.
+  New `TrustedRouterOptions.Builder.telemetrySampleRate(double)`, `TrustedRouterClient.close()`
+  (`Closeable`, one 2 s final flush), stream TTFT / `stream_broken` / `aborted` recording, and
+  `TRUSTEDROUTER_TELEMETRY_DEBUG=1`. Opting out still disables the header and the beacon together.
+
 ## 0.3.0 — 2026-08-21
 
 ### Added

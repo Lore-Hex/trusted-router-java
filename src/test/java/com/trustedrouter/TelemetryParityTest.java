@@ -6,9 +6,9 @@ import com.trustedrouter.internal.Telemetry;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pins the client telemetry contract v1 vocabulary (§5.2/§6.4) so the later
- * beacon PR — and every sibling SDK — shares byte-identical enums. These
- * values mirror the Python SDK's {@code _constants.py} and the server's
+ * Pins the client telemetry contract v1 vocabulary and bounds (§5.2/§6.2/§6.4)
+ * so every sibling SDK shares byte-identical enums and limits. These values
+ * mirror the Python SDK's {@code _constants.py} and the server's
  * {@code client_events_schema.py}; changing any of them is a coordinated
  * cross-SDK release, never a local edit.
  */
@@ -16,6 +16,47 @@ final class TelemetryParityTest {
     @Test void beaconPathAndSchemaVersionArePinned() {
         assertThat(Telemetry.CLIENT_EVENTS_PATH).isEqualTo("/client-events");
         assertThat(Telemetry.SCHEMA_VERSION).isEqualTo(1);
+    }
+
+    @Test void beaconBoundsMatchThePythonConstants() {
+        assertThat(Telemetry.FLUSH_INTERVAL_MS).isEqualTo(30_000L);
+        assertThat(Telemetry.MAX_EVENTS).isEqualTo(1_000);
+        assertThat(Telemetry.MAX_BATCH_EVENTS).isEqualTo(100);
+        assertThat(Telemetry.MAX_BATCH_COUNTERS).isEqualTo(200);
+        assertThat(Telemetry.MAX_WINDOW_KEYS).isEqualTo(256);
+        assertThat(Telemetry.RETENTION_MS).isEqualTo(86_400_000L);
+        assertThat(Telemetry.RETENTION_BYTES).isEqualTo(524_288L);
+        assertThat(Telemetry.BACKOFF_MIN_MS).isEqualTo(60_000L);
+        assertThat(Telemetry.BACKOFF_MAX_MS).isEqualTo(600_000L);
+        assertThat(Telemetry.MAX_RETRY_AFTER_MS).isEqualTo(600_000L);
+        assertThat(Telemetry.MAX_PAUSE_MS).isEqualTo(86_400_000L);
+        assertThat(Telemetry.MAX_BATCH_BYTES).isEqualTo(65_536);
+        assertThat(Telemetry.BATCH_TRIGGER_BYTES).isEqualTo(61_440);
+        assertThat(Telemetry.BATCH_TRIGGER_EVENTS).isEqualTo(50);
+        assertThat(Telemetry.DEFAULT_SUCCESS_SAMPLE_RATE).isEqualTo(0.01d);
+        assertThat(Telemetry.SLOW_REQUEST_MS).isEqualTo(30_000L);
+        assertThat(Telemetry.FINAL_FLUSH_MS).isEqualTo(2_000L);
+        assertThat(Telemetry.MAX_DURATION_MS).isEqualTo(3_600_000L);
+        assertThat(Telemetry.MAX_AGE_MS).isEqualTo(86_400_000L);
+    }
+
+    @Test void finalOutcomeTimeoutPhaseStatusClassAndBucketVocabulariesArePinned() {
+        assertThat(Telemetry.FINAL_OUTCOMES).containsExactly(
+                "ok", "http_error", "transport_error", "timeout", "stream_broken",
+                "aborted", "exhausted");
+        assertThat(Telemetry.TIMEOUT_PHASES).containsExactly(
+                "none", "connect", "first_byte", "idle", "total");
+        assertThat(Telemetry.HTTP_STATUS_CLASSES).containsExactly(
+                "none", "2xx", "4xx", "429", "5xx");
+        assertThat(Telemetry.LATENCY_BUCKETS).containsExactly(
+                "lt100", "lt200", "lt400", "lt800", "lt1600", "lt3200", "lt6400",
+                "lt12800", "lt25600", "lt51200", "lt102400", "ge102400");
+        assertThat(Telemetry.ERROR_SOURCES).containsExactly("router", "provider", "unknown");
+        assertThat(Telemetry.SAMPLE_REASONS).containsExactly(
+                "failure", "retried", "slow", "random");
+        assertThat(Telemetry.LEVELS).containsExactly("attempt", "request");
+        // Module-wins ruling: the schema accepts only GET and POST.
+        assertThat(Telemetry.BEACON_METHODS).containsExactly("GET", "POST");
     }
 
     @Test void hostVocabularyIsPinned() {

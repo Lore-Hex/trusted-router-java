@@ -1,5 +1,9 @@
 package com.trustedrouter.internal;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.trustedrouter.TrustedRouter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -28,13 +32,15 @@ import okhttp3.HttpUrl;
  * reliability contract (docs/client-telemetry.md in Lore-Hex/quill-router,
  * contract v1). Internal class with no compatibility guarantees.
  *
- * <p>This SDK implements only the HEADER channel of the contract
- * (&sect;3.2 {@code x-tr-client}): per-attempt facts ride the request the
- * caller already made. The beacon channel (&sect;4/&sect;5) is deliberately
- * NOT implemented here per &sect;9 step 7 and &sect;10 — no beacons in a
- * second SDK until the Python contract has been live and calibrated. The
- * enum lists and beacon path below are pinned anyway (&sect;6.4) so the
- * vocabulary cannot drift before that later PR.
+ * <p>This SDK implements both channels of the contract: the HEADER channel
+ * (&sect;3.2 {@code x-tr-client}), where per-attempt facts ride the request
+ * the caller already made, and the BEACON channel (&sect;4/&sect;5), where
+ * {@link TelemetryReporter} posts bounded, content-free batches of sampled
+ * events and exact per-minute counters to the control plane from its own
+ * single-shot HTTP client (owner decision 2026-08-21: beacons ship in all
+ * SDKs now, superseding the &sect;9 step 7 / &sect;10 "Python first"
+ * ordering). The vocabulary, bounds, and helpers here mirror the Python
+ * reference ({@code _constants.py}, {@code _telemetry.py}) byte for byte.
  *
  * <p>Everything here is content-free by construction (&sect;2.1): closed
  * enums, anchored regexes, hard length caps. Telemetry never fails a request
@@ -86,6 +92,100 @@ public final class Telemetry {
 
     private static final List<String> REGION_HOST_ENUMS = immutable(
             "us_central1", "us_east4", "europe_west4");
+
+    /** Final-outcome vocabulary (&sect;5.2): every attempt outcome plus {@code exhausted}. */
+    public static final List<String> FINAL_OUTCOMES = immutable(
+            "ok", "http_error", "transport_error", "timeout", "stream_broken",
+            "aborted", "exhausted");
+
+    /** Timeout-phase vocabulary (&sect;5.2). */
+    public static final List<String> TIMEOUT_PHASES = immutable(
+            "none", "connect", "first_byte", "idle", "total");
+
+    /** HTTP status-class vocabulary (&sect;5.2). */
+    public static final List<String> HTTP_STATUS_CLASSES = immutable(
+            "none", "2xx", "4xx", "429", "5xx");
+
+    /** Latency histogram buckets (&sect;5.2), upper-bound exclusive. */
+    public static final List<String> LATENCY_BUCKETS = immutable(
+            "lt100", "lt200", "lt400", "lt800", "lt1600", "lt3200", "lt6400",
+            "lt12800", "lt25600", "lt51200", "lt102400", "ge102400");
+
+    /** Error-source vocabulary (&sect;5.3). */
+    public static final List<String> ERROR_SOURCES = immutable("router", "provider", "unknown");
+
+    /** Sample-reason vocabulary (&sect;5.3). */
+    public static final List<String> SAMPLE_REASONS = immutable(
+            "failure", "retried", "slow", "random");
+
+    /** Counter levels (&sect;5.4). */
+    public static final List<String> LEVELS = immutable("attempt", "request");
+
+    /**
+     * Methods the beacon schema accepts. &sect;5.3 lists PUT/PATCH/DELETE
+     * too, but the executable schema module allows only GET and POST
+     * (module-wins ruling): other methods produce no event and no counters.
+     */
+    public static final List<String> BEACON_METHODS = immutable("GET", "POST");
+
+    private static final long[] LATENCY_UPPER_BOUNDS = {
+        100L, 200L, 400L, 800L, 1_600L, 3_200L, 6_400L, 12_800L, 25_600L, 51_200L, 102_400L,
+    };
+
+    /** Reporter bounds (&sect;6.2), mirroring the Python SDK's {@code _constants.py}. */
+    public static final long FLUSH_INTERVAL_MS = 30_000L;
+    public static final int MAX_EVENTS = 1_000;
+    public static final int MAX_BATCH_EVENTS = 100;
+    public static final int MAX_BATCH_COUNTERS = 200;
+    public static final int MAX_WINDOW_KEYS = 256;
+    public static final long RETENTION_MS = 86_400_000L;
+    public static final long RETENTION_BYTES = 524_288L;
+    public static final long BACKOFF_MIN_MS = 60_000L;
+    public static final long BACKOFF_MAX_MS = 600_000L;
+    /** Longest {@code Retry-After} the beacon honours, in milliseconds (&sect;6.2). */
+    public static final long MAX_RETRY_AFTER_MS = 600_000L;
+    /** Longest {@code pause_seconds} a 202 policy may impose, in milliseconds (&sect;4). */
+    public static final long MAX_PAUSE_MS = 86_400_000L;
+    /** Buffered bytes that trigger an early flush (&sect;6.2: 60 KB). */
+    public static final int BATCH_TRIGGER_BYTES = 60 * 1024;
+    /** Buffered events that trigger an early flush (&sect;6.2). */
+    public static final int BATCH_TRIGGER_EVENTS = 50;
+    /** Hard cap on one serialised batch (&sect;4: 413 above). */
+    public static final int MAX_BATCH_BYTES = 65_536;
+    /** Hard cap on every age on the wire, in milliseconds (&sect;5.3/&sect;5.4). */
+    public static final long MAX_AGE_MS = 86_400_000L;
+    /** Hard cap on every count on the wire (&sect;5.4). */
+    public static final long MAX_COUNT = 10_000_000L;
+    /** Default random sampling rate for healthy first-attempt successes (&sect;5.3). */
+    public static final double DEFAULT_SUCCESS_SAMPLE_RATE = 0.01d;
+    /** Successes slower than this are always sampled (&sect;5.3). */
+    public static final long SLOW_REQUEST_MS = 30_000L;
+    /** Bound on the process-exit flush (&sect;6.2). */
+    public static final long FINAL_FLUSH_MS = 2_000L;
+    /** Beacon sender per-call timeout (mirrors the Python reference's 5 s client). */
+    public static final long SENDER_TIMEOUT_MS = 5_000L;
+
+    /** Anchored model grammar (&sect;5.3); anything else is sent as null. */
+    static final Pattern MODEL = Pattern.compile("^[A-Za-z0-9._:/~@-]{1,128}$");
+
+    /** Anchored enclave request-id grammar (&sect;3.3). */
+    static final Pattern REQUEST_ID = Pattern.compile("^rlog_[0-9a-f]{32}$");
+
+    /** SemVer 2.0 grammar for the SDK identity version (&sect;5.1). */
+    static final Pattern SEMVER = Pattern.compile(
+            "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)"
+                    + "(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?"
+                    + "(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$");
+
+    /** Runtime token grammar for the SDK identity (&sect;5.1). */
+    static final Pattern RUNTIME = Pattern.compile("^[a-z]{1,10}/[0-9A-Za-z.+-]{1,24}$");
+
+    /**
+     * Compact JSON for the beacon wire: explicit nulls, because the schema's
+     * nullable fields are present-but-null in the Python reference, and no
+     * HTML escaping, so byte counts match {@code json.dumps(separators=(",", ":"))}.
+     */
+    static final Gson WIRE_JSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
 
     /** Anchored value grammar for {@code x-tr-client} (&sect;3.2). */
     static final Pattern HEADER_VALUE = Pattern.compile("^[a-z0-9_]{1,24}$");
@@ -425,6 +525,301 @@ public final class Telemetry {
     }
 
     /**
+     * Maps an inference path to the closed Endpoint vocabulary (&sect;5.2),
+     * mirroring the Python SDK's {@code endpoint_enum}: the query string is
+     * ignored, trailing slashes are trimmed, the four exact paths map
+     * directly, the four prefixed families match themselves or a sub-path,
+     * and everything else is {@code inference_other}. A missing leading
+     * slash is normalised first because {@code CandidateUrls.joinUrl}
+     * accepts either spelling for the same endpoint.
+     */
+    public static String endpointEnum(String path) {
+        String value = path == null ? "" : path.trim();
+        int query = value.indexOf('?');
+        if (query >= 0) {
+            value = value.substring(0, query);
+        }
+        int fragment = value.indexOf('#');
+        if (fragment >= 0) {
+            value = value.substring(0, fragment);
+        }
+        while (value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        if (!value.startsWith("/")) {
+            value = "/" + value;
+        }
+        if ("/chat/completions".equals(value)) {
+            return "chat_completions";
+        }
+        if ("/messages".equals(value)) {
+            return "messages";
+        }
+        if ("/responses".equals(value)) {
+            return "responses";
+        }
+        if ("/embeddings".equals(value)) {
+            return "embeddings";
+        }
+        String[][] prefixed = {
+            {"/images", "images"}, {"/videos", "videos"}, {"/models", "models"},
+            {"/fusion", "fusion"},
+        };
+        for (String[] entry : prefixed) {
+            if (value.equals(entry[0]) || value.startsWith(entry[0] + "/")) {
+                return entry[1];
+            }
+        }
+        return "inference_other";
+    }
+
+    /** The upper-bound-exclusive latency bucket for a duration (&sect;5.2). */
+    public static String latencyBucket(long millis) {
+        long value = Math.max(0L, millis);
+        for (int index = 0; index < LATENCY_UPPER_BOUNDS.length; index++) {
+            if (value < LATENCY_UPPER_BOUNDS[index]) {
+                return LATENCY_BUCKETS.get(index);
+            }
+        }
+        return LATENCY_BUCKETS.get(LATENCY_BUCKETS.size() - 1);
+    }
+
+    /** The HTTP status class for a counter key (&sect;5.2); null status is {@code none}. */
+    public static String statusClass(Integer status) {
+        if (status == null) {
+            return "none";
+        }
+        int value = status.intValue();
+        if (value >= 200 && value <= 299) {
+            return "2xx";
+        }
+        if (value == 429) {
+            return "429";
+        }
+        if (value >= 400 && value <= 499) {
+            return "4xx";
+        }
+        if (value >= 500 && value <= 599) {
+            return "5xx";
+        }
+        return "none";
+    }
+
+    /**
+     * Whether the configured timeout for a phase meets the contract floor
+     * (&sect;5.4: connect 10 s, first byte 60 s, idle 30 s); other phases
+     * and an unconfigured timeout never do.
+     */
+    public static boolean timeoutFloorMet(String phase, Long configuredMs) {
+        if (configuredMs == null || phase == null) {
+            return false;
+        }
+        long floor;
+        if ("connect".equals(phase)) {
+            floor = 10_000L;
+        } else if ("first_byte".equals(phase)) {
+            floor = 60_000L;
+        } else if ("idle".equals(phase)) {
+            floor = 30_000L;
+        } else {
+            return false;
+        }
+        return configuredMs.longValue() >= floor;
+    }
+
+    /**
+     * The timeout phase a transport failure proves (&sect;5.2), the Java
+     * analogue of the phase half of the Python SDK's
+     * {@code classify_transport_error}: a connect timeout is {@code connect},
+     * a read (or write, which OkHttp cannot tell apart — see
+     * {@link #classifyTransportError}) stall is {@code first_byte}, and
+     * OkHttp's whole-call timeout — which httpx has no equivalent for — is
+     * {@code total}. Everything else is {@code none}. A stall after the
+     * first body byte is re-phased to {@code idle} by the recorder.
+     */
+    public static String timeoutPhase(Throwable error) {
+        if (!isTimeout(error)) {
+            return "none";
+        }
+        String errorClass = classifyTransportError(error);
+        if ("connect_timeout".equals(errorClass)) {
+            return "connect";
+        }
+        if ("read_timeout".equals(errorClass) || "write_timeout".equals(errorClass)) {
+            return "first_byte";
+        }
+        return "total";
+    }
+
+    /**
+     * The bounded SDK identity included in every batch (&sect;5.1), built
+     * from the process properties and mirroring the Python SDK's
+     * {@code sdk_identity} fallbacks: an out-of-grammar version becomes
+     * {@code 0.0.0}, an out-of-grammar runtime token {@code java/0}. Never
+     * throws, even under a {@code SecurityManager} that denies properties.
+     */
+    public static JsonObject sdkIdentity() {
+        return sdkIdentity(
+                TrustedRouter.VERSION,
+                property("java.version"),
+                property("os.name"),
+                property("java.vm.name") + " " + property("java.runtime.name") + " "
+                        + property("java.vendor"),
+                property("os.arch"));
+    }
+
+    /** Pure form of {@link #sdkIdentity()} for tests. */
+    static JsonObject sdkIdentity(
+            String version,
+            String javaVersion,
+            String osName,
+            String runtimeDescription,
+            String osArch) {
+        String sdkVersion = version == null ? "" : version;
+        if (sdkVersion.length() > 32 || !SEMVER.matcher(sdkVersion).matches()) {
+            sdkVersion = "0.0.0";
+        }
+        String runtime = "java/" + RequestFactory.runtimeToken(javaVersion);
+        if (!RUNTIME.matcher(runtime).matches()) {
+            runtime = "java/0";
+        }
+        JsonObject identity = new JsonObject();
+        identity.addProperty("name", "tr-java");
+        identity.addProperty("version", sdkVersion);
+        identity.addProperty("lang", "java");
+        identity.addProperty("runtime", runtime);
+        identity.addProperty("os", osEnum(osName, runtimeDescription));
+        identity.addProperty("arch", archEnum(osArch));
+        return identity;
+    }
+
+    /**
+     * Maps {@code os.name} (and the VM/runtime description, which is how
+     * Android identifies itself) to the closed OS vocabulary (&sect;5.1).
+     */
+    public static String osEnum(String osName, String runtimeDescription) {
+        String runtime = runtimeDescription == null
+                ? "" : runtimeDescription.toLowerCase(Locale.ROOT);
+        if (runtime.contains("android")) {
+            return "android";
+        }
+        String name = osName == null ? "" : osName.trim().toLowerCase(Locale.ROOT);
+        if (name.startsWith("mac") || name.startsWith("darwin")) {
+            return "macos";
+        }
+        if (name.startsWith("linux")) {
+            return "linux";
+        }
+        if (name.startsWith("windows")) {
+            return "windows";
+        }
+        if (name.startsWith("freebsd")) {
+            return "freebsd";
+        }
+        return "other";
+    }
+
+    /** Maps {@code os.arch} to the closed architecture vocabulary (&sect;5.1). */
+    public static String archEnum(String osArch) {
+        String value = osArch == null ? "" : osArch.trim().toLowerCase(Locale.ROOT);
+        if ("x86_64".equals(value) || "amd64".equals(value)) {
+            return "x64";
+        }
+        if ("x86".equals(value) || "i386".equals(value) || "i486".equals(value)
+                || "i586".equals(value) || "i686".equals(value)) {
+            return "x32";
+        }
+        if ("aarch64".equals(value) || "arm64".equals(value)) {
+            return "arm64";
+        }
+        if (value.startsWith("arm")) {
+            return "arm";
+        }
+        if (value.startsWith("wasm")) {
+            return "wasm";
+        }
+        return "other";
+    }
+
+    /**
+     * Re-validates a caller-supplied identity field by field against the
+     * vocabulary, falling back to {@link #sdkIdentity()} per field, exactly
+     * like the Python SDK's {@code _normalise_sdk_identity}.
+     */
+    public static JsonObject normaliseSdkIdentity(JsonObject identity) {
+        JsonObject fallback = sdkIdentity();
+        JsonObject source = identity == null ? new JsonObject() : identity;
+        JsonObject result = new JsonObject();
+        String name = string(source, "name");
+        result.addProperty("name", isOneOf(name, "tr-py", "tr-js", "tr-go", "tr-rust",
+                "tr-java", "tr-swift") ? name : fallback.get("name").getAsString());
+        String version = string(source, "version");
+        result.addProperty("version", version != null && version.length() <= 32
+                && SEMVER.matcher(version).matches()
+                ? version : fallback.get("version").getAsString());
+        String lang = string(source, "lang");
+        result.addProperty("lang", isOneOf(lang, "python", "js", "go", "rust", "java", "swift")
+                ? lang : fallback.get("lang").getAsString());
+        String runtime = string(source, "runtime");
+        result.addProperty("runtime", runtime != null && RUNTIME.matcher(runtime).matches()
+                ? runtime : fallback.get("runtime").getAsString());
+        String os = string(source, "os");
+        result.addProperty("os", isOneOf(os, "linux", "macos", "windows", "ios", "android",
+                "freebsd", "other") ? os : fallback.get("os").getAsString());
+        String arch = string(source, "arch");
+        result.addProperty("arch", isOneOf(arch, "x64", "x32", "arm", "arm64", "wasm", "other")
+                ? arch : fallback.get("arch").getAsString());
+        return result;
+    }
+
+    /** Clamps a count or duration into {@code [minimum, maximum]}. */
+    public static long bounded(long value, long minimum, long maximum) {
+        return Math.min(maximum, Math.max(minimum, value));
+    }
+
+    /** A value inside {@code [minimum, maximum]}, or null when absent or outside. */
+    public static Long boundedOrNull(Long value, long minimum, long maximum) {
+        if (value == null || value.longValue() < minimum || value.longValue() > maximum) {
+            return null;
+        }
+        return value;
+    }
+
+    /** Parses a finite double from a JSON number or numeric string, else null. */
+    static Double finiteDouble(JsonElement value) {
+        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) {
+            return null;
+        }
+        try {
+            double parsed = value.getAsJsonPrimitive().isNumber()
+                    ? value.getAsDouble() : Double.parseDouble(value.getAsString().trim());
+            return Double.isNaN(parsed) || Double.isInfinite(parsed)
+                    ? null : Double.valueOf(parsed);
+        } catch (RuntimeException invalid) {
+            return null;
+        }
+    }
+
+    private static String string(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()
+                ? value.getAsString() : null;
+    }
+
+    private static boolean isOneOf(String value, String... allowed) {
+        return value != null && Arrays.asList(allowed).contains(value);
+    }
+
+    private static String property(String name) {
+        try {
+            String value = System.getProperty(name);
+            return value == null ? "" : value;
+        } catch (SecurityException denied) {
+            return "";
+        }
+    }
+
+    /**
      * Clamps a duration into {@code [0, MAX_DURATION_MS]} in pure long
      * arithmetic. Deliberately takes a {@code long}: computing millis as
      * {@code (nanoEnd - nanoStart) / 1_000_000L} never touches a double, so
@@ -438,7 +833,7 @@ public final class Telemetry {
         return Math.min(MAX_DURATION_MS, millis);
     }
 
-    private static List<Throwable> causeChain(Throwable error) {
+    static List<Throwable> causeChain(Throwable error) {
         List<Throwable> chain = new ArrayList<Throwable>();
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
         Throwable current = error;

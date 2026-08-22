@@ -208,6 +208,11 @@ public final class RequestFactory {
         return options.hasTimeoutOverride() ? options.getTimeoutMillis() : timeoutMillis;
     }
 
+    /** The SDK-level call timeout in effect for this call, or null when disabled. */
+    Long sdkTimeoutMillis(CallOptions options) {
+        return optionsTimeout(options == null ? CallOptions.NONE : options);
+    }
+
     private static boolean requiresRequestBody(String method) {
         return "POST".equalsIgnoreCase(method)
                 || "PUT".equalsIgnoreCase(method)

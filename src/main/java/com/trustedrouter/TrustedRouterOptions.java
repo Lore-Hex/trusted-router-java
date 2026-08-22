@@ -22,6 +22,7 @@ public final class TrustedRouterOptions {
     final int maxRetries;
     final boolean regionalFailover;
     final Boolean telemetry;
+    final double telemetrySampleRate;
     final Executor asyncExecutor;
 
     private TrustedRouterOptions(Builder builder) {
@@ -39,6 +40,7 @@ public final class TrustedRouterOptions {
         this.maxRetries = builder.maxRetries;
         this.regionalFailover = builder.regionalFailover;
         this.telemetry = builder.telemetry;
+        this.telemetrySampleRate = builder.telemetrySampleRate;
         this.asyncExecutor = builder.asyncExecutor;
     }
 
@@ -59,6 +61,8 @@ public final class TrustedRouterOptions {
     public boolean isRegionalFailover() { return regionalFailover; }
     /** Tri-state client-telemetry override; null means resolve from env and hosts. */
     public Boolean getTelemetry() { return telemetry; }
+    /** Random sampling rate for healthy first-attempt successes in the beacon channel. */
+    public double getTelemetrySampleRate() { return telemetrySampleRate; }
     public Executor getAsyncExecutor() { return asyncExecutor; }
 
     private static String normalizeBaseUrl(String value, String fallback) {
@@ -86,6 +90,7 @@ public final class TrustedRouterOptions {
         private int maxRetries = RetryPolicy.DEFAULT_MAX_RETRIES;
         private boolean regionalFailover = true;
         private Boolean telemetry;
+        private double telemetrySampleRate = 0.01d;
         private Executor asyncExecutor;
 
         private Builder() {}
@@ -172,16 +177,37 @@ public final class TrustedRouterOptions {
         }
 
         /**
-         * Explicitly enables or disables client reliability telemetry (the
-         * content-free {@code x-tr-client} request header). Overrides the
+         * Explicitly enables or disables client reliability telemetry: the
+         * content-free {@code x-tr-client} request header AND the beacon
+         * channel, which posts bounded, content-free batches of sampled
+         * events and exact per-minute counters to the control plane from
+         * the SDK's own background thread. Overrides the
          * {@code TRUSTEDROUTER_TELEMETRY} and {@code DO_NOT_TRACK}
          * environment variables. Left unset (null), telemetry follows those
          * variables and otherwise defaults on only when both the inference
          * base and the control host are TrustedRouter's own; custom base
-         * URLs default off and are never measured.
+         * URLs default off. If explicitly enabled for a custom inference
+         * URL, its raw hostname is reduced to the {@code unknown} enum. Set
+         * {@code TRUSTEDROUTER_TELEMETRY_DEBUG=1} to echo every batch to
+         * stderr before it is sent.
          */
         public Builder telemetry(Boolean value) {
             this.telemetry = value;
+            return this;
+        }
+
+        /**
+         * Random sampling rate, in {@code [0, 1]}, for telemetry events of
+         * healthy, fast, first-attempt successes (default 0.01). Failures,
+         * retried or failed-over calls, and calls slower than 30 s are always
+         * retained, and the exact per-minute counters are never sampled. The
+         * control plane may lower the rate but never raise it.
+         */
+        public Builder telemetrySampleRate(double value) {
+            if (!(value >= 0.0d && value <= 1.0d)) {
+                throw new IllegalArgumentException("telemetrySampleRate must be within [0, 1]");
+            }
+            this.telemetrySampleRate = value;
             return this;
         }
 
