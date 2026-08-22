@@ -1,15 +1,16 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.google.code.gson:gson:2.13.2=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.google.errorprone:error_prone_annotations:2.41.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.squareup.okhttp3:mockwebserver3:5.3.0=testCompileClasspath,testRuntimeClasspath
-com.squareup.okhttp3:mockwebserver:5.3.0=testCompileClasspath,testRuntimeClasspath
-com.squareup.okhttp3:okhttp-jvm:5.3.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.squareup.okhttp3:okhttp-tls:5.3.0=testCompileClasspath,testRuntimeClasspath
-com.squareup.okhttp3:okhttp:5.3.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.squareup.okio:okio-jvm:3.16.2=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.squareup.okio:okio:3.16.2=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+# To regenerate this file, run: ./gradlew :dependencies --write-locks
+com.google.code.gson:gson:2.14.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.google.errorprone:error_prone_annotations:2.48.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.squareup.okhttp3:mockwebserver3:5.5.0=testCompileClasspath,testRuntimeClasspath
+com.squareup.okhttp3:mockwebserver:5.5.0=testCompileClasspath,testRuntimeClasspath
+com.squareup.okhttp3:okhttp-jvm:5.5.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.squareup.okhttp3:okhttp-tls:5.5.0=testCompileClasspath,testRuntimeClasspath
+com.squareup.okhttp3:okhttp:5.5.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.squareup.okio:okio-jvm:3.18.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.squareup.okio:okio:3.18.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 junit:junit:4.13.2=testCompileClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.17.7=testCompileClasspath,testRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath
