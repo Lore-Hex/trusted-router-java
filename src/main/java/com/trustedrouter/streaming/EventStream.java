@@ -3,9 +3,12 @@ package com.trustedrouter.streaming;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.trustedrouter.errors.InternalException;
+import com.trustedrouter.errors.TrustedRouterException;
 import com.trustedrouter.internal.JsonSupport;
+import com.trustedrouter.internal.RequestRecorder;
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -15,7 +18,19 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
 
-/** Blocking, closeable SSE reader that works on the JVM and Android. */
+/**
+ * Blocking, closeable SSE reader that works on the JVM and Android.
+ *
+ * <p>This is the SDK's only place where a stream's life after the headers
+ * is observable, so it carries the telemetry hooks of the client telemetry
+ * contract (&sect;6.1): the first parsed event marks TTFT, a read failure or
+ * an end before {@code [DONE]} marks the attempt {@code stream_broken}, and
+ * closing before the end marks it {@code aborted}. Application-level
+ * failures (malformed JSON, an in-band error envelope, a mapper failure)
+ * leave the attempt as the response recorded it, exactly as the Python
+ * reference. There is no reconnect path: the engine never retries after the
+ * first surfaced body byte.
+ */
 public final class EventStream<T> implements Closeable {
     /** Maximum bytes in one SSE line or one not-yet-delimited frame. */
     public static final int MAXIMUM_FRAME_BYTES = 1_048_576;
@@ -28,14 +43,30 @@ public final class EventStream<T> implements Closeable {
     private final Response response;
     private final BufferedSource source;
     private final Mapper<T> mapper;
+    private final RequestRecorder recorder;
     private boolean finished;
+    private boolean bodyStarted;
+    private boolean telemetryFinished;
 
     public EventStream(Response response, Mapper<T> mapper) throws IOException {
+        this(response, mapper, null);
+    }
+
+    /**
+     * Wraps an opened stream, driving the engine's telemetry recorder (may
+     * be null) to completion as the stream is consumed.
+     */
+    public EventStream(Response response, Mapper<T> mapper, RequestRecorder recorder)
+            throws IOException {
         this.response = response;
+        this.recorder = recorder;
         ResponseBody body = response.body();
         if (body == null) {
             response.close();
-            throw new IOException("TrustedRouter stream had no response body");
+            IOException failure = new IOException("TrustedRouter stream had no response body");
+            recordTransportFailure(new ProtocolException(failure.getMessage()));
+            finishTelemetry(false);
+            throw failure;
         }
         this.source = body.source();
         this.mapper = mapper;
@@ -45,13 +76,17 @@ public final class EventStream<T> implements Closeable {
     public T read() throws IOException {
         try {
             while (!finished) {
-                Frame frame = readFrame();
+                Frame frame = readFrameRecorded();
                 if (frame == null) {
+                    ProtocolException truncated =
+                            new ProtocolException("TrustedRouter stream ended before [DONE]");
+                    recordTransportFailure(truncated);
                     throw new InternalException(
-                            502, "TrustedRouter stream ended before [DONE]", null);
+                            502, "TrustedRouter stream ended before [DONE]", null, truncated);
                 }
                 if (frame.done) {
                     finished = true;
+                    finishTelemetry(false);
                     close();
                     return null;
                 }
@@ -74,6 +109,7 @@ public final class EventStream<T> implements Closeable {
                     throw new InternalException(
                             502, JsonSupport.errorMessage(object), object);
                 }
+                markFirstEvent();
                 T mapped = mapper.map(frame.event, object);
                 if (mapped != null) {
                     return mapped;
@@ -81,6 +117,9 @@ public final class EventStream<T> implements Closeable {
             }
             return null;
         } catch (IOException | RuntimeException error) {
+            // A failure ends the logical call as recorded so far; it is not
+            // a caller abort, so close() below must not mark one.
+            finishTelemetry(false);
             close();
             throw error;
         }
@@ -90,10 +129,57 @@ public final class EventStream<T> implements Closeable {
         return finished;
     }
 
+    /**
+     * Closes the stream and its connection. Closing before {@code [DONE]}
+     * is a caller abort for telemetry; closing afterwards changes nothing.
+     */
     @Override
     public void close() {
         finished = true;
         response.close();
+        finishTelemetry(true);
+    }
+
+    /**
+     * Reads one frame, classifying only genuine transport failures — never
+     * the SDK's own protocol-violation exceptions — as stream failures.
+     */
+    private Frame readFrameRecorded() throws IOException {
+        try {
+            return readFrame();
+        } catch (TrustedRouterException protocolViolation) {
+            throw protocolViolation;
+        } catch (IOException transportFailure) {
+            recordTransportFailure(transportFailure);
+            throw transportFailure;
+        }
+    }
+
+    private void markFirstEvent() {
+        if (bodyStarted) {
+            return;
+        }
+        bodyStarted = true;
+        if (recorder != null) {
+            recorder.onFirstEvent();
+        }
+    }
+
+    private void recordTransportFailure(Throwable failure) {
+        if (recorder != null && !telemetryFinished) {
+            recorder.onTransportError(failure, true, bodyStarted);
+        }
+    }
+
+    private void finishTelemetry(boolean aborted) {
+        if (recorder == null || telemetryFinished) {
+            return;
+        }
+        telemetryFinished = true;
+        if (aborted) {
+            recorder.onAborted();
+        }
+        recorder.finish();
     }
 
     private Frame readFrame() throws IOException {

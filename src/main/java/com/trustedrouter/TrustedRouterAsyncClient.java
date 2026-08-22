@@ -195,6 +195,11 @@ public final class TrustedRouterAsyncClient {
         return submit(() -> client.verifyGatewayAttestation(policy));
     }
 
+    /** Closes the underlying client: one bounded telemetry flush, then its worker stops. */
+    public void close() {
+        client.close();
+    }
+
     private <T> CompletableFuture<T> submit(CheckedSupplier<T> supplier) {
         Transport.CancellationToken token = new Transport.CancellationToken();
         CancellableFuture<T> future = new CancellableFuture<T>(token);

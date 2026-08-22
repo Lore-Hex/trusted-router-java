@@ -44,6 +44,7 @@ import com.trustedrouter.requests.ModelFilters;
 import com.trustedrouter.requests.ResponsesRequest;
 import com.trustedrouter.streaming.EventStream;
 import com.trustedrouter.streaming.TextStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -53,8 +54,15 @@ import java.util.Map;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-/** Thread-safe TrustedRouter client for Java, Kotlin, and Android. */
-public final class TrustedRouterClient {
+/**
+ * Thread-safe TrustedRouter client for Java, Kotlin, and Android.
+ *
+ * <p>{@link #close()} flushes pending client telemetry once (bounded by 2 s)
+ * and stops its background worker; a JVM shutdown hook does the same for
+ * clients that were never closed. Closing does not affect the OkHttp client,
+ * which the caller may own.
+ */
+public final class TrustedRouterClient implements Closeable {
     private final TrustedRouterOptions options;
     private final Transport transport;
 
@@ -71,6 +79,21 @@ public final class TrustedRouterClient {
     public String getBaseUrl() { return transport.getBaseUrl(); }
     public String getControlBaseUrl() { return transport.getControlBaseUrl(); }
     public TrustedRouterAsyncClient async() { return new TrustedRouterAsyncClient(this, options.getAsyncExecutor()); }
+
+    /**
+     * Flushes pending client telemetry once, bounded by 2 s, and stops the
+     * telemetry worker. Safe to call more than once; later requests still
+     * work but are no longer recorded.
+     */
+    @Override
+    public void close() {
+        transport.close();
+    }
+
+    /** The engine, for tests in this package. */
+    Transport transport() {
+        return transport;
+    }
 
     /** Sends an arbitrary inference-plane request and returns parsed JSON. */
     public JsonElement request(String method, String path, JsonElement body, CallOptions options)
@@ -107,13 +130,15 @@ public final class TrustedRouterClient {
 
     public EventStream<ChatCompletionChunk> chatCompletionsChunks(ChatRequest request)
             throws TrustedRouterException {
-        Response response = transport.execute(
+        Transport.OpenedStream opened = transport.executeStream(
                 Transport.Plane.INFERENCE, "POST", "/chat/completions", request.toJson(true),
-                idempotent(request.getCallOptions()), true);
+                idempotent(request.getCallOptions()));
+        Response response = opened.response();
         Transport.requireSuccess(response);
         try {
             return new EventStream<ChatCompletionChunk>(response,
-                    (event, data) -> ModelDecoder.decode(data, ChatCompletionChunk.class));
+                    (event, data) -> ModelDecoder.decode(data, ChatCompletionChunk.class),
+                    opened.recorder());
         } catch (IOException error) {
             response.close();
             throw new InternalException(502, error.getMessage(), null, error);
@@ -125,16 +150,10 @@ public final class TrustedRouterClient {
     }
 
     public InputStream chatCompletionsRawStream(ChatRequest request) throws TrustedRouterException {
-        Response response = transport.execute(
+        Transport.OpenedStream opened = transport.executeStream(
                 Transport.Plane.INFERENCE, "POST", "/chat/completions", request.toJson(true),
-                idempotent(request.getCallOptions()), true);
-        Transport.requireSuccess(response);
-        ResponseBody body = response.body();
-        if (body == null) {
-            response.close();
-            throw new InternalException(502, "TrustedRouter stream had no body", null);
-        }
-        return new ResponseInputStream(response, body.byteStream());
+                idempotent(request.getCallOptions()));
+        return rawStream(opened);
     }
 
     /** Convenience alias for a chat request configured with a Fusion/Synth tool. */
@@ -201,9 +220,10 @@ public final class TrustedRouterClient {
 
     public EventStream<ResponseEvent> responsesEvents(ResponsesRequest request)
             throws TrustedRouterException {
-        Response response = transport.execute(
+        Transport.OpenedStream opened = transport.executeStream(
                 Transport.Plane.INFERENCE, "POST", "/responses", request.toJson(true),
-                idempotent(request.getCallOptions()), true);
+                idempotent(request.getCallOptions()));
+        Response response = opened.response();
         Transport.requireSuccess(response);
         try {
             return new EventStream<ResponseEvent>(response, (event, data) -> {
@@ -212,7 +232,7 @@ public final class TrustedRouterClient {
                     eventName = data.get("type").getAsString();
                 }
                 return new ResponseEvent(eventName, data);
-            });
+            }, opened.recorder());
         } catch (IOException error) {
             response.close();
             throw new InternalException(502, error.getMessage(), null, error);
@@ -220,16 +240,25 @@ public final class TrustedRouterClient {
     }
 
     public InputStream responsesRawStream(ResponsesRequest request) throws TrustedRouterException {
-        Response response = transport.execute(
+        Transport.OpenedStream opened = transport.executeStream(
                 Transport.Plane.INFERENCE, "POST", "/responses", request.toJson(true),
-                idempotent(request.getCallOptions()), true);
+                idempotent(request.getCallOptions()));
+        return rawStream(opened);
+    }
+
+    private static InputStream rawStream(Transport.OpenedStream opened)
+            throws TrustedRouterException {
+        Response response = opened.response();
         Transport.requireSuccess(response);
         ResponseBody body = response.body();
         if (body == null) {
             response.close();
-            throw new InternalException(502, "TrustedRouter stream had no body", null);
+            InternalException failure =
+                    new InternalException(502, "TrustedRouter stream had no body", null);
+            opened.abandon(failure);
+            throw failure;
         }
-        return new ResponseInputStream(response, body.byteStream());
+        return new ResponseInputStream(response, body.byteStream(), opened.recorder());
     }
 
     public ResponseInputTokens responsesInputTokens(ResponsesRequest request)

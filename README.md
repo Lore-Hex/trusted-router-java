@@ -378,6 +378,44 @@ Aliases are used only for the default `baseUrl`. A custom one — a private depl
 server, a regional pin — is never rewritten. Call `.regionalFailover(false)` to keep every attempt
 on a single host. The control plane always uses the single configured `controlBaseUrl`.
 
+## Client telemetry
+
+The SDK reports content-free reliability facts so TrustedRouter can measure availability from
+the client's side (contract v1, `docs/client-telemetry.md` in `Lore-Hex/quill-router`). Two
+channels, both closed-vocabulary by construction — no prompts, outputs, raw hostnames, keys, or
+user identifiers ever leave (request correlation uses the bounded server-issued rlog id):
+
+- **Header** — every inference attempt carries `x-tr-client` (`v=1;a=0;s=0`, plus the previous
+  attempt's outcome on retries).
+- **Beacon** — a daemon thread, started on the first recorded call, posts bounded batches of
+  exact per-minute counters and sampled request events to
+  `POST https://trustedrouter.com/v1/client-events` from its own single-shot HTTP client. It
+  never rides the engine, the retry loop, or an injected `OkHttpClient`, and it never retries a
+  flush. Failures, retried calls, and calls slower than 30 s are always kept; healthy
+  first-attempt successes are sampled at `telemetrySampleRate` (default 1%).
+
+```java
+TrustedRouterClient client = new TrustedRouterClient(TrustedRouterOptions.builder()
+        .apiKey(System.getenv("TRUSTEDROUTER_API_KEY"))
+        .telemetry(Boolean.TRUE)          // explicit; default follows the rules below
+        .telemetrySampleRate(0.01)        // random sampling of healthy successes
+        .build());
+try {
+    client.chatCompletions(ChatRequest.builder().message("user", "hi").build());
+} finally {
+    client.close();                       // one bounded (2 s) flush, then the worker stops
+}
+```
+
+Telemetry defaults on only for TrustedRouter's own inference and control hosts; custom base
+URLs default off. If telemetry is explicitly enabled with a custom inference URL, its raw
+hostname is never emitted (the host field is the closed-vocabulary `unknown`). Precedence:
+`telemetry(...)` >
+`TRUSTEDROUTER_TELEMETRY=0|false|off|no` > `DO_NOT_TRACK=1` > default. Opting out disables the
+header and the beacon together. Set `TRUSTEDROUTER_TELEMETRY_DEBUG=1` to echo every batch to
+stderr before it is sent. `close()` (or try-with-resources) performs the final flush; a JVM
+shutdown hook does the same for clients that were never closed.
+
 ## Errors
 
 ```java
