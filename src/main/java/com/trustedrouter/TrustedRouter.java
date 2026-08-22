@@ -9,7 +9,7 @@ import java.util.List;
 
 /** Stable SDK constants and orchestration tool helpers. */
 public final class TrustedRouter {
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "0.3.0";
     public static final String DEFAULT_API_BASE_URL = "https://api.trustedrouter.com/v1";
     public static final String DEFAULT_CONTROL_BASE_URL = "https://trustedrouter.com/v1";
 
