@@ -23,7 +23,7 @@ dependencyLocking {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
+    options.release.set(17)
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
 }
@@ -85,7 +85,7 @@ val compileJavaExamples by tasks.registering(JavaCompile::class) {
     source(fileTree("examples/java") { include("**/*.java") })
     classpath = sourceSets.main.get().runtimeClasspath
     destinationDirectory.set(layout.buildDirectory.dir("examples/java"))
-    options.release.set(8)
+    options.release.set(17)
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
 }

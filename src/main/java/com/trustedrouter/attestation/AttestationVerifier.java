@@ -55,6 +55,42 @@ public final class AttestationVerifier {
     }
 
     /**
+     * Verifies a boot-minted GCP key attestation and requires set membership of a receipt-key
+     * commitment in its nonce values.
+     *
+     * <p>Unlike {@link #verify(byte[], AttestationVerificationOptions)}, this profile deliberately
+     * does not require a live TLS certificate, caller nonce, or exporter: the evidence binds a
+     * durable receipt key rather than a connection. The Google signature, issuer, expiry,
+     * production posture, Confidential Space platform, audience, and supplied image pins are
+     * still checked.
+     */
+    public static void verifyReceiptKeyCommitment(
+            byte[] document,
+            byte[] commitment,
+            AttestationVerificationOptions options)
+            throws AttestationVerificationException {
+        if (document == null) { throw new NullPointerException("document"); }
+        if (commitment == null) { throw new NullPointerException("commitment"); }
+        if (options == null) { throw new NullPointerException("options"); }
+        if (commitment.length != 32) {
+            throw failure("receipt key commitment must be 32 bytes", null);
+        }
+        String token = new String(document, StandardCharsets.US_ASCII).trim();
+        String[] parts = token.split("\\.", -1);
+        if (parts.length != 3) {
+            throw failure("expected 3 JWT segments, got " + parts.length, null);
+        }
+        JsonObject header = decodeObject(parts[0], "header");
+        JsonObject claims = decodeObject(parts[1], "claims");
+        byte[] signature = decodeBase64(parts[2]);
+        JsonObject jwks = options.jwks();
+        if (jwks == null) { jwks = fetchJwks(options); }
+        verifySignature(header, jwks,
+                (parts[0] + "." + parts[1]).getBytes(StandardCharsets.US_ASCII), signature);
+        verifyReceiptClaims(claims, commitment, options);
+    }
+
+    /**
      * Flagged transport BYPASS, by design: a documented single-shot,
      * credential-free metadata fetch against Google's JWKS endpoint that
      * deliberately stays outside the SDK's transport engine (no retries, no
@@ -215,6 +251,62 @@ public final class AttestationVerifier {
         return new GatewayAttestation(
                 certHash, empty(digest), empty(reference), nonce, expires, issuer,
                 expectedAudience, claims);
+    }
+
+    private static void verifyReceiptClaims(
+            JsonObject claims, byte[] commitment, AttestationVerificationOptions options)
+            throws AttestationVerificationException {
+        long now = System.currentTimeMillis() / 1000L;
+        Long expires = longValue(claims.get("exp"));
+        if (expires == null) {
+            throw failure("JWT is missing a valid expiration", null);
+        }
+        if (expires.longValue() <= now) {
+            throw failure("JWT expired at " + expires + " (now=" + now + ")", null);
+        }
+        String issuer = string(claims, "iss");
+        if (!GCP_ISSUER.equals(issuer)) {
+            throw failure("unexpected issuer " + issuer + "; expected " + GCP_ISSUER, null);
+        }
+        if (!options.policy().isDebugAllowed()) {
+            String debugStatus = string(claims, "dbgstat");
+            if (!PRODUCTION_DEBUG_STATUS.equalsIgnoreCase(debugStatus)) {
+                throw failure(
+                        "debug Confidential Space workload must report disabled-since-boot", null);
+            }
+        }
+        if (!"CONFIDENTIAL_SPACE".equals(string(claims, "swname"))) {
+            throw failure("attested workload is not running Confidential Space", null);
+        }
+        if (!booleanValue(claims.get("secboot"))) {
+            throw failure("attested workload does not report Secure Boot", null);
+        }
+        String hardware = string(claims, "hwmodel");
+        if (!"GCP_AMD_SEV".equals(hardware)
+                && !"GCP_AMD_SEV_ES".equals(hardware)
+                && !"GCP_INTEL_TDX".equals(hardware)) {
+            throw failure("unsupported confidential hardware model " + hardware, null);
+        }
+        String expectedAudience = options.policy().getAudience();
+        if (!strings(claims.get("aud")).contains(expectedAudience)) {
+            throw failure("audience " + expectedAudience + " not present in JWT", null);
+        }
+
+        JsonObject container = object(object(claims, "submods"), "container");
+        if (!options.policy().pinsImageIdentity()) {
+            throw failure("attestation policy pins no image identity; refusing to verify "
+                    + "a receipt key against an unspecified workload", null);
+        }
+        requireOneOf("image_digest", string(container, "image_digest"),
+                options.policy().getExpectedImageDigests());
+        requireOneOf("image_reference", string(container, "image_reference"),
+                options.policy().getExpectedImageReferences());
+
+        List<String> committedValues = strings(claims.has("eat_nonce")
+                ? claims.get("eat_nonce") : claims.get("nonces"));
+        if (!containsIgnoreCase(committedValues, hex(commitment))) {
+            throw failure("receipt key commitment not present in JWT nonce set", null);
+        }
     }
 
     private static JsonObject decodeObject(String encoded, String name)

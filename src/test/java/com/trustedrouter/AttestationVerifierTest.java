@@ -201,6 +201,24 @@ final class AttestationVerifierTest {
                 .hasMessageContaining("expected RS256");
     }
 
+    @Test void receiptKeyCommitmentUsesSetMembershipWithoutLiveTlsBinding() throws Exception {
+        byte[] commitment = MessageDigest.getInstance("SHA-256")
+                .digest("receipt-key-commitment".getBytes(StandardCharsets.UTF_8));
+        claims.getAsJsonArray("eat_nonce").add(hex(commitment));
+        AttestationVerificationOptions receiptOptions =
+                AttestationVerificationOptions.builder(pinnedPolicy()).jwks(jwks).build();
+
+        AttestationVerifier.verifyReceiptKeyCommitment(
+                jwt(claims), commitment, receiptOptions);
+
+        byte[] missing = commitment.clone();
+        missing[0] ^= 1;
+        assertThatThrownBy(() -> AttestationVerifier.verifyReceiptKeyCommitment(
+                jwt(claims), missing, receiptOptions))
+                .isInstanceOf(AttestationVerificationException.class)
+                .hasMessageContaining("commitment");
+    }
+
     private GatewayAttestation verify(JsonObject value, AttestationPolicy policy) throws Exception {
         return AttestationVerifier.verify(jwt(value),
                 AttestationVerificationOptions.builder(policy).nonceHex("fresh-nonce")
