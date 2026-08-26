@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Signed inference receipt verification for compact and flattened JWS, strict duplicate-member
+  JSON rejection, exact body and SSE hashing, typed fail-closed errors, GCP receipt-key attestation
+  binding, and `ReceiptCapture` for byte-exact streaming verification. The artifact now targets
+  Java 17 so Ed25519 uses the standard JDK provider.
 - Client telemetry beacon channel (contract v1, §4/§5/§6.2–§6.4): a bounded, content-free
   reporter posts exact per-minute counters and sampled request events to
   `/v1/client-events` from its own single-shot HTTP client on a lazily started daemon thread.

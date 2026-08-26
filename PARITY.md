@@ -22,6 +22,7 @@ TrustedRouter Python and JavaScript SDKs as of Java SDK 0.1.0.
 | OAuth credit delegation | PKCE authorize, callback, exchange, user info | Yes | Yes | N/A |
 | Status and trust release | `status`, `trustRelease` | Yes | Yes | N/A |
 | Attestation | `attestation`, `verifyGatewayAttestation` | Yes | Yes | N/A |
+| Inference receipts | `ReceiptVerifier.verifyReceipt` | Yes | N/A | `ReceiptCapture` |
 | Raw extension surface | API and control request/raw request | Yes | Yes | Raw response |
 
 ## Behavioral parity gates
@@ -43,10 +44,10 @@ TrustedRouter Python and JavaScript SDKs as of Java SDK 0.1.0.
 ## Intentional runtime differences
 
 The async API uses a caller-configurable executor and returns `CompletableFuture`. It is an async
-facade over the same blocking OkHttp implementation, which keeps one audited transport and works
-on Java 8. Cancelling the future does not promise cancellation of an in-flight network call.
+facade over the same blocking OkHttp implementation, which keeps one audited transport. Cancelling
+the future does not promise cancellation of an in-flight network call.
 
 Java before JDK 25 has no standard TLS-exporter API. Certificate-bound attestation works on the
-supported Java 8 surface. Exporter-bound verification is available when the application supplies
+supported Java 17 surface. Exporter-bound verification is available when the application supplies
 exporter bytes from its TLS provider; otherwise use the TrustedRouter Go verifier for that stronger
 session-binding mode.

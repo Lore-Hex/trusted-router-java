@@ -1,6 +1,7 @@
 # Contributing
 
-Use JDK 17 to build. Published classes target Java 8 bytecode.
+Use JDK 17 to build. Published classes target Java 17 bytecode so receipt verification can use the
+JDK's native Ed25519 provider without adding a second cryptography provider.
 
 ```bash
 ./gradlew clean check javadoc

@@ -17,7 +17,8 @@ The SDK provides:
 - Billing, credits, activity, models, providers, and Broadcast destinations
 - OAuth credit delegation with PKCE and Android deep link validation
 - Google Confidential Space attestation verification
-- Java 8 bytecode, Android API 21+ networking, and a `CompletableFuture` async facade
+- Java 17 bytecode, `java.security` Ed25519 receipt verification, and a `CompletableFuture` async
+  facade
 
 Inference uses `https://api.trustedrouter.com/v1`. Control operations use
 `https://trustedrouter.com/v1`. The SDK keeps those planes separate so prompt traffic never
@@ -43,11 +44,11 @@ Maven:
 </dependency>
 ```
 
-Android apps with a minimum API below 26 should enable
-[core library desugaring](https://developer.android.com/studio/write/java8-support) for the
-`Duration` and `CompletableFuture` convenience APIs. The synchronous API and OkHttp transport
-support Android API 21+. The artifact includes consumer R8/ProGuard rules that preserve its Gson
-wire models in minified release builds.
+The JVM artifact requires JDK 17. Ed25519 entered the standard JDK provider in JDK 15; the project
+uses its existing JDK 17 build toolchain as the published runtime floor instead of adding a second
+cryptography provider. Android consumers need a platform/toolchain that supplies the same
+`java.security` Ed25519 algorithms. The artifact includes consumer R8/ProGuard rules that preserve
+its Gson wire models in minified release builds.
 
 ## Java quickstart
 
@@ -468,6 +469,32 @@ standard TLS exporter API, so applications requiring exporter-bound verification
 the exporter from their TLS provider or use the TrustedRouter Go verifier. Do not describe a
 certificate-only Java verification as exporter-bound.
 
+## Inference receipts
+
+`ReceiptVerifier` verifies compact or flattened inference-receipt JWS values in fail-closed order.
+Pass the exact bytes held by the caller; JSON and SSE content are never normalized:
+
+```java
+ReceiptVerificationOptions options = ReceiptVerificationOptions.builder()
+        .requestBody(requestBytes)
+        .responseBody(responseBytes)
+        .expectedNonce(nonce)
+        .maxAgeSeconds(300)
+        .build();
+ReceiptClaims claims = ReceiptVerifier.verifyReceipt(compactJws, options);
+```
+
+Attestation verification is required by default. Compact receipts carry only an attestation hash,
+so callers must obtain the pinned evidence separately or explicitly select signature-and-hash-only
+verification with `requireAttestation(false)`. For streaming responses, wrap the raw response
+`InputStream` in `ReceiptCapture`, read through the wrapper, then call `verify(...)`; it retains the
+exact SSE wire bytes, discovers the flattened receipt event, and checks its position and hash.
+
+For GCP evidence, the default path reads the public trust release and Google's JWKS. The
+`gcpAttestationOptions(...)` builder method accepts the existing attestation options so callers can
+supply release pins and pre-fetched JWKS for a fully offline check. An explicitly declared unknown
+attestation kind always fails with `UnsupportedAttestationException`; it is never silently skipped.
+
 ## Raw and extensible APIs
 
 Typed response objects retain the complete top-level JSON through `getRaw()`. Request builders
@@ -483,7 +510,7 @@ absolute URL. Status and trust metadata have dedicated credential-free absolute 
 ./gradlew clean check javadoc
 ```
 
-CI compiles with JDK 17 and emits Java 8 bytecode. It runs on Linux, macOS, and Windows, compiles
+CI compiles with JDK 17 and emits Java 17 bytecode. It runs on Linux, macOS, and Windows, compiles
 the Java quickstart, checks Javadocs, and enforces the starting coverage floor.
 
 The credential-free production trust smoke verifies public status, release metadata, and a fresh

@@ -56,14 +56,14 @@ final class MetadataAndCompatibilityTest {
         }
     }
 
-    @Test void productionClassesTargetJava8BytecodeForAndroidCompatibility() throws Exception {
+    @Test void productionClassesTargetJava17ForJdkEd25519() throws Exception {
         try (InputStream resource = TrustedRouterClient.class
                 .getResourceAsStream("TrustedRouterClient.class")) {
             assertThat(resource).isNotNull();
             DataInputStream input = new DataInputStream(resource);
             assertThat(input.readInt()).isEqualTo(0xCAFEBABE);
             input.readUnsignedShort();
-            assertThat(input.readUnsignedShort()).isEqualTo(52);
+            assertThat(input.readUnsignedShort()).isEqualTo(61);
         }
     }
 
