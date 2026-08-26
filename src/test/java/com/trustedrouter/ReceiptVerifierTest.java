@@ -3,9 +3,15 @@ package com.trustedrouter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.trustedrouter.attestation.AttestationPolicy;
+import com.trustedrouter.attestation.AttestationVerificationException;
+import com.trustedrouter.attestation.AttestationVerificationOptions;
+import com.trustedrouter.attestation.AttestationVerifier;
 import com.trustedrouter.internal.JsonSupport;
 import com.trustedrouter.receipts.MissingAttestationException;
+import com.trustedrouter.receipts.ReceiptAttestationException;
 import com.trustedrouter.receipts.ReceiptCapture;
 import com.trustedrouter.receipts.ReceiptClaims;
 import com.trustedrouter.receipts.ReceiptHashException;
@@ -22,11 +28,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.Signature;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,9 +44,28 @@ final class ReceiptVerifierTest {
     private static final byte[] RESPONSE = "response bytes".getBytes(StandardCharsets.UTF_8);
 
     private KeyPair signingKey;
+    private KeyPair gcpSigningKey;
+    private AttestationVerificationOptions gcpAttestationOptions;
 
     @BeforeEach void setUp() throws Exception {
         signingKey = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
+        KeyPairGenerator rsaGenerator = KeyPairGenerator.getInstance("RSA");
+        rsaGenerator.initialize(2048);
+        gcpSigningKey = rsaGenerator.generateKeyPair();
+        RSAPublicKey publicKey = (RSAPublicKey) gcpSigningKey.getPublic();
+        JsonObject jwk = new JsonObject();
+        jwk.addProperty("kid", "receipt-attestation-test-key");
+        jwk.addProperty("kty", "RSA");
+        jwk.addProperty("n", unsignedBase64(publicKey.getModulus()));
+        jwk.addProperty("e", unsignedBase64(publicKey.getPublicExponent()));
+        JsonArray keys = new JsonArray();
+        keys.add(jwk);
+        JsonObject gcpJwks = new JsonObject();
+        gcpJwks.add("keys", keys);
+        gcpAttestationOptions = AttestationVerificationOptions.builder(
+                AttestationPolicy.builder().expectedImageDigest("sha256:trusted").build())
+                .jwks(gcpJwks)
+                .build();
     }
 
     @Test void verifiesFrozenCompactBodyFixtureUnmodified() throws Exception {
@@ -203,6 +230,109 @@ final class ReceiptVerifierTest {
                 .hasMessageContaining("duplicate JSON member");
     }
 
+    @Test void receiptKeyBindingPassesReceiptPathButFailsLivePathAtAnyNoncePosition()
+            throws Exception {
+        byte[] commitment = receiptKeyCommitment();
+        for (int position : new int[] {0, 2}) {
+            byte[] document = gcpKeyAttestation(commitment, position);
+            JsonObject claims = baseClaims();
+            claims.remove("att_sha256");
+            JsonObject receiptHeader = protectedHeader();
+            receiptHeader.addProperty("att", new String(document, StandardCharsets.US_ASCII));
+            receiptHeader.addProperty("att_kind", "gcp-cs-jwt");
+            String receipt = flattenedReceipt(receiptHeader, claims);
+
+            ReceiptClaims verified = ReceiptVerifier.verifyReceipt(
+                    receipt,
+                    baseOptions()
+                            .requireAttestation(true)
+                            .attestationDocument(document)
+                            .gcpAttestationOptions(gcpAttestationOptions)
+                            .build());
+
+            assertThat(verified.getAttestationStatus())
+                    .isEqualTo(ReceiptClaims.AttestationStatus.VERIFIED);
+            assertThatThrownBy(() -> AttestationVerifier.verify(
+                    document, gcpAttestationOptions))
+                    .isInstanceOf(AttestationVerificationException.class)
+                    .hasMessageContaining("TLS cert");
+        }
+    }
+
+    @Test void receiptKeyBindingRejectsWrongCommitment() throws Exception {
+        byte[] wrongCommitment = sha256(
+                "another-receipt-key".getBytes(StandardCharsets.US_ASCII));
+        byte[] document = gcpKeyAttestation(wrongCommitment, 2);
+        JsonObject claims = baseClaims();
+        claims.remove("att_sha256");
+        JsonObject receiptHeader = protectedHeader();
+        receiptHeader.addProperty("att", new String(document, StandardCharsets.US_ASCII));
+        receiptHeader.addProperty("att_kind", "gcp-cs-jwt");
+
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                flattenedReceipt(receiptHeader, claims),
+                baseOptions()
+                        .requireAttestation(true)
+                        .gcpAttestationOptions(gcpAttestationOptions)
+                        .build()))
+                .isInstanceOf(ReceiptAttestationException.class)
+                .hasMessageContaining("commitment");
+    }
+
+    @Test void compactReceiptVerifiesSuppliedPinnedAttestationAndRejectsOneByteMismatch()
+            throws Exception {
+        byte[] document = gcpKeyAttestation(receiptKeyCommitment(), 2);
+        JsonObject claims = baseClaims();
+        claims.addProperty("att_sha256", b64(sha256(document)));
+        String receipt = compactReceipt(claims);
+
+        ReceiptClaims verified = ReceiptVerifier.verifyReceipt(
+                receipt,
+                baseOptions()
+                        .requireAttestation(true)
+                        .attestationDocument(document)
+                        .gcpAttestationOptions(gcpAttestationOptions)
+                        .build());
+        assertThat(verified.getAttestationStatus())
+                .isEqualTo(ReceiptClaims.AttestationStatus.VERIFIED);
+
+        byte[] changed = document.clone();
+        changed[changed.length - 1] ^= 1;
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                baseOptions()
+                        .requireAttestation(true)
+                        .attestationDocument(changed)
+                        .gcpAttestationOptions(gcpAttestationOptions)
+                        .build()))
+                .isInstanceOf(ReceiptAttestationException.class)
+                .hasMessageContaining("att_sha256 check failed");
+    }
+
+    @Test void flattenedReceiptRejectsMismatchedSuppliedAttestation() throws Exception {
+        byte[] document = gcpKeyAttestation(receiptKeyCommitment(), 2);
+        JsonObject claims = baseClaims();
+        claims.remove("att_sha256");
+        JsonObject receiptHeader = protectedHeader();
+        receiptHeader.addProperty("att", new String(document, StandardCharsets.US_ASCII));
+        receiptHeader.addProperty("att_kind", "gcp-cs-jwt");
+        String receipt = flattenedReceipt(receiptHeader, claims);
+        byte[] changed = new byte[document.length + 1];
+        System.arraycopy(document, 0, changed, 0, document.length);
+        changed[changed.length - 1] = 'x';
+
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                baseOptions()
+                        .requireAttestation(true)
+                        .attestationDocument(changed)
+                        .gcpAttestationOptions(gcpAttestationOptions)
+                        .build()))
+                .isInstanceOf(ReceiptAttestationException.class)
+                .hasMessageContaining("does not match")
+                .hasMessageContaining("embedded attestation");
+    }
+
     @Test void rejectsMultilineDataAndUnknownSseFields() throws Exception {
         StreamFixture fixture = streamReceipt(1L, "gcp-cs-jwt");
         String stream = new String(fixture.stream, StandardCharsets.UTF_8);
@@ -362,6 +492,50 @@ final class ReceiptVerifierTest {
         return header;
     }
 
+    private byte[] receiptKeyCommitment() throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update("inference-receipt-key-v1\0".getBytes(StandardCharsets.US_ASCII));
+        return digest.digest(rawPublicKey(signingKey));
+    }
+
+    private byte[] gcpKeyAttestation(byte[] commitment, int commitmentPosition)
+            throws Exception {
+        JsonObject attestationClaims = new JsonObject();
+        attestationClaims.addProperty("iss", AttestationVerifier.GCP_ISSUER);
+        attestationClaims.addProperty("aud", "quill-cloud");
+        attestationClaims.addProperty("exp", System.currentTimeMillis() / 1000L + 300L);
+        attestationClaims.addProperty("dbgstat", "disabled-since-boot");
+        attestationClaims.addProperty("swname", "CONFIDENTIAL_SPACE");
+        attestationClaims.addProperty("secboot", true);
+        attestationClaims.addProperty("hwmodel", "GCP_INTEL_TDX");
+        JsonArray nonces = new JsonArray();
+        if (commitmentPosition == 0) { nonces.add(hex(commitment)); }
+        nonces.add(repeat('a', 64));
+        nonces.add(repeat('b', 64));
+        if (commitmentPosition == 2) { nonces.add(hex(commitment)); }
+        attestationClaims.add("eat_nonce", nonces);
+        JsonObject container = new JsonObject();
+        container.addProperty("image_digest", "sha256:trusted");
+        container.addProperty("image_reference", "us-docker.pkg.dev/project/image:release");
+        JsonObject submods = new JsonObject();
+        submods.add("container", container);
+        attestationClaims.add("submods", submods);
+        return gcpJwt(attestationClaims);
+    }
+
+    private byte[] gcpJwt(JsonObject claims) throws Exception {
+        JsonObject header = new JsonObject();
+        header.addProperty("alg", "RS256");
+        header.addProperty("kid", "receipt-attestation-test-key");
+        String signingInput = b64(
+                JsonSupport.GSON.toJson(header).getBytes(StandardCharsets.UTF_8))
+                + "." + b64(JsonSupport.GSON.toJson(claims).getBytes(StandardCharsets.UTF_8));
+        Signature signer = Signature.getInstance("SHA256withRSA");
+        signer.initSign(gcpSigningKey.getPrivate());
+        signer.update(signingInput.getBytes(StandardCharsets.US_ASCII));
+        return (signingInput + "." + b64(signer.sign())).getBytes(StandardCharsets.US_ASCII);
+    }
+
     private static JsonObject header(String receipt) {
         String encoded = receipt.split("\\.", -1)[0];
         return JsonSupport.parse(new String(
@@ -400,8 +574,32 @@ final class ReceiptVerifierTest {
         return MessageDigest.getInstance("SHA-256").digest(value);
     }
 
+    private static String unsignedBase64(BigInteger value) {
+        byte[] bytes = value.toByteArray();
+        if (bytes.length > 1 && bytes[0] == 0) {
+            byte[] stripped = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, stripped, 0, stripped.length);
+            bytes = stripped;
+        }
+        return b64(bytes);
+    }
+
     private static String b64(byte[] value) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
+    }
+
+    private static String hex(byte[] value) {
+        StringBuilder result = new StringBuilder(value.length * 2);
+        for (byte item : value) {
+            result.append(String.format("%02x", item & 0xff));
+        }
+        return result.toString();
+    }
+
+    private static String repeat(char value, int count) {
+        StringBuilder result = new StringBuilder(count);
+        for (int index = 0; index < count; index++) { result.append(value); }
+        return result.toString();
     }
 
     private static int indexOf(byte[] value, byte[] needle) {

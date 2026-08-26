@@ -478,6 +478,7 @@ Pass the exact bytes held by the caller; JSON and SSE content are never normaliz
 ReceiptVerificationOptions options = ReceiptVerificationOptions.builder()
         .requestBody(requestBytes)
         .responseBody(responseBytes)
+        .attestationDocument(attestationBytes)
         .expectedNonce(nonce)
         .maxAgeSeconds(300)
         .build();
@@ -485,8 +486,11 @@ ReceiptClaims claims = ReceiptVerifier.verifyReceipt(compactJws, options);
 ```
 
 Attestation verification is required by default. Compact receipts carry only an attestation hash,
-so callers must obtain the pinned evidence separately or explicitly select signature-and-hash-only
-verification with `requireAttestation(false)`. For streaming responses, wrap the raw response
+so callers must pass the exact pinned evidence with `attestationDocument(...)` or explicitly select
+signature-and-hash-only verification with `requireAttestation(false)`. The
+`/receipt-attestation` endpoint serves a per-instance document: callers should retry that fetch
+until its SHA-256 matches the receipt's `att_sha256` claim. A document supplied for a flattened
+receipt must exactly match its embedded evidence. For streaming responses, wrap the raw response
 `InputStream` in `ReceiptCapture`, read through the wrapper, then call `verify(...)`; it retains the
 exact SSE wire bytes, discovers the flattened receipt event, and checks its position and hash.
 
