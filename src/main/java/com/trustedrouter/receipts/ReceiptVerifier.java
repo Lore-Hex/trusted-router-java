@@ -403,16 +403,20 @@ public final class ReceiptVerifier {
         }
 
         ReceiptClaims.AttestationStatus attestationStatus = verifyAttestation(
-                envelope, header, options);
+                envelope, header, attestationSha256, options);
         return new ReceiptClaims(
                 (int) rv, issuer, issuedAt, id, generationId, nonce, route,
                 request, response, model, upstream, attestationSha256, attestationStatus);
     }
 
     private static ReceiptClaims.AttestationStatus verifyAttestation(
-            Envelope envelope, Header parsedHeader, ReceiptVerificationOptions options)
+            Envelope envelope,
+            Header parsedHeader,
+            String attestationSha256,
+            ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
-        if (!options.requireAttestation()) {
+        byte[] suppliedDocument = options.attestationDocument();
+        if (!options.requireAttestation() && suppliedDocument == null) {
             if (envelope.flattened != null && parsedHeader.value.has("att_kind")) {
                 String skippedKind = stringOrNull(parsedHeader.value.get("att_kind"));
                 if (!"gcp-cs-jwt".equals(skippedKind)) {
@@ -423,25 +427,48 @@ public final class ReceiptVerifier {
             }
             return ReceiptClaims.AttestationStatus.UNVERIFIED_BY_THIS_SDK;
         }
+        byte[] attestationDocument;
         if (envelope.flattened == null) {
-            throw new MissingAttestationException(
-                    "attestation check failed: compact receipts omit attestation evidence; "
-                            + "obtain the pinned document or explicitly pass "
-                            + "requireAttestation(false)");
-        }
-        String kind = stringOrNull(parsedHeader.value.get("att_kind"));
-        if (kind == null && !parsedHeader.value.has("att_kind")) {
-            throw new MissingAttestationException(
-                    "attestation check failed: flattened receipt has no att_kind");
-        }
-        if (!"gcp-cs-jwt".equals(kind)) {
-            throw new UnsupportedAttestationException(
-                    "attestation kind check failed: unsupported att_kind '" + kind + "'");
-        }
-        String attestation = stringOrNull(parsedHeader.value.get("att"));
-        if (attestation == null || attestation.isEmpty()) {
-            throw new MissingAttestationException(
-                    "attestation check failed: flattened receipt has no embedded att");
+            if (suppliedDocument == null) {
+                throw new MissingAttestationException(
+                        "attestation check failed: compact receipts omit attestation evidence; "
+                                + "obtain the pinned document or explicitly pass "
+                                + "requireAttestation(false)");
+            }
+            if (attestationSha256 == null) {
+                throw new MissingAttestationException(
+                        "attestation check failed: compact receipt has no att_sha256 claim");
+            }
+            byte[] expectedDigest = decodeAttestationDigest(
+                    attestationSha256, "att_sha256 claim");
+            if (!MessageDigest.isEqual(sha256(suppliedDocument), expectedDigest)) {
+                throw new ReceiptAttestationException(
+                        "att_sha256 check failed: supplied attestation does not match "
+                                + "the compact receipt");
+            }
+            attestationDocument = suppliedDocument;
+        } else {
+            String kind = stringOrNull(parsedHeader.value.get("att_kind"));
+            if (kind == null && !parsedHeader.value.has("att_kind")) {
+                throw new MissingAttestationException(
+                        "attestation check failed: flattened receipt has no att_kind");
+            }
+            if (!"gcp-cs-jwt".equals(kind)) {
+                throw new UnsupportedAttestationException(
+                        "attestation kind check failed: unsupported att_kind '" + kind + "'");
+            }
+            String attestation = stringOrNull(parsedHeader.value.get("att"));
+            if (attestation == null || attestation.isEmpty()) {
+                throw new MissingAttestationException(
+                        "attestation check failed: flattened receipt has no embedded att");
+            }
+            attestationDocument = attestationBytes(attestation);
+            if (suppliedDocument != null
+                    && !MessageDigest.isEqual(suppliedDocument, attestationDocument)) {
+                throw new ReceiptAttestationException(
+                        "attestation check failed: supplied attestation does not match the "
+                                + "flattened receipt's embedded attestation");
+            }
         }
         MessageDigest digest = sha256Digest();
         digest.update(KEY_COMMITMENT_DOMAIN);
@@ -453,8 +480,7 @@ public final class ReceiptVerifier {
                 attestationOptions = defaultGcpAttestationOptions();
             }
             AttestationVerifier.verifyReceiptKeyCommitment(
-                    attestation.getBytes(StandardCharsets.US_ASCII),
-                    commitment, attestationOptions);
+                    attestationDocument, commitment, attestationOptions);
         } catch (AttestationVerificationException | RuntimeException error) {
             throw new ReceiptAttestationException(
                     "GCP attestation check failed: " + error.getMessage(), error);
@@ -541,6 +567,26 @@ public final class ReceiptVerifier {
         } catch (ReceiptStructureException error) {
             throw new ReceiptClaimsException(error.getMessage(), error);
         }
+    }
+
+    private static byte[] decodeAttestationDigest(String value, String check)
+            throws ReceiptAttestationException {
+        try {
+            return decodeBase64Url(value, check, false);
+        } catch (ReceiptStructureException error) {
+            throw new ReceiptAttestationException(error.getMessage(), error);
+        }
+    }
+
+    private static byte[] attestationBytes(String value)
+            throws ReceiptAttestationException {
+        for (int index = 0; index < value.length(); index++) {
+            if (value.charAt(index) > 0x7f) {
+                throw new ReceiptAttestationException(
+                        "attestation check failed: flattened receipt att must be ASCII");
+            }
+        }
+        return value.getBytes(StandardCharsets.US_ASCII);
     }
 
     private static StreamDigest streamDigest(

@@ -10,6 +10,7 @@ public final class ReceiptVerificationOptions {
     private final String expectedNonce;
     private final Long maxAgeSeconds;
     private final Long now;
+    private final byte[] attestationDocument;
     private final boolean requireAttestation;
     private final AttestationVerificationOptions gcpAttestationOptions;
 
@@ -20,6 +21,7 @@ public final class ReceiptVerificationOptions {
         expectedNonce = builder.expectedNonce;
         maxAgeSeconds = builder.maxAgeSeconds;
         now = builder.now;
+        attestationDocument = copy(builder.attestationDocument);
         requireAttestation = builder.requireAttestation;
         gcpAttestationOptions = builder.gcpAttestationOptions;
     }
@@ -34,6 +36,7 @@ public final class ReceiptVerificationOptions {
                 .expectedNonce(expectedNonce)
                 .maxAgeSeconds(maxAgeSeconds)
                 .now(now)
+                .attestationDocument(attestationDocument)
                 .requireAttestation(requireAttestation)
                 .gcpAttestationOptions(gcpAttestationOptions);
     }
@@ -44,6 +47,7 @@ public final class ReceiptVerificationOptions {
     String expectedNonce() { return expectedNonce; }
     Long maxAgeSeconds() { return maxAgeSeconds; }
     Long now() { return now; }
+    byte[] attestationDocument() { return copy(attestationDocument); }
     boolean requireAttestation() { return requireAttestation; }
     AttestationVerificationOptions gcpAttestationOptions() { return gcpAttestationOptions; }
 
@@ -57,6 +61,7 @@ public final class ReceiptVerificationOptions {
         private String expectedNonce;
         private Long maxAgeSeconds;
         private Long now;
+        private byte[] attestationDocument;
         private boolean requireAttestation = true;
         private AttestationVerificationOptions gcpAttestationOptions;
 
@@ -70,6 +75,17 @@ public final class ReceiptVerificationOptions {
         Builder maxAgeSeconds(Long value) { maxAgeSeconds = value; return this; }
         public Builder now(long value) { now = Long.valueOf(value); return this; }
         Builder now(Long value) { now = value; return this; }
+
+        /**
+         * Supplies the exact GCP attestation JWT bytes pinned by a compact receipt's
+         * {@code att_sha256} claim. For a flattened receipt, the supplied bytes must equal its
+         * embedded document.
+         */
+        public Builder attestationDocument(byte[] value) {
+            attestationDocument = copy(value);
+            return this;
+        }
+
         public Builder requireAttestation(boolean value) { requireAttestation = value; return this; }
 
         /**
