@@ -50,23 +50,17 @@ public final class ReceiptCapture extends FilterInputStream {
     /** Verify the discovered receipt against every byte read through this wrapper. */
     public ReceiptClaims verify(ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
+        if (options == null) { throw new NullPointerException("options"); }
         refreshReceipt();
         if (receipt == null) {
             throw new ReceiptStructureException(
                     "receipt capture check failed: no flattened receipt event has been captured");
         }
-        ReceiptVerificationOptions base = options == null
-                ? ReceiptVerificationOptions.builder().build() : options;
-        ReceiptVerificationOptions checked = base.toBuilder()
+        ReceiptVerificationOptions checked = options.toBuilder()
                 .responseBody((byte[]) null)
                 .responseStream(captured.toByteArray())
                 .build();
         return ReceiptVerifier.verifyReceipt(receipt, checked);
-    }
-
-    /** Verify the captured receipt with default fail-closed options. */
-    public ReceiptClaims verify() throws ReceiptVerificationException {
-        return verify(null);
     }
 
     private void refreshReceipt() {

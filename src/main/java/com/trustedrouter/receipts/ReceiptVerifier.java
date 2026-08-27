@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -36,6 +38,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -58,23 +61,19 @@ public final class ReceiptVerifier {
 
     private ReceiptVerifier() {}
 
-    /** Verify with default fail-closed options. */
-    public static ReceiptClaims verifyReceipt(String receipt)
-            throws ReceiptVerificationException {
-        return verifyReceipt(receipt, null);
-    }
-
     /** Verify a compact JWS string or flattened JWS JSON string. */
     public static ReceiptClaims verifyReceipt(
             String receipt, ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
         if (receipt == null) { throw new NullPointerException("receipt"); }
-        ReceiptVerificationOptions checkedOptions = options == null
-                ? ReceiptVerificationOptions.builder().build() : options;
+        if (options == null) { throw new NullPointerException("options"); }
+        requireTrafficBindings(options);
+        String expectedIssuer = canonicalHttpsOrigin(
+                options.expectedIssuer(), "expectedIssuer");
         Envelope envelope = parseEnvelope(receipt);
         Header header = parseHeader(envelope.header);
         verifySignature(envelope, header.publicKey);
-        return verifyClaimsAndInputs(envelope, header, checkedOptions);
+        return verifyClaimsAndInputs(envelope, header, options, expectedIssuer);
     }
 
     /** Verify a previously parsed flattened JWS object. */
@@ -83,12 +82,6 @@ public final class ReceiptVerifier {
             throws ReceiptVerificationException {
         if (receipt == null) { throw new NullPointerException("receipt"); }
         return verifyReceipt(JsonSupport.GSON.toJson(receipt), options);
-    }
-
-    /** Verify a parsed flattened JWS object with default fail-closed options. */
-    public static ReceiptClaims verifyReceipt(JsonObject receipt)
-            throws ReceiptVerificationException {
-        return verifyReceipt(receipt, null);
     }
 
     /** Verify a compact or flattened ASCII JWS value. */
@@ -107,10 +100,74 @@ public final class ReceiptVerifier {
         }
     }
 
-    /** Verify an ASCII JWS value with default fail-closed options. */
-    public static ReceiptClaims verifyReceipt(byte[] receipt)
-            throws ReceiptVerificationException {
-        return verifyReceipt(receipt, null);
+    private static void requireTrafficBindings(ReceiptVerificationOptions options)
+            throws MissingBindingException {
+        if (!options.requireBindings()) { return; }
+        boolean missingRequest = options.requestBody() == null;
+        boolean missingResponse = options.responseBody() == null
+                && options.responseStream() == null;
+        if (missingRequest && missingResponse) {
+            throw new MissingBindingException(
+                    "receipt binding check failed: missing requestBody and "
+                            + "responseBody or responseStream");
+        }
+        if (missingRequest) {
+            throw new MissingBindingException(
+                    "receipt binding check failed: missing requestBody");
+        }
+        if (missingResponse) {
+            throw new MissingBindingException(
+                    "receipt binding check failed: missing responseBody or responseStream");
+        }
+    }
+
+    private static String canonicalHttpsOrigin(String value, String check)
+            throws ReceiptIssuerException {
+        if (value == null || value.isEmpty()) {
+            throw new ReceiptIssuerException(
+                    check + " check failed: required HTTPS origin is missing");
+        }
+        URI origin;
+        try {
+            origin = new URI(value);
+        } catch (URISyntaxException | IllegalArgumentException error) {
+            throw new ReceiptIssuerException(
+                    check + " check failed: invalid HTTPS origin", error);
+        }
+        if (!"https".equalsIgnoreCase(origin.getScheme())) {
+            throw new ReceiptIssuerException(
+                    check + " check failed: issuer origin must use https");
+        }
+        String path = origin.getRawPath();
+        if (origin.getHost() == null
+                || origin.getRawUserInfo() != null
+                || !(path == null || path.isEmpty() || "/".equals(path))
+                || origin.getRawQuery() != null
+                || origin.getRawFragment() != null) {
+            throw new ReceiptIssuerException(
+                    check + " check failed: expected an origin with no path, query, or fragment");
+        }
+        String host = origin.getHost().toLowerCase(Locale.ROOT);
+        for (int index = 0; index < host.length(); index++) {
+            if (Character.isWhitespace(host.charAt(index))) {
+                throw new ReceiptIssuerException(
+                        check + " check failed: invalid HTTPS origin host");
+            }
+        }
+        if (host.indexOf(':') >= 0 && !host.startsWith("[")) { host = "[" + host + "]"; }
+        int port = origin.getPort();
+        if (port > 65535) {
+            throw new ReceiptIssuerException(check + " check failed: invalid HTTPS origin");
+        }
+        String canonical = "https://" + host
+                + (port == -1 || port == 443 ? "" : ":" + port);
+        String normalizedInput = value.endsWith("/")
+                ? value.substring(0, value.length() - 1) : value;
+        String acceptedInput = port == 443 ? "https://" + host + ":443" : canonical;
+        if (!normalizedInput.equalsIgnoreCase(acceptedInput)) {
+            throw new ReceiptIssuerException(check + " check failed: invalid HTTPS origin");
+        }
+        return canonical;
     }
 
     private static Envelope parseEnvelope(String receipt) throws ReceiptStructureException {
@@ -247,7 +304,10 @@ public final class ReceiptVerifier {
     }
 
     private static ReceiptClaims verifyClaimsAndInputs(
-            Envelope envelope, Header header, ReceiptVerificationOptions options)
+            Envelope envelope,
+            Header header,
+            ReceiptVerificationOptions options,
+            String expectedIssuer)
             throws ReceiptVerificationException {
         if (!envelope.claims.isJsonObject()) {
             throw new ReceiptClaimsException(
@@ -258,6 +318,13 @@ public final class ReceiptVerifier {
         if (rv != 1L) {
             throw new ReceiptClaimsException(
                     "rv claim check failed: expected integer 1, got " + rv);
+        }
+        String issuer = requiredString(claims, "iss", "claims");
+        String canonicalIssuer = canonicalHttpsOrigin(issuer, "iss claim");
+        if (!constantTimeEquals(canonicalIssuer, expectedIssuer)) {
+            throw new ReceiptIssuerException(
+                    "iss claim check failed: expected '" + expectedIssuer
+                            + "', got '" + canonicalIssuer + "'");
         }
         long issuedAt = integer(claims.get("iat"), "iat claim", ErrorFamily.TIME);
         long now = options.now() == null
@@ -280,8 +347,6 @@ public final class ReceiptVerifier {
                         "iat max-age check failed: receipt exceeds maxAgeSeconds");
             }
         }
-
-        String issuer = requiredString(claims, "iss", "claims");
         String id = requiredString(claims, "jti", "claims");
         String generationId = optionalString(claims, "gen", "claims");
         String route = requiredString(claims, "route", "claims");

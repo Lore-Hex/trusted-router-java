@@ -11,11 +11,13 @@ import com.trustedrouter.attestation.AttestationVerificationOptions;
 import com.trustedrouter.attestation.AttestationVerifier;
 import com.trustedrouter.internal.JsonSupport;
 import com.trustedrouter.receipts.MissingAttestationException;
+import com.trustedrouter.receipts.MissingBindingException;
 import com.trustedrouter.receipts.ReceiptAttestationException;
 import com.trustedrouter.receipts.ReceiptCapture;
 import com.trustedrouter.receipts.ReceiptClaims;
 import com.trustedrouter.receipts.ReceiptHashException;
 import com.trustedrouter.receipts.ReceiptHeaderException;
+import com.trustedrouter.receipts.ReceiptIssuerException;
 import com.trustedrouter.receipts.ReceiptNonceException;
 import com.trustedrouter.receipts.ReceiptSignatureException;
 import com.trustedrouter.receipts.ReceiptStructureException;
@@ -35,16 +37,24 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class ReceiptVerifierTest {
+    private static final String EXPECTED_ISSUER = "https://api.trustedrouter.com";
     private static final byte[] REQUEST = "request bytes".getBytes(StandardCharsets.UTF_8);
     private static final byte[] RESPONSE = "response bytes".getBytes(StandardCharsets.UTF_8);
 
     private KeyPair signingKey;
     private KeyPair gcpSigningKey;
+    private JsonObject gcpJwks;
     private AttestationVerificationOptions gcpAttestationOptions;
 
     @BeforeEach void setUp() throws Exception {
@@ -60,7 +70,7 @@ final class ReceiptVerifierTest {
         jwk.addProperty("e", unsignedBase64(publicKey.getPublicExponent()));
         JsonArray keys = new JsonArray();
         keys.add(jwk);
-        JsonObject gcpJwks = new JsonObject();
+        gcpJwks = new JsonObject();
         gcpJwks.add("keys", keys);
         gcpAttestationOptions = AttestationVerificationOptions.builder(
                 AttestationPolicy.builder().expectedImageDigest("sha256:trusted").build())
@@ -88,6 +98,158 @@ final class ReceiptVerifierTest {
         assertThat(claims.getRoute()).isEqualTo("responses");
         assertThat(claims.getResponse().getOf()).isEqualTo("sse-events-v1");
         assertThat(claims.getResponse().getEvents()).isEqualTo(3L);
+    }
+
+    @Test void bindingsAreRequiredByDefaultAndCanBeExplicitlyDisabled() throws Exception {
+        String receipt = compactReceipt(baseClaims());
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt, signatureOnlyOptions(EXPECTED_ISSUER).build()))
+                .isInstanceOf(MissingBindingException.class)
+                .hasMessageContaining(
+                        "missing requestBody and responseBody or responseStream");
+
+        ReceiptClaims claims = ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .requireBindings(false)
+                        .build());
+        assertThat(claims.getIssuer()).isEqualTo(EXPECTED_ISSUER);
+    }
+
+    @Test void partialBindingsFailClosedAndNameTheMissingInput() throws Exception {
+        String receipt = compactReceipt(baseClaims());
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .requestBody(REQUEST)
+                        .build()))
+                .isInstanceOf(MissingBindingException.class)
+                .hasMessageContaining("missing responseBody or responseStream");
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .responseBody(RESPONSE)
+                        .build()))
+                .isInstanceOf(MissingBindingException.class)
+                .hasMessageContaining("missing requestBody");
+    }
+
+    @Test void issuerPinMatchesExactlyAndMismatchIsTyped() throws Exception {
+        String receipt = compactReceipt(baseClaims());
+        ReceiptClaims verified = ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .requireBindings(false)
+                        .build());
+        assertThat(verified.getIssuer()).isEqualTo(EXPECTED_ISSUER);
+
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions("https://other.example")
+                        .requireBindings(false)
+                        .build()))
+                .isInstanceOf(ReceiptIssuerException.class)
+                .hasMessageContaining("iss claim check failed: expected");
+    }
+
+    @Test void issuerOriginsNormalizeCaseDefaultPortAndTrailingSlash() throws Exception {
+        for (String[] origins : new String[][] {
+                {"https://API.TrustedRouter.COM/", "HTTPS://api.trustedrouter.com"},
+                {"https://API.TrustedRouter.COM:443/", "https://api.trustedrouter.com"},
+                {"https://api.trustedrouter.com", "HTTPS://API.TrustedRouter.COM:443/"},
+                {"https://API.TrustedRouter.COM:8443/", "https://api.trustedrouter.com:8443"}
+        }) {
+            JsonObject claims = baseClaims();
+            claims.addProperty("iss", origins[0]);
+            ReceiptClaims verified = ReceiptVerifier.verifyReceipt(
+                    compactReceipt(claims),
+                    signatureOnlyOptions(origins[1])
+                            .requireBindings(false)
+                            .build());
+            assertThat(verified.getIssuer()).isEqualTo(origins[0]);
+        }
+    }
+
+    @Test void issuerNonDefaultPortMustMatchAfterNormalization() throws Exception {
+        JsonObject claims = baseClaims();
+        claims.addProperty("iss", EXPECTED_ISSUER + ":8443");
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                compactReceipt(claims),
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .requireBindings(false)
+                        .build()))
+                .isInstanceOf(ReceiptIssuerException.class)
+                .hasMessageContaining("iss claim check failed: expected");
+    }
+
+    @Test void receiptAndExpectedIssuerMustBeHttpsOrigins() throws Exception {
+        JsonObject claims = baseClaims();
+        claims.addProperty("iss", "http://api.trustedrouter.com");
+        String receipt = compactReceipt(claims);
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                receipt,
+                signatureOnlyOptions(EXPECTED_ISSUER)
+                        .requireBindings(false)
+                        .build()))
+                .isInstanceOf(ReceiptIssuerException.class)
+                .hasMessageContaining("must use https");
+
+        assertThatThrownBy(() -> ReceiptVerifier.verifyReceipt(
+                compactReceipt(baseClaims()),
+                signatureOnlyOptions("http://api.trustedrouter.com")
+                        .requireBindings(false)
+                        .build()))
+                .isInstanceOf(ReceiptIssuerException.class)
+                .hasMessageContaining("must use https");
+    }
+
+    @Test void receiptIssuerIsNeverUsedToFetchVerificationMaterial() throws Exception {
+        String hostileIssuer = "https://evil.example";
+        byte[] document = gcpKeyAttestation(receiptKeyCommitment(), 2);
+        JsonObject claims = baseClaims();
+        claims.addProperty("iss", hostileIssuer);
+        claims.remove("att_sha256");
+        JsonObject receiptHeader = protectedHeader();
+        receiptHeader.addProperty("att", new String(document, StandardCharsets.US_ASCII));
+        receiptHeader.addProperty("att_kind", "gcp-cs-jwt");
+        String receipt = flattenedReceipt(receiptHeader, claims);
+        List<String> requestedHosts = new ArrayList<String>();
+        OkHttpClient guardedHttp = new OkHttpClient.Builder()
+                .addInterceptor(chain -> {
+                    String host = chain.request().url().host();
+                    requestedHosts.add(host);
+                    if ("evil.example".equals(host)) {
+                        throw new AssertionError(
+                                "receipt issuer was dereferenced for verification material");
+                    }
+                    return new Response.Builder()
+                            .request(chain.request())
+                            .protocol(Protocol.HTTP_1_1)
+                            .code(200)
+                            .message("OK")
+                            .body(ResponseBody.create(JsonSupport.GSON.toJson(gcpJwks), null))
+                            .build();
+                })
+                .build();
+        AttestationVerificationOptions guardedAttestation =
+                AttestationVerificationOptions.builder(
+                                AttestationPolicy.builder()
+                                        .expectedImageDigest("sha256:trusted")
+                                        .build())
+                        .httpClient(guardedHttp)
+                        .build();
+
+        ReceiptClaims verified = ReceiptVerifier.verifyReceipt(
+                receipt,
+                ReceiptVerificationOptions.builder(hostileIssuer)
+                        .requestBody(REQUEST)
+                        .responseBody(RESPONSE)
+                        .now(1000L)
+                        .gcpAttestationOptions(guardedAttestation)
+                        .build());
+
+        assertThat(verified.getIssuer()).isEqualTo(hostileIssuer);
+        assertThat(requestedHosts).containsExactly("www.googleapis.com");
     }
 
     @Test void receiptCapturePreservesChunkedWireBytesAndVerifies() throws Exception {
@@ -358,7 +520,8 @@ final class ReceiptVerifierTest {
         byte[] metadataBytes = resource("receipts/" + name + "/metadata.json");
         JsonObject metadata = JsonSupport.parse(
                 new String(metadataBytes, StandardCharsets.UTF_8)).getAsJsonObject();
-        ReceiptVerificationOptions.Builder options = ReceiptVerificationOptions.builder()
+        ReceiptVerificationOptions.Builder options =
+                ReceiptVerificationOptions.builder(EXPECTED_ISSUER)
                 .requestBody(resource("receipts/" + name + "/request.body"))
                 .expectedNonce(metadata.get("expected_nonce").getAsString())
                 .now(metadata.get("now").getAsLong())
@@ -377,7 +540,7 @@ final class ReceiptVerifierTest {
 
     private void verifyStream(String receipt, byte[] stream) throws Exception {
         ReceiptVerifier.verifyReceipt(receipt,
-                ReceiptVerificationOptions.builder()
+                ReceiptVerificationOptions.builder(EXPECTED_ISSUER)
                         .requestBody(REQUEST)
                         .responseStream(stream)
                         .expectedNonce("fixture_nonce")
@@ -387,10 +550,16 @@ final class ReceiptVerifierTest {
     }
 
     private ReceiptVerificationOptions.Builder baseOptions() {
-        return ReceiptVerificationOptions.builder()
+        return ReceiptVerificationOptions.builder(EXPECTED_ISSUER)
                 .requestBody(REQUEST)
                 .responseBody(RESPONSE)
                 .expectedNonce("fixture_nonce")
+                .now(1000L)
+                .requireAttestation(false);
+    }
+
+    private ReceiptVerificationOptions.Builder signatureOnlyOptions(String expectedIssuer) {
+        return ReceiptVerificationOptions.builder(expectedIssuer)
                 .now(1000L)
                 .requireAttestation(false);
     }
