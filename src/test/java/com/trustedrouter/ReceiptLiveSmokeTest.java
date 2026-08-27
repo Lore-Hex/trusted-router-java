@@ -66,7 +66,7 @@ final class ReceiptLiveSmokeTest {
         assertThat(receipt).as("receipt event in stream").isNotNull();
         ReceiptClaims claims = ReceiptVerifier.verifyReceipt(
                 receipt,
-                ReceiptVerificationOptions.builder()
+                ReceiptVerificationOptions.builder("https://api.trustedrouter.com")
                         .requestBody(body.getBytes(StandardCharsets.UTF_8))
                         .responseStream(wire)
                         .expectedNonce("java_live_check_1")
@@ -105,7 +105,7 @@ final class ReceiptLiveSmokeTest {
         assertThat(attestation).as("matching per-instance attestation within 12 fetches").isNotNull();
         ReceiptClaims claims = ReceiptVerifier.verifyReceipt(
                 compact,
-                ReceiptVerificationOptions.builder()
+                ReceiptVerificationOptions.builder("https://api.trustedrouter.com")
                         .requestBody(body.getBytes(StandardCharsets.UTF_8))
                         .responseBody(response.body())
                         .expectedNonce("java_live_check_2")

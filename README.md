@@ -472,10 +472,13 @@ certificate-only Java verification as exporter-bound.
 ## Inference receipts
 
 `ReceiptVerifier` verifies compact or flattened inference-receipt JWS values in fail-closed order.
-Pass the exact bytes held by the caller; JSON and SSE content are never normalized:
+The expected issuer is required and pinned after canonical HTTPS-origin normalization (lowercase
+host, no default port or trailing slash). Pass the exact bytes held by the caller; JSON and SSE
+content are never normalized:
 
 ```java
-ReceiptVerificationOptions options = ReceiptVerificationOptions.builder()
+ReceiptVerificationOptions options = ReceiptVerificationOptions.builder(
+        "https://api.trustedrouter.com")
         .requestBody(requestBytes)
         .responseBody(responseBytes)
         .attestationDocument(attestationBytes)
@@ -485,9 +488,14 @@ ReceiptVerificationOptions options = ReceiptVerificationOptions.builder()
 ReceiptClaims claims = ReceiptVerifier.verifyReceipt(compactJws, options);
 ```
 
-Attestation verification is required by default. Compact receipts carry only an attestation hash,
-so callers must pass the exact pinned evidence with `attestationDocument(...)` or explicitly select
-signature-and-hash-only verification with `requireAttestation(false)`. The
+Request and response bindings are required by default. For deliberate signature-only inspection,
+pass `requireBindings(false)`; otherwise missing traffic throws `MissingBindingException`. An
+invalid or mismatched issuer throws `ReceiptIssuerException`. Attestation verification is
+independently required by default.
+Compact receipts carry only an attestation hash, so callers must pass the exact pinned evidence with
+`attestationDocument(...)` or explicitly select verification without attestation with
+`requireAttestation(false)`; both escape hatches must be explicit when neither traffic nor
+attestation evidence is supplied. The
 `/receipt-attestation` endpoint serves a per-instance document: callers should retry that fetch
 until its SHA-256 matches the receipt's `att_sha256` claim. A document supplied for a flattened
 receipt must exactly match its embedded evidence. For streaming responses, wrap the raw response

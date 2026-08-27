@@ -4,6 +4,7 @@ import com.trustedrouter.attestation.AttestationVerificationOptions;
 
 /** Exact request/response bytes and policy checks used to verify a receipt. */
 public final class ReceiptVerificationOptions {
+    private final String expectedIssuer;
     private final byte[] requestBody;
     private final byte[] responseBody;
     private final byte[] responseStream;
@@ -12,9 +13,11 @@ public final class ReceiptVerificationOptions {
     private final Long now;
     private final byte[] attestationDocument;
     private final boolean requireAttestation;
+    private final boolean requireBindings;
     private final AttestationVerificationOptions gcpAttestationOptions;
 
     private ReceiptVerificationOptions(Builder builder) {
+        expectedIssuer = builder.expectedIssuer;
         requestBody = copy(builder.requestBody);
         responseBody = copy(builder.responseBody);
         responseStream = copy(builder.responseStream);
@@ -23,13 +26,15 @@ public final class ReceiptVerificationOptions {
         now = builder.now;
         attestationDocument = copy(builder.attestationDocument);
         requireAttestation = builder.requireAttestation;
+        requireBindings = builder.requireBindings;
         gcpAttestationOptions = builder.gcpAttestationOptions;
     }
 
-    public static Builder builder() { return new Builder(); }
+    /** Creates verification options pinned to the expected receipt issuer. */
+    public static Builder builder(String expectedIssuer) { return new Builder(expectedIssuer); }
 
     public Builder toBuilder() {
-        return new Builder()
+        return new Builder(expectedIssuer)
                 .requestBody(requestBody)
                 .responseBody(responseBody)
                 .responseStream(responseStream)
@@ -38,9 +43,11 @@ public final class ReceiptVerificationOptions {
                 .now(now)
                 .attestationDocument(attestationDocument)
                 .requireAttestation(requireAttestation)
+                .requireBindings(requireBindings)
                 .gcpAttestationOptions(gcpAttestationOptions);
     }
 
+    String expectedIssuer() { return expectedIssuer; }
     byte[] requestBody() { return copy(requestBody); }
     byte[] responseBody() { return copy(responseBody); }
     byte[] responseStream() { return copy(responseStream); }
@@ -49,12 +56,17 @@ public final class ReceiptVerificationOptions {
     Long now() { return now; }
     byte[] attestationDocument() { return copy(attestationDocument); }
     boolean requireAttestation() { return requireAttestation; }
+    boolean requireBindings() { return requireBindings; }
     AttestationVerificationOptions gcpAttestationOptions() { return gcpAttestationOptions; }
 
     private static byte[] copy(byte[] value) { return value == null ? null : value.clone(); }
 
-    /** Builder for receipt verification inputs. Attestation verification defaults to required. */
+    /**
+     * Builder for receipt verification inputs. Traffic bindings and attestation verification
+     * default to required.
+     */
     public static final class Builder {
+        private final String expectedIssuer;
         private byte[] requestBody;
         private byte[] responseBody;
         private byte[] responseStream;
@@ -63,9 +75,10 @@ public final class ReceiptVerificationOptions {
         private Long now;
         private byte[] attestationDocument;
         private boolean requireAttestation = true;
+        private boolean requireBindings = true;
         private AttestationVerificationOptions gcpAttestationOptions;
 
-        private Builder() {}
+        private Builder(String expectedIssuer) { this.expectedIssuer = expectedIssuer; }
 
         public Builder requestBody(byte[] value) { requestBody = copy(value); return this; }
         public Builder responseBody(byte[] value) { responseBody = copy(value); return this; }
@@ -87,6 +100,12 @@ public final class ReceiptVerificationOptions {
         }
 
         public Builder requireAttestation(boolean value) { requireAttestation = value; return this; }
+
+        /**
+         * Requires exact request and response traffic by default. Set false only for deliberate
+         * signature-only or partial-binding inspection.
+         */
+        public Builder requireBindings(boolean value) { requireBindings = value; return this; }
 
         /**
          * Supplies release pins and optionally pre-fetched GCP JWKS for offline attestation checks.
