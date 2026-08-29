@@ -43,15 +43,15 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 }
 
 dependencies {
-    api("com.squareup.okhttp3:okhttp:5.3.0")
-    api("com.google.code.gson:gson:2.13.2")
+    api("com.squareup.okhttp3:okhttp:5.5.0")
+    api("com.google.code.gson:gson:2.14.0")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("com.squareup.okhttp3:mockwebserver:5.3.0")
-    testImplementation("com.squareup.okhttp3:okhttp-tls:5.3.0")
-    testImplementation("org.assertj:assertj-core:3.27.6")
+    testImplementation("com.squareup.okhttp3:mockwebserver:5.5.0")
+    testImplementation("com.squareup.okhttp3:okhttp-tls:5.5.0")
+    testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
 tasks.test {
