@@ -1,0 +1,848 @@
+[
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/CallOptions.java",
+      "HeaderMapOperation",
+      "this.headers.put(name, value);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/CallOptions.java",
+      "HeaderMapOperation",
+      "this.headers.putAll(values);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/TrustedRouterAsyncClient.java",
+      "BroadCatch",
+      "} catch (Exception error) {"
+    ],
+    "count": 1,
+    "reason": "The future completes exceptionally with the original failure."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/TrustedRouterClient.java",
+      "InputLaundering",
+      "query.append(encode(key)).append('=').append(encode(String.valueOf(value)));"
+    ],
+    "count": 1,
+    "reason": "Query serialization follows a null guard and is not a JSON field conversion."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/TrustedRouterOptions.java",
+      "HeaderMapOperation",
+      "this.headers.put(name, value);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/TrustedRouterOptions.java",
+      "HeaderMapOperation",
+      "this.headers.putAll(values);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "BroadCatch",
+      "} catch (IOException | RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS parse failure is translated to an attestation verification exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "BroadCatch",
+      "} catch (RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS parse failure is translated to an attestation verification exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "&& value.getAsJsonPrimitive().isBoolean() && value.getAsBoolean();"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "? jwks.getAsJsonArray(\"keys\") : new JsonArray();"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "for (JsonElement item : value.getAsJsonArray()) {"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "if (!parsed.isJsonObject() || !parsed.getAsJsonObject().has(\"keys\")) {"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "if (value.isJsonObject() && safeEquals(kid, string(value.getAsJsonObject(), \"kid\"))) {"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "key = value.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "out.add(item.getAsString());"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "out.add(value.getAsString());"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "return parent.getAsJsonObject(key);"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "return parsed.getAsJsonObject();"
+    ],
+    "count": 2,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "return value.getAsString();"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+      "JsonExtraction",
+      "try { return Long.valueOf(value.getAsBigDecimal().longValueExact()); }"
+    ],
+    "count": 1,
+    "reason": "JWT/JWKS object and primitive guards dominate extraction; malformed trust material fails with an attestation exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/errors/TrustedRouterException.java",
+      "JsonExtraction",
+      "JsonElement direct = payload.getAsJsonObject().get(key);"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/errors/TrustedRouterException.java",
+      "JsonExtraction",
+      "JsonElement error = payload.getAsJsonObject().get(\"error\");"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/errors/TrustedRouterException.java",
+      "JsonExtraction",
+      "direct = error.getAsJsonObject().get(key);"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/errors/TrustedRouterException.java",
+      "JsonExtraction",
+      "return com.trustedrouter.internal.WireShape.isString(direct) ? direct.getAsString() : null;"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/ErrorClassifier.java",
+      "InputLaundering",
+      "Double bounded = boundedRetryAfter(Double.parseDouble(millis.trim()) / 1000.0d);"
+    ],
+    "count": 1,
+    "reason": "Retry-After is an advisory string header; NumberFormatException falls back to bounded retry policy."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/ErrorClassifier.java",
+      "InputLaundering",
+      "return boundedRetryAfter(Double.parseDouble(value.trim()));"
+    ],
+    "count": 1,
+    "reason": "Retry-After is an advisory string header; NumberFormatException falls back to bounded retry policy."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/JsonSupport.java",
+      "JsonExtraction",
+      "JsonObject object = payload.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/JsonSupport.java",
+      "JsonExtraction",
+      "String message = nonEmptyString(error.getAsJsonObject().get(\"message\"));"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/JsonSupport.java",
+      "JsonExtraction",
+      "String text = value.getAsString();"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/JsonSupport.java",
+      "JsonExtraction",
+      "String type = nonEmptyString(error.getAsJsonObject().get(\"type\"));"
+    ],
+    "count": 1,
+    "reason": "Optional error metadata extraction is shape/type guarded; malformed metadata preserves raw payload and HTTP error classification."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/RequestRecorder.java",
+      "BroadCatch",
+      "} catch (RuntimeException impossible) {"
+    ],
+    "count": 8,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/ReservedHeader.java",
+      "BroadCatch",
+      "} catch (RuntimeException impossible) {"
+    ],
+    "count": 3,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "BroadCatch",
+      "} catch (RuntimeException invalid) {"
+    ],
+    "count": 1,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "InputLaundering",
+      "? value.getAsDouble() : Double.parseDouble(value.getAsString().trim());"
+    ],
+    "count": 1,
+    "reason": "Telemetry policy accepts finite numeric hints only; malformed advisory input cannot affect API success."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "\"freebsd\", \"other\") ? os : fallback.get(\"os\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "\"tr-java\", \"tr-swift\") ? name : fallback.get(\"name\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? arch : fallback.get(\"arch\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? lang : fallback.get(\"lang\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? runtime : fallback.get(\"runtime\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? value.getAsDouble() : Double.parseDouble(value.getAsString().trim());"
+    ],
+    "count": 2,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? value.getAsString() : null;"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Telemetry.java",
+      "JsonExtraction",
+      "? version : fallback.get(\"version\").getAsString());"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "BroadCatch",
+      "} catch (IOException | RuntimeException failure) {"
+    ],
+    "count": 1,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "BroadCatch",
+      "} catch (RuntimeException failure) {"
+    ],
+    "count": 1,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "BroadCatch",
+      "} catch (RuntimeException impossible) {"
+    ],
+    "count": 6,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "HeaderMapOperation",
+      "headers.put(\"Authorization\", \"Bearer \" + key);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "HeaderMapOperation",
+      "headers.put(\"Content-Type\", \"application/json\");"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "HeaderMapOperation",
+      "headers.put(\"User-Agent\", RequestFactory.userAgent());"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "HeaderMapOperation",
+      "headers.put(\"X-TrustedRouter-Workspace\", workspaceId);"
+    ],
+    "count": 1,
+    "reason": "Public builder stores entries only; RequestFactory performs case-insensitive grouping and merges before wire use."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "InputLaundering",
+      "seconds = Double.parseDouble(header.trim());"
+    ],
+    "count": 1,
+    "reason": "Telemetry policy accepts finite numeric hints only; malformed advisory input cannot affect API success."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "JsonExtraction",
+      ".get(\"outcome\").getAsString();"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "JsonExtraction",
+      ": attempts.get(attempts.size() - 1).getAsJsonObject()"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "JsonExtraction",
+      "JsonElement policyElement = payload.getAsJsonObject().get(\"policy\");"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "JsonExtraction",
+      "JsonObject policy = policyElement.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/TelemetryReporter.java",
+      "JsonExtraction",
+      "this.finalOutcome = json.get(\"final_outcome\").getAsString();"
+    ],
+    "count": 1,
+    "reason": "Generated telemetry objects have fixed fields; incoming policy and finite-number conversion are guarded and advisory."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "BroadCatch",
+      "} catch (RuntimeException impossible) {"
+    ],
+    "count": 1,
+    "reason": "Telemetry is best effort and cannot fail an API request; reserved-header failure strips the reserved header before proceeding."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "BroadCatch",
+      "} catch (TrustedRouterException | RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "Finishes telemetry then rethrows the original failure."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "JsonExtraction",
+      "&& !allowFallbacks.getAsBoolean();"
+    ],
+    "count": 1,
+    "reason": "Optional routing/telemetry hints check object shape and exact primitive kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "JsonExtraction",
+      "? model.getAsString() : null;"
+    ],
+    "count": 1,
+    "reason": "Optional routing/telemetry hints check object shape and exact primitive kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "JsonExtraction",
+      "JsonElement allowFallbacks = provider.getAsJsonObject().get(\"allow_fallbacks\");"
+    ],
+    "count": 1,
+    "reason": "Optional routing/telemetry hints check object shape and exact primitive kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "JsonExtraction",
+      "JsonElement provider = body.getAsJsonObject().get(\"provider\");"
+    ],
+    "count": 1,
+    "reason": "Optional routing/telemetry hints check object shape and exact primitive kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/Transport.java",
+      "JsonExtraction",
+      "JsonObject object = body.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Optional routing/telemetry hints check object shape and exact primitive kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/WireShape.java",
+      "JsonExtraction",
+      "return value.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Central object/string guard checks the precise JSON kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/internal/WireShape.java",
+      "JsonExtraction",
+      "return value.getAsString();"
+    ],
+    "count": 1,
+    "reason": "Central object/string guard checks the precise JSON kind before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ChatCompletion.java",
+      "JsonExtraction",
+      "return content != null && content.isJsonPrimitive() ? content.getAsString() : \"\";"
+    ],
+    "count": 1,
+    "reason": "ModelDecoder validates consumed message content before reflective construction; structured/null content yields no text."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "JsonElement projected = project(value.getAsJsonObject().get(name), field.getGenericType());"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "T value = JsonSupport.GSON.fromJson(project(object, type), type);"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "for (JsonElement item : value.getAsJsonArray()) {"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "for (Map.Entry<String, JsonElement> entry : value.getAsJsonObject().entrySet()) {"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "if (target == int.class || target == Integer.class) { value.getAsBigDecimal().intValueExact(); }"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "if (target == long.class || target == Long.class) { value.getAsBigDecimal().longValueExact(); }"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+      "JsonExtraction",
+      "return value.getAsJsonArray();"
+    ],
+    "count": 1,
+    "reason": "Projection extracts only after the matching shape/kind check; consumed fields validated first; original tree retained."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "BroadCatch",
+      "} catch (AttestationVerificationException | RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "Parse failure is translated into a typed receipt structure exception; no success or retry."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "BroadCatch",
+      "} catch (IOException | RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "Parse failure is translated into a typed receipt structure exception; no success or retry."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "InputLaundering",
+      "@Override public double doubleValue() { return Double.parseDouble(value); }"
+    ],
+    "count": 1,
+    "reason": "Integer JSON kind and integer grammar checked first; overflow becomes a typed receipt exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "InputLaundering",
+      "return Long.parseLong(raw);"
+    ],
+    "count": 1,
+    "reason": "Integer JSON kind and integer grammar checked first; overflow becomes a typed receipt exception."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "JsonElement receipt = decoded.getAsJsonObject().get(\"inference_receipt\");"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "JsonObject claims = envelope.claims.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "JsonObject header = value.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "JsonObject jwk = jwkValue.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "String raw = value.getAsString();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "flattened = parsed.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "if (!isString(member) || member.getAsString().isEmpty()) {"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "return isString(value) ? value.getAsString() : null;"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "return member.getAsString();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "return receipt.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "return value.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java",
+      "JsonExtraction",
+      "|| !decoded.getAsJsonObject().has(\"inference_receipt\")) {"
+    ],
+    "count": 1,
+    "reason": "Receipt parser checks JSON kind and primitive grammar before extraction; failures retain the typed receipt error family."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/requests/ChatRequest.java",
+      "JsonExtraction",
+      "? value.getAsJsonObject(\"stream_options\") : new JsonObject();"
+    ],
+    "count": 1,
+    "reason": "stream_options is checked for object shape before extraction."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/requests/FusionRequest.java",
+      "JsonExtraction",
+      "chat.message(message.getAsJsonObject());"
+    ],
+    "count": 1,
+    "reason": "Private arrays contain only JsonObjects copied by typed builder methods."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/requests/FusionRequest.java",
+      "JsonExtraction",
+      "chat.tool(tool.getAsJsonObject());"
+    ],
+    "count": 1,
+    "reason": "Private arrays contain only JsonObjects copied by typed builder methods."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/streaming/EventStream.java",
+      "BroadCatch",
+      "} catch (IOException | RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "Malformed JSON becomes InternalException; outer catch closes the stream and rethrows the same failure."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/streaming/EventStream.java",
+      "BroadCatch",
+      "} catch (RuntimeException error) {"
+    ],
+    "count": 1,
+    "reason": "Malformed JSON becomes InternalException; outer catch closes the stream and rethrows the same failure."
+  },
+  {
+    "site": [
+      "src/main/java/com/trustedrouter/streaming/EventStream.java",
+      "JsonExtraction",
+      "JsonObject object = parsed.getAsJsonObject();"
+    ],
+    "count": 1,
+    "reason": "Non-object SSE payloads are rejected with InternalException before extraction."
+  }
+]

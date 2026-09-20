@@ -25,6 +25,29 @@ import org.junit.jupiter.api.Test;
 
 final class AttestationVerifierTest {
 
+    @Test void expirationMustBeAnExactNumericInteger() throws Exception {
+        for (String value : java.util.List.of("\"9999999999\"", "9999999999.5", "999999999999999999999999999")) {
+            JsonObject changed = claims.deepCopy();
+            changed.add("exp", JsonSupport.parse(value));
+            assertThatThrownBy(() -> verify(changed, pinnedPolicy()))
+                    .isInstanceOf(AttestationVerificationException.class).hasMessageContaining("expiration");
+        }
+    }
+
+    @Test void trustStringsAndArraysCannotBeCoercedOrFiltered() throws Exception {
+        JsonObject changed = claims.deepCopy();
+        changed.getAsJsonObject("submods").getAsJsonObject("container").addProperty("image_reference", 7);
+        assertThatThrownBy(() -> verify(changed, pinnedPolicy()))
+                .isInstanceOf(AttestationVerificationException.class).hasMessageContaining("string");
+        for (String value : java.util.List.of("7", "[\"quill-cloud\",7]", "[\"quill-cloud\",null]")) {
+            JsonObject audience = claims.deepCopy();
+            audience.add("aud", JsonSupport.parse(value));
+            assertThatThrownBy(() -> verify(audience, pinnedPolicy()))
+                    .isInstanceOf(AttestationVerificationException.class).hasMessageContaining("string");
+        }
+    }
+
+
     /** A policy pinning the image the fixture claims attest to.
      *
      * Verification refuses a policy that pins no image identity at all, so

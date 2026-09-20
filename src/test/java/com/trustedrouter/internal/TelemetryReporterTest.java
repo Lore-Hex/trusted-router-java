@@ -1006,8 +1006,8 @@ final class TelemetryReporterTest {
         }
     }
 
-    @SuppressWarnings("serial")
     static final class ScriptedRandom extends Random {
+        private static final long serialVersionUID = 1L;
         private final Iterator<Double> draws;
 
         ScriptedRandom(Double... values) {

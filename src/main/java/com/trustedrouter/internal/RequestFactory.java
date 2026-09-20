@@ -143,12 +143,8 @@ public final class RequestFactory {
             String telemetryHeader) {
         Request.Builder request = new Request.Builder().url(url);
         if (includeCredentials) {
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                request.header(header.getKey(), header.getValue());
-            }
-            for (Map.Entry<String, String> header : options.getHeaders().entrySet()) {
-                request.header(header.getKey(), header.getValue());
-            }
+            mergeHeaders(request, headers);
+            mergeHeaders(request, options.getHeaders());
         }
         request.header("User-Agent", userAgent());
         // x-tr-client is SDK-reserved across all six TrustedRouter SDKs: a
@@ -202,6 +198,17 @@ public final class RequestFactory {
         }
         request.method(method, requestBody);
         return request.build();
+    }
+
+    private static void mergeHeaders(Request.Builder request, Map<String, String> values) {
+        Map<String, java.util.List<String>> grouped = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            grouped.computeIfAbsent(entry.getKey(), key -> new java.util.ArrayList<>()).add(entry.getValue());
+        }
+        for (Map.Entry<String, java.util.List<String>> entry : grouped.entrySet()) {
+            request.removeHeader(entry.getKey());
+            for (String value : entry.getValue()) { request.addHeader(entry.getKey(), value); }
+        }
     }
 
     private Long optionsTimeout(CallOptions options) {

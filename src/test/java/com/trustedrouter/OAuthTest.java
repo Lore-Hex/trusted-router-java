@@ -17,6 +17,54 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
 final class OAuthTest {
+
+    @Test void sharedAuthWireFixturesUseRealClientParsing() throws Exception {
+        com.google.gson.JsonObject fixtures;
+        try (java.io.InputStream input = getClass().getResourceAsStream("/auth-wire-fixtures.json")) {
+            assertThat(input).isNotNull();
+            fixtures = com.trustedrouter.internal.JsonSupport.parse(
+                    new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
+        }
+        try (MockWebServer server = new MockWebServer();
+                TrustedRouterClient client = new TrustedRouterClient(TrustedRouterOptions.builder()
+                        .baseUrl(server.url("/v1").toString()).controlBaseUrl(server.url("/v1").toString())
+                        .maxRetries(0).build())) {
+            for (String endpoint : java.util.List.of("exchange", "userinfo")) {
+                JsonObject section = fixtures.getAsJsonObject(endpoint);
+                for (var entry : section.getAsJsonObject("accept").entrySet()) {
+                    server.enqueue(new MockResponse().setBody(entry.getValue().toString()));
+                    com.trustedrouter.models.JsonModel decoded;
+                    if (endpoint.equals("exchange")) {
+                        OAuthToken token = client.exchangeOAuthKey("code", "verifier", "S256");
+                        assertThat(token.getKey()).as(entry.getKey())
+                                .isEqualTo(entry.getValue().getAsJsonObject().get("key").getAsString());
+                        decoded = token;
+                    } else {
+                        var info = client.userInfo();
+                        assertThat(info.getData()).as(entry.getKey()).isNotNull();
+                        var data = entry.getValue().getAsJsonObject().getAsJsonObject("data");
+                        assertThat(info.getData().getSub()).isEqualTo(data.get("sub").isJsonNull()
+                                ? null : data.get("sub").getAsString());
+                        assertThat(info.getData().getWorkspaceId()).isEqualTo(data.get("workspace_id").getAsString());
+                        decoded = info;
+                    }
+                    assertThat(decoded.getRaw()).as(entry.getKey()).isEqualTo(entry.getValue());
+                    var request = server.takeRequest();
+                    assertThat(request.getMethod()).isEqualTo(endpoint.equals("exchange") ? "POST" : "GET");
+                    assertThat(request.getPath()).isEqualTo(endpoint.equals("exchange") ? "/v1/auth/keys" : "/v1/auth/userinfo");
+                }
+                for (var entry : section.getAsJsonObject("reject").entrySet()) {
+                    server.enqueue(new MockResponse().setBody(entry.getValue().toString()));
+                    assertThatThrownBy(() -> {
+                        if (endpoint.equals("exchange")) { client.exchangeOAuthKey("code", "verifier", "S256"); }
+                        else { client.userInfo(); }
+                    }).as(entry.getKey()).isInstanceOf(com.trustedrouter.errors.InternalException.class);
+                    server.takeRequest();
+                }
+            }
+        }
+    }
+
     @Test void pkceMatchesRfc7636Vector() {
         String verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
         OAuthPkcePair pair = OAuth.createPkcePair(verifier);

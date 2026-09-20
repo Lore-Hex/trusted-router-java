@@ -306,13 +306,13 @@ public final class TelemetryReporter implements TelemetrySink {
     /** One closed minute of counters, retained until delivered or expired. */
     private static final class CounterWindow {
         private final long windowStartMs;
-        private final LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
+        private final Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
                 rows;
         private long sizeBytes;
 
         private CounterWindow(
                 long windowStartMs,
-                LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> rows) {
+                Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> rows) {
             this.windowStartMs = windowStartMs;
             this.rows = rows;
         }
@@ -398,7 +398,7 @@ public final class TelemetryReporter implements TelemetrySink {
     private final List<WireEvent> events = new ArrayList<WireEvent>();
     private long eventsSizeBytes;
     private Long currentWindowStartMs;
-    private LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
+    private Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
             currentCounters = newRows();
     private final Deque<CounterWindow> closedWindows = new ArrayDeque<CounterWindow>();
     private long retainedWindowBytes;
@@ -636,7 +636,7 @@ public final class TelemetryReporter implements TelemetrySink {
 
     // ---- counters ---------------------------------------------------------
 
-    private static LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
+    private static Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>
             newRows() {
         return new LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement>();
     }
@@ -1393,7 +1393,7 @@ public final class TelemetryReporter implements TelemetrySink {
     public Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> currentCounters() {
         lock.lock();
         try {
-            LinkedHashMap<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> copy =
+            Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> copy =
                     newRows();
             for (Map.Entry<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> entry
                     : currentCounters.entrySet()) {

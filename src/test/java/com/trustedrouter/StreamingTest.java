@@ -24,6 +24,24 @@ import okio.BufferedSource;
 import org.junit.jupiter.api.Test;
 
 final class StreamingTest {
+
+    @Test void malformedConsumedEventTypeIsTypedFailure() throws Exception {
+        try (MockWebServer server = new MockWebServer()) {
+            for (String value : java.util.List.of("null", "7", "[]", "{}", "false")) {
+                server.enqueue(sse("data: {\"type\":" + value + "}\n\ndata: [DONE]\n\n"));
+                try (EventStream<ResponseEvent> stream = client(server).responsesEvents(
+                        ResponsesRequest.builder().input("hi").build())) {
+                    assertThatThrownBy(stream::read).isInstanceOf(InternalException.class);
+                }
+            }
+            server.enqueue(sse("event: named\ndata: {\"type\":7}\n\ndata: [DONE]\n\n"));
+            try (EventStream<ResponseEvent> stream = client(server).responsesEvents(
+                    ResponsesRequest.builder().input("hi").build())) {
+                assertThat(stream.read().getEvent()).isEqualTo("named");
+            }
+        }
+    }
+
     @Test void chatStreamingParsesChunksUsageAndDone() throws Exception {
         try (MockWebServer server = new MockWebServer()) {
             server.enqueue(sse("data: {\"id\":\"c1\",\"object\":\"chat.completion.chunk\","

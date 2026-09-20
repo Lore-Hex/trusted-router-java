@@ -66,6 +66,6 @@ public class TrustedRouterException extends IOException {
         if ((direct == null || direct.isJsonNull()) && error != null && error.isJsonObject()) {
             direct = error.getAsJsonObject().get(key);
         }
-        return direct != null && direct.isJsonPrimitive() ? direct.getAsString() : null;
+        return com.trustedrouter.internal.WireShape.isString(direct) ? direct.getAsString() : null;
     }
 }

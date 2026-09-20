@@ -125,7 +125,7 @@ public final class TrustedRouterClient implements Closeable {
         JsonElement json = json(
                 Transport.Plane.INFERENCE, "POST", "/chat/completions", request.toJson(false),
                 idempotent(request.getCallOptions()));
-        return ModelDecoder.decode(json, ChatCompletion.class);
+        return decodeResponse(json, ChatCompletion.class);
     }
 
     public EventStream<ChatCompletionChunk> chatCompletionsChunks(ChatRequest request)
@@ -137,7 +137,7 @@ public final class TrustedRouterClient implements Closeable {
         Transport.requireSuccess(response);
         try {
             return new EventStream<ChatCompletionChunk>(response,
-                    (event, data) -> ModelDecoder.decode(data, ChatCompletionChunk.class),
+                    (event, data) -> decodeResponse(data, ChatCompletionChunk.class),
                     opened.recorder());
         } catch (IOException error) {
             response.close();
@@ -181,39 +181,39 @@ public final class TrustedRouterClient implements Closeable {
             appendQuery(query, "provider[region]", filters.getProviderRegion());
             if (query.length() > 0) { path += "?" + query; }
         }
-        return ModelDecoder.decode(json(Transport.Plane.CONTROL, "GET", path, null, null), ModelList.class);
+        return decodeResponse(json(Transport.Plane.CONTROL, "GET", path, null, null), ModelList.class);
     }
 
     public ProviderList providers() throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/providers", null, null), ProviderList.class);
     }
 
     public RegionList regions() throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/regions", null, null), RegionList.class);
     }
 
     public CreditsBalance credits() throws TrustedRouterException { return credits(null); }
     public CreditsBalance credits(CallOptions options) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/credits", null, options), CreditsBalance.class);
     }
 
     public EmbeddingResponse embeddings(EmbeddingsRequest request) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.INFERENCE, "POST", "/embeddings", request.toJson(),
                         idempotent(request.getCallOptions())), EmbeddingResponse.class);
     }
 
     public MessagesResponse messages(MessagesRequest request) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.INFERENCE, "POST", "/messages", request.toJson(),
                         idempotent(request.getCallOptions())), MessagesResponse.class);
     }
 
     public ResponseObject responses(ResponsesRequest request) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.INFERENCE, "POST", "/responses", request.toJson(false),
                         idempotent(request.getCallOptions())), ResponseObject.class);
     }
@@ -229,7 +229,11 @@ public final class TrustedRouterClient implements Closeable {
             return new EventStream<ResponseEvent>(response, (event, data) -> {
                 String eventName = event;
                 if ((eventName == null || eventName.isEmpty()) && data.has("type")) {
-                    eventName = data.get("type").getAsString();
+                    try {
+                        eventName = com.trustedrouter.internal.WireShape.string(data.get("type"));
+                    } catch (com.trustedrouter.errors.InvalidResponseException error) {
+                        throw new InternalException(502, error.getMessage(), data, error);
+                    }
                 }
                 return new ResponseEvent(eventName, data);
             }, opened.recorder());
@@ -263,7 +267,7 @@ public final class TrustedRouterClient implements Closeable {
 
     public ResponseInputTokens responsesInputTokens(ResponsesRequest request)
             throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.INFERENCE, "POST", "/responses/input_tokens",
                         request.toJson(false), idempotent(request.getCallOptions())),
                 ResponseInputTokens.class);
@@ -271,7 +275,7 @@ public final class TrustedRouterClient implements Closeable {
 
     public BroadcastDestinationList broadcastDestinations(CallOptions options)
             throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/broadcast/destinations", null, options),
                 BroadcastDestinationList.class);
     }
@@ -281,14 +285,14 @@ public final class TrustedRouterClient implements Closeable {
 
     public BroadcastDestination createBroadcastDestination(BroadcastDestinationRequest request)
             throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "POST", "/broadcast/destinations", request.toJson(),
                         idempotent(request.getCallOptions())), BroadcastDestination.class);
     }
 
     public BroadcastDestination getBroadcastDestination(String id, CallOptions options)
             throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", destinationPath(id), null, options),
                 BroadcastDestination.class);
     }
@@ -298,7 +302,7 @@ public final class TrustedRouterClient implements Closeable {
 
     public BroadcastDestination updateBroadcastDestination(
             String id, JsonObject patch, CallOptions options) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "PATCH", destinationPath(id), patch,
                         idempotent(options)),
                 BroadcastDestination.class);
@@ -324,7 +328,7 @@ public final class TrustedRouterClient implements Closeable {
 
     public CheckoutResponse billingCheckout(BillingCheckoutRequest request)
             throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "POST", "/billing/checkout", request.toJson(),
                         idempotent(request.getCallOptions())), CheckoutResponse.class);
     }
@@ -333,26 +337,26 @@ public final class TrustedRouterClient implements Closeable {
             throws TrustedRouterException {
         JsonObject body = request.toJson();
         body.addProperty("payment_method", "stablecoin");
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "POST", "/billing/checkout", body,
                         idempotent(request.getCallOptions())), CheckoutResponse.class);
     }
 
     public AuthSessionResponse authSession() throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/auth/session", null, null),
                 AuthSessionResponse.class);
     }
 
     public LogoutResponse logout() throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "POST", "/auth/logout", null,
                         idempotent(null)),
                 LogoutResponse.class);
     }
 
     public UserInfoResponse userInfo() throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", "/auth/userinfo", null, null),
                 UserInfoResponse.class);
     }
@@ -383,7 +387,7 @@ public final class TrustedRouterClient implements Closeable {
         if (codeChallengeMethod != null && !codeChallengeMethod.isEmpty()) {
             body.addProperty("code_challenge_method", codeChallengeMethod);
         }
-        return ModelDecoder.decode(
+        return decodeResponse(
                 Transport.decodeJson(transport.executeCredentialFreeControl(
                         "POST", "/auth/keys", body, false)), OAuthToken.class);
     }
@@ -396,7 +400,7 @@ public final class TrustedRouterClient implements Closeable {
             }
         }
         String path = query.length() == 0 ? "/activity" : "/activity?" + query;
-        return ModelDecoder.decode(
+        return decodeResponse(
                 json(Transport.Plane.CONTROL, "GET", path, null, null), ActivityResponse.class);
     }
 
@@ -407,7 +411,12 @@ public final class TrustedRouterClient implements Closeable {
     }
 
     public JsonObject status(String url) throws TrustedRouterException {
-        return absoluteJson(url).getAsJsonObject();
+        JsonElement value = absoluteJson(url);
+        try {
+            return com.trustedrouter.internal.WireShape.object(value);
+        } catch (com.trustedrouter.errors.InvalidResponseException error) {
+            throw new InternalException(502, error.getMessage(), value, error);
+        }
     }
 
     public byte[] attestation() throws TrustedRouterException { return attestation(null); }
@@ -435,7 +444,7 @@ public final class TrustedRouterClient implements Closeable {
     }
 
     public TrustRelease trustRelease(String url) throws TrustedRouterException {
-        return ModelDecoder.decode(
+        return decodeResponse(
                 absoluteJson(url), TrustRelease.class);
     }
 
@@ -443,6 +452,15 @@ public final class TrustedRouterClient implements Closeable {
             Transport.Plane plane, String method, String path, JsonElement body, CallOptions options)
             throws TrustedRouterException {
         return Transport.decodeJson(transport.execute(plane, method, path, body, options, false));
+    }
+
+    private static <T extends com.trustedrouter.models.JsonModel> T decodeResponse(
+            JsonElement json, Class<T> type) throws InternalException {
+        try {
+            return ModelDecoder.decode(json, type);
+        } catch (com.trustedrouter.errors.InvalidResponseException error) {
+            throw new InternalException(502, error.getMessage(), json, error);
+        }
     }
 
     private JsonElement absoluteJson(String url) throws TrustedRouterException {

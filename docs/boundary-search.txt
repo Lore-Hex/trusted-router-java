@@ -1,0 +1,106 @@
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:20:    final Map<String, String> headers;
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:38:        this.headers = Collections.unmodifiableMap(new LinkedHashMap<String, String>(builder.headers));
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:58:    public Map<String, String> getHeaders() { return headers; }
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:66:    public Executor getAsyncExecutor() { return asyncExecutor; }
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:88:        private final Map<String, String> headers = new LinkedHashMap<String, String>();
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:153:        public Builder headers(Map<String, String> values) {
+src/main/java/com/trustedrouter/CallOptions.java:19:    final Map<String, String> headers;
+src/main/java/com/trustedrouter/CallOptions.java:29:        this.headers = Collections.unmodifiableMap(new LinkedHashMap<String, String>(builder.headers));
+src/main/java/com/trustedrouter/CallOptions.java:43:    public Map<String, String> getHeaders() { return headers; }
+src/main/java/com/trustedrouter/CallOptions.java:64:        private final Map<String, String> headers = new LinkedHashMap<String, String>();
+src/main/java/com/trustedrouter/CallOptions.java:120:        public Builder headers(Map<String, String> values) {
+src/main/java/com/trustedrouter/TrustedRouterAsyncClient.java:178:    public CompletableFuture<ActivityResponse> activity(Map<String, String> parameters) {
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:64:        JsonElement direct = payload.getAsJsonObject().get(key);
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:65:        JsonElement error = payload.getAsJsonObject().get("error");
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:67:            direct = error.getAsJsonObject().get(key);
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:69:        return direct != null && direct.isJsonPrimitive() ? direct.getAsString() : null;
+src/main/java/com/trustedrouter/models/ChatCompletion.java:61:            return content != null && content.isJsonPrimitive() ? content.getAsString() : "";
+src/main/java/com/trustedrouter/TrustedRouterClient.java:81:    public TrustedRouterAsyncClient async() { return new TrustedRouterAsyncClient(this, options.getAsyncExecutor()); }
+src/main/java/com/trustedrouter/TrustedRouterClient.java:232:                    eventName = data.get("type").getAsString();
+src/main/java/com/trustedrouter/TrustedRouterClient.java:391:    public ActivityResponse activity(Map<String, String> parameters) throws TrustedRouterException {
+src/main/java/com/trustedrouter/TrustedRouterClient.java:410:        return absoluteJson(url).getAsJsonObject();
+src/main/java/com/trustedrouter/models/ModelDecoder.java:11:        T value = JsonSupport.GSON.fromJson(json, type);
+src/main/java/com/trustedrouter/models/ModelDecoder.java:13:            value.setRaw(json.getAsJsonObject());
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:15:    private Map<String, String> headers;
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:23:    public Map<String, String> getHeaders() {
+src/main/java/com/trustedrouter/oauth/OAuth.java:103:            Map<String, String> query = parseQuery(uri.getRawQuery());
+src/main/java/com/trustedrouter/oauth/OAuth.java:166:    private static Map<String, String> parseQuery(String rawQuery) {
+src/main/java/com/trustedrouter/oauth/OAuth.java:167:        Map<String, String> values = new LinkedHashMap<String, String>();
+src/main/java/com/trustedrouter/oauth/OAuth.java:175:                if (values.containsKey(decodedKey)) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:113:            if (!parsed.isJsonObject() || !parsed.getAsJsonObject().has("keys")) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:116:            return parsed.getAsJsonObject();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:132:                ? jwks.getAsJsonArray("keys") : new JsonArray();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:134:            if (value.isJsonObject() && safeEquals(kid, string(value.getAsJsonObject(), "kid"))) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:135:                key = value.getAsJsonObject();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:276:            return parsed.getAsJsonObject();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:291:        return parent.getAsJsonObject(key);
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:297:        return object.get(key).getAsString();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:302:        try { return Long.valueOf(value.getAsLong()); } catch (RuntimeException ignored) { return null; }
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:307:                && value.getAsJsonPrimitive().isBoolean() && value.getAsBoolean();
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:313:        if (value.isJsonPrimitive()) { out.add(value.getAsString()); return out; }
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:315:            for (JsonElement item : value.getAsJsonArray()) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:316:                if (item.isJsonPrimitive()) { out.add(item.getAsString()); }
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:325:        if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:326:            out.add(value.getAsString());
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:330:            for (JsonElement item : value.getAsJsonArray()) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:331:                if (item.isJsonPrimitive() && item.getAsJsonPrimitive().isString()) {
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:332:                    out.add(item.getAsString());
+src/main/java/com/trustedrouter/streaming/EventStream.java:107:                JsonObject object = parsed.getAsJsonObject();
+src/main/java/com/trustedrouter/internal/RequestFactory.java:38:    private final Map<String, String> headers;
+src/main/java/com/trustedrouter/requests/FusionRequest.java:21:            chat.message(message.getAsJsonObject());
+src/main/java/com/trustedrouter/requests/FusionRequest.java:24:            chat.tool(tool.getAsJsonObject());
+src/main/java/com/trustedrouter/internal/JsonSupport.java:43:        JsonObject object = payload.getAsJsonObject();
+src/main/java/com/trustedrouter/internal/JsonSupport.java:46:            String message = nonEmptyString(error.getAsJsonObject().get("message"));
+src/main/java/com/trustedrouter/internal/JsonSupport.java:50:            String type = nonEmptyString(error.getAsJsonObject().get("type"));
+src/main/java/com/trustedrouter/internal/JsonSupport.java:61:        String text = value.getAsString();
+src/main/java/com/trustedrouter/internal/PhysicalAttemptGuard.java:17: * authenticators have public disable switches, while these status follow-ups
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:185:            flattened = parsed.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:215:        if (!isString(member) || member.getAsString().isEmpty()) {
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:220:        return member.getAsString();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:229:        JsonObject header = value.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:243:        JsonObject jwk = jwkValue.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:316:        JsonObject claims = envelope.claims.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:752:                || !decoded.getAsJsonObject().has("inference_receipt")) {
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:755:        JsonElement receipt = decoded.getAsJsonObject().get("inference_receipt");
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:761:        return receipt.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:861:        return value.getAsJsonObject();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:899:                || !value.getAsJsonPrimitive().isNumber()) {
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:902:        String raw = value.getAsString();
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:907:            return Long.parseLong(raw);
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:914:        return isString(value) ? value.getAsString() : null;
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:919:                && value.getAsJsonPrimitive().isString();
+src/main/java/com/trustedrouter/requests/BroadcastDestinationRequest.java:29:        public Builder headers(Map<String, String> values) {
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:109:        SendResult send(String url, Map<String, String> headers, byte[] body, Long timeoutMs)
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:147:        public SendResult send(String url, Map<String, String> headers, byte[] body, Long timeoutMs)
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:292:            this.finalOutcome = json.get("final_outcome").getAsString();
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:444:    public static boolean debugFromEnvironment(Map<String, String> environ) {
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:564:                : attempts.get(attempts.size() - 1).getAsJsonObject()
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:565:                        .get("outcome").getAsString();
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:760:        if (currentCounters.containsKey(key)
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:765:        if (currentCounters.containsKey(errorFolded)) {
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:779:        if (currentCounters.containsKey(endpointFolded)) {
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:974:            Map<String, String> headers = new LinkedHashMap<String, String>();
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1177:        JsonElement policyElement = payload.getAsJsonObject().get("policy");
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1181:        JsonObject policy = policyElement.getAsJsonObject();
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1459:    private static Map<String, String> environment() {
+src/main/java/com/trustedrouter/internal/Transport.java:358:        JsonElement provider = body.getAsJsonObject().get("provider");
+src/main/java/com/trustedrouter/internal/Transport.java:362:        JsonElement allowFallbacks = provider.getAsJsonObject().get("allow_fallbacks");
+src/main/java/com/trustedrouter/internal/Transport.java:364:                && allowFallbacks.getAsJsonPrimitive().isBoolean()
+src/main/java/com/trustedrouter/internal/Transport.java:365:                && !allowFallbacks.getAsBoolean();
+src/main/java/com/trustedrouter/internal/Transport.java:373:        JsonObject object = body.getAsJsonObject();
+src/main/java/com/trustedrouter/internal/Transport.java:375:        return model != null && model.isJsonPrimitive() && model.getAsJsonPrimitive().isString()
+src/main/java/com/trustedrouter/internal/Transport.java:376:                ? model.getAsString() : null;
+src/main/java/com/trustedrouter/requests/ChatRequest.java:36:                    ? value.getAsJsonObject("stream_options") : new JsonObject();
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:138:     * statuses entirely: one switch answering two questions. The flag now
+src/main/java/com/trustedrouter/internal/Telemetry.java:257:        Map<String, String> environ;
+src/main/java/com/trustedrouter/internal/Telemetry.java:282:            Map<String, String> environ) {
+src/main/java/com/trustedrouter/internal/Telemetry.java:755:                "tr-java", "tr-swift") ? name : fallback.get("name").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:759:                ? version : fallback.get("version").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:762:                ? lang : fallback.get("lang").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:765:                ? runtime : fallback.get("runtime").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:768:                "freebsd", "other") ? os : fallback.get("os").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:771:                ? arch : fallback.get("arch").getAsString());
+src/main/java/com/trustedrouter/internal/Telemetry.java:794:            double parsed = value.getAsJsonPrimitive().isNumber()
+src/main/java/com/trustedrouter/internal/Telemetry.java:795:                    ? value.getAsDouble() : Double.parseDouble(value.getAsString().trim());
+src/main/java/com/trustedrouter/internal/Telemetry.java:805:        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()
+src/main/java/com/trustedrouter/internal/Telemetry.java:806:                ? value.getAsString() : null;

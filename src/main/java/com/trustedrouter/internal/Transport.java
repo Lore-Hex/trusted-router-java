@@ -382,8 +382,8 @@ public final class Transport {
      * rather than the network's, so the attempt is {@code aborted}.
      */
     static boolean isAbort(Throwable error) {
-        if (error instanceof TrustedRouterException
-                && ((TrustedRouterException) error).getStatusCode() == 499) {
+        if (error instanceof TrustedRouterException routerError
+                && routerError.getStatusCode() == 499) {
             return true;
         }
         for (Throwable item : Telemetry.causeChain(error)) {

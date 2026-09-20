@@ -1,6 +1,9 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
     `java-library`
     jacoco
+    id("net.ltgt.errorprone") version "4.3.0"
     id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
@@ -28,6 +31,28 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
 }
 
+tasks.named<JavaCompile>("compileJava") {
+    options.errorprone {
+        // Isolated runtime proofs must fail in the test, not in a static checker.
+        if (providers.gradleProperty("mutationRuntime").isPresent) { isEnabled.set(false) }
+        error("UnusedVariable", "MissingCasesInEnumSwitch", "ReturnValueIgnored",
+            "FutureReturnValueIgnored", "CatchAndPrintStackTrace", "EmptyCatch", "ClassCanBeStatic")
+        disable("UnnecessaryParentheses")
+        option("NullAway:AnnotatedPackages", "com.trustedrouter")
+        // 345 diagnostic locations / 187 uninitialized field sites; see docs/nullaway-audit.txt.
+        disable("NullAway")
+        if (providers.gradleProperty("nullawayAudit").isPresent) {
+            error("NullAway")
+        }
+    }
+    options.compilerArgs.addAll(listOf("-Xmaxerrs", "1000", "-Xmaxwarns", "1000"))
+}
+
+// Tests retain javac -Xlint:all -Werror; production is the Error Prone gate.
+tasks.named<JavaCompile>("compileTestJava") {
+    options.errorprone.isEnabled.set(false)
+}
+
 tasks.withType<Javadoc>().configureEach {
     options.encoding = "UTF-8"
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:all,-missing", "-quiet")
@@ -43,6 +68,9 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 }
 
 dependencies {
+    errorprone("com.google.errorprone:error_prone_core:2.42.0")
+    errorprone("com.uber.nullaway:nullaway:0.12.10")
+
     api("com.squareup.okhttp3:okhttp:5.3.0")
     api("com.google.code.gson:gson:2.13.2")
 
@@ -110,6 +138,13 @@ tasks.register<JavaExec>("runAuthenticatedSmoke") {
         sourceSets.main.get().runtimeClasspath
     mainClass.set("AuthenticatedSmoke")
 }
+
+val boundaryCheck by tasks.registering(Exec::class) {
+    commandLine("python3", "scripts/boundary_check.py")
+    inputs.files(fileTree("src/main/java"), fileTree("scripts") { include("boundary*") })
+}
+
+tasks.named("compileJava") { dependsOn(boundaryCheck) }
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification, compileJavaExamples)

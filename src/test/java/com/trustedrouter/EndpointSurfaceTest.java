@@ -1,6 +1,7 @@
 package com.trustedrouter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -22,6 +23,34 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
 final class EndpointSurfaceTest {
+
+    @Test void malformedStatusAndModelBodiesHaveTypedErrors() throws Exception {
+        try (MockWebServer server = new MockWebServer();
+                TrustedRouterClient client = new TrustedRouterClient(TrustedRouterOptions.builder()
+                        .baseUrl(server.url("/v1").toString()).maxRetries(0).build())) {
+            for (String body : java.util.List.of("null", "[]", "7")) {
+                server.enqueue(new MockResponse().setBody(body));
+                assertThatThrownBy(() -> client.status(server.url("/status").toString()))
+                        .isInstanceOf(com.trustedrouter.errors.InternalException.class);
+                server.enqueue(new MockResponse().setBody(body));
+                assertThatThrownBy(() -> client.chatCompletions(
+                        com.trustedrouter.requests.ChatRequest.builder().message("user", "hi").build()))
+                        .isInstanceOf(com.trustedrouter.errors.InternalException.class);
+            }
+        }
+    }
+
+    @Test void malformedErrorMetadataKeepsStatusAndRawPayload() {
+        var json = com.trustedrouter.internal.JsonSupport.parse(
+                "{\"message\":7,\"error\":{\"message\":false,\"type\":7},\"layer\":9,\"request_id\":true}");
+        assertThat(com.trustedrouter.internal.JsonSupport.errorMessage(json)).isEqualTo("TrustedRouter error");
+        var error = new com.trustedrouter.errors.BadRequestException(400, "bad", json);
+        assertThat(error.getLayer()).isNull();
+        assertThat(error.getRequestId()).isNull();
+        assertThat(error.getPayload()).isEqualTo(json);
+        assertThat(error.getStatusCode()).isEqualTo(400);
+    }
+
     @Test void inferenceEndpointShapesMatchSiblingSdks() throws Exception {
         try (MockWebServer server = new MockWebServer()) {
             server.enqueue(json("{\"object\":\"list\",\"data\":[{\"index\":0,"
