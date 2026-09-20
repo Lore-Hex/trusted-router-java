@@ -68,10 +68,10 @@ def main():
                 check = 'parsed and matched to published Maven coordinates'
             elif language in ('bash', 'sh'):
                 # Syntax-check shell snippets only where a POSIX bash exists: on Windows,
-            # `bash` resolves to the WSL launcher, which fails without a distribution.
-            # The Java and Kotlin snippets are the real gate and compile everywhere.
-            if os.name != 'nt':
-                subprocess.run(['bash', '-n'], input=code, text=True, check=True)
+                # `bash` resolves to the WSL launcher, which fails without a distribution.
+                # The Java and Kotlin snippets are the real gate and compile everywhere.
+                if os.name != 'nt':
+                    subprocess.run(['bash', '-n'], input=code, text=True, check=True)
                 check = 'shell syntax checked; Gradle tasks exercised by CI (live smoke separate)'
             elif language in ('text', 'json', 'diff'):
                 if language == 'json':
