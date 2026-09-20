@@ -3,6 +3,7 @@
 from pathlib import Path
 import re
 import shutil
+import os
 import subprocess
 import xml.etree.ElementTree as ET
 
@@ -66,6 +67,10 @@ def main():
                 assert xml.findtext('version') == '0.3.0', origin
                 check = 'parsed and matched to published Maven coordinates'
             elif language in ('bash', 'sh'):
+                # Syntax-check shell snippets only where a POSIX bash exists: on Windows,
+            # `bash` resolves to the WSL launcher, which fails without a distribution.
+            # The Java and Kotlin snippets are the real gate and compile everywhere.
+            if os.name != 'nt':
                 subprocess.run(['bash', '-n'], input=code, text=True, check=True)
                 check = 'shell syntax checked; Gradle tasks exercised by CI (live smoke separate)'
             elif language in ('text', 'json', 'diff'):
