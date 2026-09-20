@@ -40,12 +40,12 @@ def sites(root=ROOT):
             for match in re.finditer(pattern, source):
                 line = source.count('\n', 0, match.start()) + 1
                 statement = original.splitlines()[line - 1].strip()
-                yield (str(path.relative_to(root)), rule, statement), line
+                yield (path.relative_to(root).as_posix(), rule, statement), line
         for match in re.finditer(r'@SuppressWarnings', source):
             line = source.count('\n', 0, match.start()) + 1
             preceding = original.splitlines()[max(0, line - 3):line - 1]
             if not any('//' in text and 'reason:' in text.lower() for text in preceding):
-                yield (str(path.relative_to(root)), 'UnexplainedSuppression', original.splitlines()[line - 1].strip()), line
+                yield (path.relative_to(root).as_posix(), 'UnexplainedSuppression', original.splitlines()[line - 1].strip()), line
 
 
 def main():
