@@ -24,9 +24,19 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Static analysis
+        shell: bash
+        run: ./gradlew clean compileJava
       - name: Verify
         shell: bash
-        run: ./gradlew clean check javadoc
+        run: ./gradlew check javadoc
+      - name: Boundary mutation gate
+        run: python3 scripts/mutation_check.py
+      - name: Static gate negative controls
+        run: python3 scripts/static_gate_check.py
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4

@@ -599,8 +599,8 @@ public final class ReceiptVerifier {
             try {
                 count = integer(eventsValue, name + ".events", ErrorFamily.HASH);
             } catch (ReceiptVerificationException error) {
-                if (error instanceof ReceiptHashException) {
-                    throw (ReceiptHashException) error;
+                if (error instanceof ReceiptHashException hashError) {
+                    throw hashError;
                 }
                 throw new ReceiptHashException(error.getMessage(), error);
             }

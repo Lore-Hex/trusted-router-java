@@ -1,0 +1,15 @@
+REJECTED DecodedCast
+REJECTED JsonExtraction
+REJECTED InputLaundering
+REJECTED HeaderMapOperation
+REJECTED BroadCatch
+REJECTED OptionalGet
+REJECTED WireSwitch
+REJECTED UnusedVariable
+REJECTED MissingCasesInEnumSwitch
+REJECTED ReturnValueIgnored
+REJECTED FutureReturnValueIgnored
+REJECTED CatchAndPrintStackTrace
+REJECTED EmptyCatch
+REJECTED ClassCanBeStatic
+Static proof wall time: 18.145s

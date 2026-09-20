@@ -238,10 +238,9 @@ public final class RequestRecorder {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof CounterKey)) {
+            if (!(other instanceof CounterKey that)) {
                 return false;
             }
-            CounterKey that = (CounterKey) other;
             return matchesExceptErrorClass(that)
                     && (errorClass == null ? that.errorClass == null
                             : errorClass.equals(that.errorClass));

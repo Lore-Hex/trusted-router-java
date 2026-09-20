@@ -150,8 +150,8 @@ public final class AttestationVerifier {
                 throw failure("JWT signature verification failed", null);
             }
         } catch (GeneralSecurityException | IllegalArgumentException error) {
-            if (error instanceof AttestationVerificationException) {
-                throw (AttestationVerificationException) error;
+            if (error instanceof AttestationVerificationException attestationError) {
+                throw attestationError;
             }
             throw failure("JWT signature verification failed", error);
         }
@@ -291,15 +291,21 @@ public final class AttestationVerifier {
         return parent.getAsJsonObject(key);
     }
 
-    private static String string(JsonObject object, String key) {
-        if (object == null || !object.has(key) || object.get(key).isJsonNull()
-                || !object.get(key).isJsonPrimitive()) { return null; }
-        return object.get(key).getAsString();
+    private static String string(JsonObject object, String key)
+            throws AttestationVerificationException {
+        JsonElement value = object == null ? null : object.get(key);
+        if (value == null || value.isJsonNull()) { return null; }
+        if (!com.trustedrouter.internal.WireShape.isString(value)) {
+            throw failure("expected string " + key, null);
+        }
+        return value.getAsString();
     }
 
     private static Long longValue(JsonElement value) {
-        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) { return null; }
-        try { return Long.valueOf(value.getAsLong()); } catch (RuntimeException ignored) { return null; }
+        if (value == null || !value.isJsonPrimitive()
+                || !value.getAsJsonPrimitive().isNumber()) { return null; }
+        try { return Long.valueOf(value.getAsBigDecimal().longValueExact()); }
+        catch (ArithmeticException | NumberFormatException invalid) { return null; }
     }
 
     private static boolean booleanValue(JsonElement value) {
@@ -307,33 +313,27 @@ public final class AttestationVerifier {
                 && value.getAsJsonPrimitive().isBoolean() && value.getAsBoolean();
     }
 
-    private static List<String> strings(JsonElement value) {
+    private static List<String> strings(JsonElement value)
+            throws AttestationVerificationException {
         List<String> out = new ArrayList<String>();
         if (value == null || value.isJsonNull()) { return out; }
-        if (value.isJsonPrimitive()) { out.add(value.getAsString()); return out; }
-        if (value.isJsonArray()) {
-            for (JsonElement item : value.getAsJsonArray()) {
-                if (item.isJsonPrimitive()) { out.add(item.getAsString()); }
+        if (com.trustedrouter.internal.WireShape.isString(value)) {
+            out.add(value.getAsString());
+            return out;
+        }
+        if (!value.isJsonArray()) { throw failure("expected string or string array", null); }
+        for (JsonElement item : value.getAsJsonArray()) {
+            if (!com.trustedrouter.internal.WireShape.isString(item)) {
+                throw failure("expected string array member", null);
             }
+            out.add(item.getAsString());
         }
         return out;
     }
 
-    private static List<String> stringValues(JsonElement value) {
-        List<String> out = new ArrayList<String>();
-        if (value == null || value.isJsonNull()) { return out; }
-        if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
-            out.add(value.getAsString());
-            return out;
-        }
-        if (value.isJsonArray()) {
-            for (JsonElement item : value.getAsJsonArray()) {
-                if (item.isJsonPrimitive() && item.getAsJsonPrimitive().isString()) {
-                    out.add(item.getAsString());
-                }
-            }
-        }
-        return out;
+    private static List<String> stringValues(JsonElement value)
+            throws AttestationVerificationException {
+        return strings(value);
     }
 
     private static void requireMatch(String field, String actual, String expected)
@@ -362,7 +362,7 @@ public final class AttestationVerifier {
     }
 
     private static boolean safeEquals(String left, String right) {
-        if (left == null || right == null) { return left == right; }
+        if (left == null || right == null) { return left == null && right == null; }
         return MessageDigest.isEqual(
                 left.getBytes(StandardCharsets.UTF_8), right.getBytes(StandardCharsets.UTF_8));
     }

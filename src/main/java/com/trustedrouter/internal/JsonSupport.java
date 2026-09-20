@@ -55,7 +55,7 @@ public final class JsonSupport {
     }
 
     private static String nonEmptyString(JsonElement value) {
-        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) {
+        if (!WireShape.isString(value)) {
             return null;
         }
         String text = value.getAsString();

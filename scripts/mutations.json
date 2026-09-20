@@ -1,0 +1,205 @@
+[
+  {
+    "id": "object-envelope",
+    "file": "src/main/java/com/trustedrouter/internal/WireShape.java",
+    "before": "if (value == null || !value.isJsonObject())",
+    "after": "if (false)",
+    "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields"
+  },
+  {
+    "id": "string-kind",
+    "file": "src/main/java/com/trustedrouter/internal/WireShape.java",
+    "before": "if (!isString(value))",
+    "after": "if (value == null || value.isJsonNull())",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "exchange-key",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "            WireShape.string(object.get(\"key\"));",
+    "after": "",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "exchange-identity",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "            optionalIdentity(object.get(\"identity\"));",
+    "after": "",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "exchange-data",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "if (data != null && !data.isJsonNull()) { WireShape.object(data); }",
+    "after": "if (data != null && !data.isJsonNull()) { data.deepCopy(); }",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "userinfo-data",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "identity(WireShape.object(object.get(\"data\")));",
+    "after": "optionalIdentity(object.get(\"data\"));",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "identity-sub",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "        WireShape.optionalString(value, \"sub\");",
+    "after": "",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "identity-email",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "        WireShape.optionalString(value, \"email\");",
+    "after": "",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "pin-image_digest",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "            WireShape.optionalString(object, \"image_digest\");",
+    "after": "",
+    "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced"
+  },
+  {
+    "id": "pin-image_reference",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "            WireShape.optionalString(object, \"image_reference\");",
+    "after": "",
+    "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced"
+  },
+  {
+    "id": "pin-arrays",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "for (JsonElement value : array(values)) { WireShape.string(value); }",
+    "after": "for (JsonElement value : array(values)) { value.deepCopy(); }",
+    "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced"
+  },
+  {
+    "id": "chat-consumed",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "if (type == ChatCompletion.class || type == ChatCompletionChunk.class) {",
+    "after": "if (false) {",
+    "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields"
+  },
+  {
+    "id": "catalog-consumed",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "if (type == ModelList.class) {",
+    "after": "if (false) {",
+    "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields"
+  },
+  {
+    "id": "metadata-projection",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "JsonSupport.GSON.fromJson(project(object, type), type)",
+    "after": "JsonSupport.GSON.fromJson(object, type)",
+    "test": "com.trustedrouter.RequestBuilderTest.metadataPassesThroughWithoutCoercion"
+  },
+  {
+    "id": "raw-retention",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "        value.setRaw(object);",
+    "after": "",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "fixture-invented-data",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "            WireShape.string(object.get(\"key\"));",
+    "after": "            WireShape.string(object.get(\"key\"));\n            WireShape.object(object.get(\"data\"));",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  },
+  {
+    "id": "status-shape",
+    "file": "src/main/java/com/trustedrouter/TrustedRouterClient.java",
+    "before": "return com.trustedrouter.internal.WireShape.object(value);",
+    "after": "return value.getAsJsonObject();",
+    "test": "com.trustedrouter.EndpointSurfaceTest.malformedStatusAndModelBodiesHaveTypedErrors"
+  },
+  {
+    "id": "model-typed-error",
+    "file": "src/main/java/com/trustedrouter/TrustedRouterClient.java",
+    "before": "    private static <T extends com.trustedrouter.models.JsonModel> T decodeResponse(\n            JsonElement json, Class<T> type) throws InternalException {\n        try {\n            return ModelDecoder.decode(json, type);\n        } catch (com.trustedrouter.errors.InvalidResponseException error) {\n            throw new InternalException(502, error.getMessage(), json, error);\n        }\n    }\n\n",
+    "after": "    private static <T extends com.trustedrouter.models.JsonModel> T decodeResponse(\n            JsonElement json, Class<T> type) throws InternalException {\n        return ModelDecoder.decode(json, type);\n    }\n\n",
+    "test": "com.trustedrouter.EndpointSurfaceTest.malformedStatusAndModelBodiesHaveTypedErrors"
+  },
+  {
+    "id": "sse-type",
+    "file": "src/main/java/com/trustedrouter/TrustedRouterClient.java",
+    "before": "com.trustedrouter.internal.WireShape.string(data.get(\"type\"))",
+    "after": "data.get(\"type\").getAsString()",
+    "test": "com.trustedrouter.StreamingTest.malformedConsumedEventTypeIsTypedFailure"
+  },
+  {
+    "id": "error-message",
+    "file": "src/main/java/com/trustedrouter/internal/JsonSupport.java",
+    "before": "if (!WireShape.isString(value))",
+    "after": "if (value == null || !value.isJsonPrimitive())",
+    "test": "com.trustedrouter.EndpointSurfaceTest.malformedErrorMetadataKeepsStatusAndRawPayload"
+  },
+  {
+    "id": "error-metadata",
+    "file": "src/main/java/com/trustedrouter/errors/TrustedRouterException.java",
+    "before": "com.trustedrouter.internal.WireShape.isString(direct)",
+    "after": "direct != null && direct.isJsonPrimitive()",
+    "test": "com.trustedrouter.EndpointSurfaceTest.malformedErrorMetadataKeepsStatusAndRawPayload"
+  },
+  {
+    "id": "header-repeats",
+    "file": "src/main/java/com/trustedrouter/internal/RequestFactory.java",
+    "before": "request.addHeader(entry.getKey(), value);",
+    "after": "request.header(entry.getKey(), value);",
+    "test": "com.trustedrouter.RequestBuilderTest.headerMergePreservesRepeatsAndOverridesIgnoringCase"
+  },
+  {
+    "id": "header-case",
+    "file": "src/main/java/com/trustedrouter/internal/RequestFactory.java",
+    "before": "new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER)",
+    "after": "new java.util.LinkedHashMap<>()",
+    "test": "com.trustedrouter.RequestBuilderTest.headerMergePreservesRepeatsAndOverridesIgnoringCase"
+  },
+  {
+    "id": "expiry-number",
+    "file": "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+    "before": "|| !value.getAsJsonPrimitive().isNumber()) { return null; }",
+    "after": ") { return null; }",
+    "test": "com.trustedrouter.AttestationVerifierTest.expirationMustBeAnExactNumericInteger"
+  },
+  {
+    "id": "expiry-exact",
+    "file": "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+    "before": "value.getAsBigDecimal().longValueExact()",
+    "after": "value.getAsLong()",
+    "test": "com.trustedrouter.AttestationVerifierTest.expirationMustBeAnExactNumericInteger"
+  },
+  {
+    "id": "trust-string",
+    "file": "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+    "before": "if (!com.trustedrouter.internal.WireShape.isString(value)) {",
+    "after": "if (false) {",
+    "test": "com.trustedrouter.AttestationVerifierTest.trustStringsAndArraysCannotBeCoercedOrFiltered"
+  },
+  {
+    "id": "trust-array-member",
+    "file": "src/main/java/com/trustedrouter/attestation/AttestationVerifier.java",
+    "before": "throw failure(\"expected string array member\", null);",
+    "after": "continue;",
+    "test": "com.trustedrouter.AttestationVerifierTest.trustStringsAndArraysCannotBeCoercedOrFiltered"
+  },
+  {
+    "id": "array-shape",
+    "file": "src/main/java/com/trustedrouter/models/ModelDecoder.java",
+    "before": "if (!value.isJsonArray()) { throw new InvalidResponseException(\"Expected a JSON array\"); }",
+    "after": "if (false) { throw new InvalidResponseException(\"Expected a JSON array\"); }",
+    "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields"
+  },
+  {
+    "id": "nullable-identity",
+    "file": "src/main/java/com/trustedrouter/internal/WireShape.java",
+    "before": "if (value != null && !value.isJsonNull()) { string(value); }",
+    "after": "if (value != null) { string(value); }",
+    "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing"
+  }
+]

@@ -1,0 +1,345 @@
+src/main/java/com/trustedrouter/CallOptions.java:110: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/CallOptions.java:66: error: [NullAway] initializer method does not guarantee @NonNull fields apiKey (line 57), workspaceId (line 59), idempotencyKey (line 61), timeoutMillis (line 62) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/TrustedRouterAsyncClient.java:233: error: [NullAway] initializer method does not guarantee @NonNull field runner (line 231) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/TrustedRouterAsyncClient.java:238: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/TrustedRouterClient.java:144: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:144: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:174: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:184: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:189: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:194: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:197: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:200: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:235: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:242: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:242: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:261: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:279: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:283: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:296: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:300: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:313: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:317: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:322: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:326: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:347: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:353: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:354: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:360: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:369: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:404: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:407: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:418: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:422: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterClient.java:462: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:144: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/TrustedRouterOptions.java:96: error: [NullAway] initializer method does not guarantee @NonNull fields apiKey (line 81), baseUrl (line 82), controlBaseUrl (line 83), statusUrl (line 84), trustReleaseUrl (line 85), httpClient (line 86), workspaceId (line 89), telemetry (line 92), asyncExecutor (line 94) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/attestation/AttestationPolicy.java:96: error: [NullAway] initializer method does not guarantee @NonNull fields audience (line 89), expectedCertSha256 (line 90), expectedImageDigest (line 91), expectedImageDigests (line 92), expectedImageReference (line 93), expectedImageReferences (line 94) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/attestation/AttestationVerificationOptions.java:22: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/attestation/AttestationVerificationOptions.java:31: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/attestation/AttestationVerificationOptions.java:34: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/attestation/AttestationVerificationOptions.java:43: error: [NullAway] initializer method does not guarantee @NonNull fields nonceHex (line 37), tlsCertificateDer (line 38), tlsExporter (line 39), jwks (line 40), jwksUrl (line 41), httpClient (line 42) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:110: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:114: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:127: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:139: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:140: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:150: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:169: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:172: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:176: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:182: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:186: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:189: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:195: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:200: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:213: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:222: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:233: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:238: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:240: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:243: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:246: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:258: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:262: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:297: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:299: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:306: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:308: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:324: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:327: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:342: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:352: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:48: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:70: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/attestation/AttestationVerifier.java:82: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:18: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:37: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:62: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/errors/TrustedRouterException.java:69: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/AttestationHttp.java:64: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/internal/AttestationHttp.java:64: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/AttestationHttp.java:95: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/internal/AttestationHttp.java:95: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:123: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:128: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:158: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:35: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:41: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/ErrorClassifier.java:60: error: [NullAway] passing @Nullable parameter 'payload' where @NonNull is required
+src/main/java/com/trustedrouter/internal/JitterSleeper.java:48: error: [NullAway] passing @Nullable parameter 'interrupted.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/internal/JitterSleeper.java:48: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/JsonSupport.java:30: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/JsonSupport.java:35: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/JsonSupport.java:59: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/JsonSupport.java:62: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/PhysicalAttemptGuard.java:109: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/PhysicalAttemptGuard.java:147: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestFactory.java:126: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:112: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:361: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:36: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.host not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:376: error: [NullAway] initializer method does not guarantee @NonNull fields ttftMs (line 345), currentHost (line 349) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:37: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.outcome not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:38: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.errorClass not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:391: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:410: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:426: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:42: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.httpStatus not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:434: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:44: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.errorSource not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:479: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:47: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.retryAfterMs not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:487: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:492: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:498: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:49: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.ttfbMs not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:515: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:516: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:51: error: [NullAway] @NonNull field RequestRecorder$AttemptRecord.requestId not initialized
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:594: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:595: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:597: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:598: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:599: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:729: error: [NullAway] passing @Nullable parameter 'firstErrorClass' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RequestRecorder.java:85: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/ReservedHeader.java:101: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/ResponseInputStream.java:24: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:121: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:130: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:229: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:251: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:253: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/RetryPolicy.java:92: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Telemetry.java:263: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Telemetry.java:466: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:471: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:474: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:783: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:791: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:796: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:799: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:805: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Telemetry.java:862: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1005: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1007: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1044: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1068: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1111: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1117: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:1121: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:125: error: [NullAway] @NonNull field TelemetryReporter$OkHttpSender.client not initialized
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:175: error: [NullAway] passing @Nullable parameter 'text' where @NonNull is required
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:184: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:198: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:212: error: [NullAway] initializer method does not guarantee @NonNull fields workspaceId (line 201), sdkIdentity (line 202), sender (line 206), clock (line 207), random (line 208), debug (line 209) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:420: error: [NullAway] initializer method does not guarantee @NonNull fields worker (line 394), workerThread (line 395), currentWindowStartMs (line 400) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:524: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:538: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:548: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:568: error: [NullAway] passing @Nullable parameter 'event.finalHttpStatus == null ? null : Long.valueOf(event.finalHttpStatus)' where @NonNull is required
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:591: error: [NullAway] passing @Nullable parameter 'attempt.httpStatus == null ? null : Long.valueOf(attempt.httpStatus)' where @NonNull is required
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:701: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:913: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:938: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/TelemetryReporter.java:989: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:191: error: [NullAway] initializer method does not guarantee @NonNull field reporter (line 189) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/internal/Transport.java:254: error: [NullAway] passing @Nullable parameter 'recorder' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:275: error: [NullAway] passing @Nullable parameter 'recorder' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:276: error: [NullAway] passing @Nullable parameter 'recorder' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:304: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:306: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Transport.java:350: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Transport.java:371: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Transport.java:375: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Transport.java:403: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:404: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:413: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:443: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:459: error: [NullAway] passing @Nullable parameter 'telemetryHeader' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:477: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/internal/Transport.java:499: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/internal/Transport.java:507: error: [NullAway] dereferenced expression failure is @Nullable
+src/main/java/com/trustedrouter/internal/Transport.java:508: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/models/ActivityResponse.java:9: error: [NullAway] @NonNull field activities not initialized
+src/main/java/com/trustedrouter/models/AuthSessionResponse.java:10: error: [NullAway] @NonNull field AuthSessionResponse$User.id not initialized
+src/main/java/com/trustedrouter/models/AuthSessionResponse.java:11: error: [NullAway] @NonNull field AuthSessionResponse$User.email not initialized
+src/main/java/com/trustedrouter/models/AuthSessionResponse.java:6: error: [NullAway] @NonNull field user not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:10: error: [NullAway] @NonNull field name not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:11: error: [NullAway] @NonNull field endpoint not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:12: error: [NullAway] @NonNull field enabled not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:13: error: [NullAway] @NonNull field includeContent not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:14: error: [NullAway] @NonNull field method not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:15: error: [NullAway] @NonNull field headers not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:8: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestination.java:9: error: [NullAway] @NonNull field type not initialized
+src/main/java/com/trustedrouter/models/BroadcastDestinationList.java:8: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:10: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:11: error: [NullAway] @NonNull field object not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:13: error: [NullAway] @NonNull field model not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:14: error: [NullAway] @NonNull field choices not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:15: error: [NullAway] @NonNull field usage not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:35: error: [NullAway] @NonNull field ChatCompletion$Choice.message not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:36: error: [NullAway] @NonNull field ChatCompletion$Choice.finishReason not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:37: error: [NullAway] @NonNull field ChatCompletion$Choice.logprobs not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:46: error: [NullAway] @NonNull field ChatCompletion$Message.role not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:47: error: [NullAway] @NonNull field ChatCompletion$Message.content not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:48: error: [NullAway] @NonNull field ChatCompletion$Message.name not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:49: error: [NullAway] @NonNull field ChatCompletion$Message.toolCalls not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:50: error: [NullAway] @NonNull field ChatCompletion$Message.toolCallId not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:70: error: [NullAway] @NonNull field ChatCompletion$Usage.costMicrodollars not initialized
+src/main/java/com/trustedrouter/models/ChatCompletion.java:71: error: [NullAway] @NonNull field ChatCompletion$Usage.providerUsage not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:10: error: [NullAway] @NonNull field object not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:12: error: [NullAway] @NonNull field model not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:13: error: [NullAway] @NonNull field choices not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:14: error: [NullAway] @NonNull field usage not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:34: error: [NullAway] @NonNull field ChatCompletionChunk$Choice.delta not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:35: error: [NullAway] @NonNull field ChatCompletionChunk$Choice.finishReason not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:42: error: [NullAway] @NonNull field ChatCompletionChunk$Delta.role not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:43: error: [NullAway] @NonNull field ChatCompletionChunk$Delta.content not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:44: error: [NullAway] @NonNull field ChatCompletionChunk$Delta.reasoning not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:45: error: [NullAway] @NonNull field ChatCompletionChunk$Delta.toolCalls not initialized
+src/main/java/com/trustedrouter/models/ChatCompletionChunk.java:9: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/CheckoutResponse.java:5: error: [NullAway] @NonNull field url not initialized
+src/main/java/com/trustedrouter/models/CheckoutResponse.java:6: error: [NullAway] @NonNull field status not initialized
+src/main/java/com/trustedrouter/models/CheckoutResponse.java:7: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/CreditsBalance.java:7: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:10: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:11: error: [NullAway] @NonNull field model not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:12: error: [NullAway] @NonNull field usage not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:22: error: [NullAway] @NonNull field EmbeddingResponse$Embedding.object not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:23: error: [NullAway] @NonNull field EmbeddingResponse$Embedding.embedding not initialized
+src/main/java/com/trustedrouter/models/EmbeddingResponse.java:9: error: [NullAway] @NonNull field object not initialized
+src/main/java/com/trustedrouter/models/JsonModel.java:15: error: [NullAway] assigning @Nullable expression to @NonNull field
+src/main/java/com/trustedrouter/models/JsonModel.java:7: error: [NullAway] @NonNull field raw not initialized
+src/main/java/com/trustedrouter/models/LogoutResponse.java:7: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:10: error: [NullAway] @NonNull field type not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:11: error: [NullAway] @NonNull field role not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:12: error: [NullAway] @NonNull field content not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:13: error: [NullAway] @NonNull field model not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:14: error: [NullAway] @NonNull field stopReason not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:15: error: [NullAway] @NonNull field stopSequence not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:16: error: [NullAway] @NonNull field usage not initialized
+src/main/java/com/trustedrouter/models/MessagesResponse.java:9: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:21: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/models/ModelList.java:25: error: [NullAway] @NonNull field ModelList$ModelInfo.id not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:26: error: [NullAway] @NonNull field ModelList$ModelInfo.object not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:28: error: [NullAway] @NonNull field ModelList$ModelInfo.ownedBy not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:29: error: [NullAway] @NonNull field ModelList$ModelInfo.name not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:30: error: [NullAway] @NonNull field ModelList$ModelInfo.description not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:31: error: [NullAway] @NonNull field ModelList$ModelInfo.contextLength not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:32: error: [NullAway] @NonNull field ModelList$ModelInfo.pricing not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:33: error: [NullAway] @NonNull field ModelList$ModelInfo.architecture not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:34: error: [NullAway] @NonNull field ModelList$ModelInfo.topProvider not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:35: error: [NullAway] @NonNull field ModelList$ModelInfo.perRequestLimits not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:36: error: [NullAway] @NonNull field ModelList$ModelInfo.trustedrouter not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:62: error: [NullAway] @NonNull field ModelList$Pricing.prompt not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:63: error: [NullAway] @NonNull field ModelList$Pricing.completion not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:64: error: [NullAway] @NonNull field ModelList$Pricing.promptMax not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:65: error: [NullAway] @NonNull field ModelList$Pricing.completionMax not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:73: error: [NullAway] @NonNull field ModelList$TrustedRouterMetadata.openWeights not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:74: error: [NullAway] @NonNull field ModelList$TrustedRouterMetadata.usProviderAvailable not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:75: error: [NullAway] @NonNull field ModelList$TrustedRouterMetadata.euFocusedProviderAvailable not initialized
+src/main/java/com/trustedrouter/models/ModelList.java:9: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:14: error: [NullAway] @NonNull field ProviderList$ProviderInfo.id not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:15: error: [NullAway] @NonNull field ProviderList$ProviderInfo.name not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:16: error: [NullAway] @NonNull field ProviderList$ProviderInfo.zeroDataRetention not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:17: error: [NullAway] @NonNull field ProviderList$ProviderInfo.confidential not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:18: error: [NullAway] @NonNull field ProviderList$ProviderInfo.privacy not initialized
+src/main/java/com/trustedrouter/models/ProviderList.java:9: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/RegionList.java:13: error: [NullAway] @NonNull field RegionList$RegionInfo.id not initialized
+src/main/java/com/trustedrouter/models/RegionList.java:14: error: [NullAway] @NonNull field RegionList$RegionInfo.name not initialized
+src/main/java/com/trustedrouter/models/RegionList.java:8: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/ResponseInputTokens.java:6: error: [NullAway] @NonNull field totalTokens not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:10: error: [NullAway] @NonNull field object not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:11: error: [NullAway] @NonNull field createdAt not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:12: error: [NullAway] @NonNull field status not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:13: error: [NullAway] @NonNull field model not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:14: error: [NullAway] @NonNull field output not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:15: error: [NullAway] @NonNull field usage not initialized
+src/main/java/com/trustedrouter/models/ResponseObject.java:9: error: [NullAway] @NonNull field id not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:10: error: [NullAway] @NonNull field acceptedImageDigests not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:11: error: [NullAway] @NonNull field imageReference not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:12: error: [NullAway] @NonNull field acceptedImageReferences not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:13: error: [NullAway] @NonNull field sourceCommit not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:14: error: [NullAway] @NonNull field tls not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:15: error: [NullAway] @NonNull field dataPolicy not initialized
+src/main/java/com/trustedrouter/models/TrustRelease.java:9: error: [NullAway] @NonNull field imageDigest not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:10: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.emailVerified not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:11: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.walletAddress not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:12: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.workspaceId not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:13: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.createdAt not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:5: error: [NullAway] @NonNull field data not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:8: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.sub not initialized
+src/main/java/com/trustedrouter/models/UserInfoResponse.java:9: error: [NullAway] @NonNull field UserInfoResponse$UserInfo.email not initialized
+src/main/java/com/trustedrouter/oauth/OAuth.java:105: error: [NullAway] passing @Nullable parameter 'state' where @NonNull is required
+src/main/java/com/trustedrouter/oauth/OAuth.java:118: error: [NullAway] passing @Nullable parameter 'state' where @NonNull is required
+src/main/java/com/trustedrouter/oauth/OAuth.java:28: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/oauth/OAuthAuthorizeOptions.java:51: error: [NullAway] initializer method does not guarantee @NonNull fields codeChallenge (line 42), codeChallengeMethod (line 43), keyLabel (line 44), limit (line 45), usageLimitType (line 46), expiresAt (line 47), spawnAgent (line 48), spawnCloud (line 49), state (line 50) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/oauth/OAuthToken.java:10: error: [NullAway] @NonNull field identity not initialized
+src/main/java/com/trustedrouter/oauth/OAuthToken.java:8: error: [NullAway] @NonNull field key not initialized
+src/main/java/com/trustedrouter/oauth/OAuthToken.java:9: error: [NullAway] @NonNull field userId not initialized
+src/main/java/com/trustedrouter/receipts/ReceiptCapture.java:17: error: [NullAway] initializer method does not guarantee @NonNull field receipt (line 15) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/receipts/ReceiptCapture.java:42: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptCapture.java:60: error: [NullAway] passing @Nullable parameter '(byte[]) null' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerificationOptions.java:62: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerificationOptions.java:81: error: [NullAway] initializer method does not guarantee @NonNull fields requestBody (line 70), responseBody (line 71), responseStream (line 72), expectedNonce (line 73), maxAgeSeconds (line 74), now (line 75), attestationDocument (line 76), gcpAttestationOptions (line 79) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:209: error: [NullAway] passing @Nullable parameter 'flattened' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:258: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:281: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:409: error: [NullAway] passing @Nullable parameter 'verificationExpiresAt' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:409: error: [NullAway] passing @Nullable parameter 'verifiedAt' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:473: error: [NullAway] passing @Nullable parameter 'nonce' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:605: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:616: error: [NullAway] passing @Nullable parameter 'events' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:624: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:633: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:642: error: [NullAway] passing @Nullable parameter 'error.getMessage()' where @NonNull is required
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:740: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:749: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:753: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:818: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:876: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:887: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/receipts/ReceiptVerifier.java:914: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/requests/BillingCheckoutRequest.java:21: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 20) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/BroadcastDestinationRequest.java:22: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 21) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/ChatRequest.java:70: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 68) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/EmbeddingsRequest.java:24: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 23) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/FusionRequest.java:50: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 49) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/MessagesRequest.java:28: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 27) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/ModelFilters.java:22: error: [NullAway] initializer method does not guarantee @NonNull fields openWeights (line 19), providerJurisdiction (line 20), providerRegion (line 21) are initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/requests/ResponsesRequest.java:33: error: [NullAway] initializer method does not guarantee @NonNull field callOptions (line 32) is initialized along all control-flow paths (remember to check for exceptions or early returns).
+src/main/java/com/trustedrouter/streaming/EventStream.java:101: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:105: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:118: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/streaming/EventStream.java:194: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/streaming/EventStream.java:234: error: [NullAway] passing @Nullable parameter 'event' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:261: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/streaming/EventStream.java:280: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:288: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:52: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:85: error: [NullAway] passing @Nullable parameter 'null' where @NonNull is required
+src/main/java/com/trustedrouter/streaming/EventStream.java:91: error: [NullAway] returning @Nullable expression from method with @NonNull return type
+src/main/java/com/trustedrouter/streaming/TextStream.java:15: error: [NullAway] returning @Nullable expression from method with @NonNull return type

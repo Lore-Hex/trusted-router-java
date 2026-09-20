@@ -132,7 +132,7 @@ public final class OAuth {
             String query = uri.getRawQuery();
             StringBuilder updated = new StringBuilder();
             if (query != null && !query.isEmpty()) {
-                for (String item : query.split("&")) {
+                for (String item : query.split("&", 0)) {
                     if (!item.startsWith("state=")) {
                         if (updated.length() > 0) { updated.append('&'); }
                         updated.append(item);
@@ -166,7 +166,7 @@ public final class OAuth {
     private static Map<String, String> parseQuery(String rawQuery) {
         Map<String, String> values = new LinkedHashMap<String, String>();
         if (rawQuery == null || rawQuery.isEmpty()) { return values; }
-        for (String item : rawQuery.split("&")) {
+        for (String item : rawQuery.split("&", 0)) {
             int separator = item.indexOf('=');
             String key = separator < 0 ? item : item.substring(0, separator);
             String value = separator < 0 ? "" : item.substring(separator + 1);

@@ -14,6 +14,69 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 final class RequestBuilderTest {
+
+    @Test void modelBoundaryRejectsMalformedConsumedFields() {
+        for (String body : java.util.List.of("null", "[]", "7", "\"x\"")) {
+            assertThatThrownBy(() -> ModelDecoder.decode(
+                    com.trustedrouter.internal.JsonSupport.parse(body), ChatCompletion.class))
+                    .isInstanceOf(com.trustedrouter.errors.InvalidResponseException.class);
+        }
+        for (String body : java.util.List.of("{\"choices\":[null]}", "{\"choices\":{}}",
+                "{\"choices\":[{\"message\":7}]}", "{\"choices\":[{\"message\":{\"content\":7}}]}")) {
+            assertThatThrownBy(() -> ModelDecoder.decode(
+                    com.trustedrouter.internal.JsonSupport.parse(body), ChatCompletion.class))
+                    .isInstanceOf(com.trustedrouter.errors.InvalidResponseException.class);
+        }
+        for (String body : java.util.List.of("{\"choices\":[null]}",
+                "{\"choices\":[{\"delta\":{\"content\":7}}]}")) {
+            assertThatThrownBy(() -> ModelDecoder.decode(com.trustedrouter.internal.JsonSupport.parse(body),
+                    com.trustedrouter.models.ChatCompletionChunk.class))
+                    .isInstanceOf(com.trustedrouter.errors.InvalidResponseException.class);
+        }
+        for (String body : java.util.List.of("{\"data\":[null]}", "{\"data\":[{\"id\":7}]}")) {
+            assertThatThrownBy(() -> ModelDecoder.decode(com.trustedrouter.internal.JsonSupport.parse(body),
+                    com.trustedrouter.models.ModelList.class))
+                    .isInstanceOf(com.trustedrouter.errors.InvalidResponseException.class);
+        }
+    }
+
+    @Test void metadataPassesThroughWithoutCoercion() {
+        var json = com.trustedrouter.internal.JsonSupport.parse(
+                "{\"id\":7,\"created\":\"bad\",\"usage\":[],\"choices\":[],\"future\":{\"x\":true}}");
+        ChatCompletion value = ModelDecoder.decode(json, ChatCompletion.class);
+        assertThat(value.getRaw()).isEqualTo(json);
+        assertThat(value.getId()).isNull();
+        assertThat(value.getUsage()).isNull();
+        assertThat(value.firstText()).isEmpty();
+        var tokenJson = com.trustedrouter.internal.JsonSupport.parse(
+                "{\"key\":\"k\",\"user_id\":{},\"identity\":{\"sub\":null,\"future\":[]}}");
+        var token = ModelDecoder.decode(tokenJson, com.trustedrouter.oauth.OAuthToken.class);
+        assertThat(token.getRaw()).isEqualTo(tokenJson);
+        assertThat(token.getKey()).isEqualTo("k");
+        assertThat(token.getUserId()).isNull();
+    }
+
+    @Test void releasePinsCannotBeCoerced() {
+        for (String body : java.util.List.of("{\"image_digest\":7}", "{\"image_reference\":false}",
+                "{\"accepted_image_digests\":[7]}", "{\"accepted_image_references\":[null]}",
+                "{\"accepted_image_digests\":{}}")) {
+            assertThatThrownBy(() -> ModelDecoder.decode(com.trustedrouter.internal.JsonSupport.parse(body),
+                    com.trustedrouter.models.TrustRelease.class))
+                    .isInstanceOf(com.trustedrouter.errors.InvalidResponseException.class);
+        }
+    }
+
+    @Test void headerMergePreservesRepeatsAndOverridesIgnoringCase() {
+        var options = TrustedRouterOptions.builder().header("X-Example", "base")
+                .header("X-Repeat", "one").header("x-repeat", "two").build();
+        var call = CallOptions.builder().header("x-example", "override")
+                .header("X-EXAMPLE", "second").build();
+        var request = new com.trustedrouter.internal.RequestFactory(options)
+                .buildRequest("https://example.com", "GET", null, call, true);
+        assertThat(request.headers().values("X-Repeat")).containsExactly("one", "two");
+        assertThat(request.headers().values("X-Example")).containsExactly("override", "second");
+    }
+
     @Test void acceptsMillisecondTimeoutsWithoutDuration() {
         TrustedRouterOptions options = TrustedRouterOptions.builder()
                 .timeoutMillis(1_234L)

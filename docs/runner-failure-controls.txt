@@ -1,0 +1,6 @@
+Stale pattern control: exit 1
+STALE object-envelope: expected exactly one before pattern, found 0
+
+Surviving (no-op) mutation control: exit 1
+SURVIVED object-envelope: 0.54s
+Mutation wall time: 2.86s; 0/1 killed.

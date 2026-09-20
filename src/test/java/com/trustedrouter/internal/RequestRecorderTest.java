@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.trustedrouter.errors.InternalException;
 import com.trustedrouter.internal.RequestRecorder.AttemptRecord;
 import com.trustedrouter.internal.RequestRecorder.ConfiguredTimeouts;
-import com.trustedrouter.internal.RequestRecorder.CounterIncrement;
 import com.trustedrouter.internal.RequestRecorder.CounterKey;
 import com.trustedrouter.internal.RequestRecorder.CounterUpdate;
 import java.io.IOException;
@@ -520,8 +519,4 @@ final class RequestRecorderTest {
         }
     }
 
-    @SuppressWarnings("unused")
-    private static CounterIncrement unused() {
-        return new CounterIncrement();
-    }
 }
