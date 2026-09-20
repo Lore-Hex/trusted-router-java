@@ -12,7 +12,7 @@ public final class TrustedRouter {
     /**
      * The version.
      */
-    public static final String VERSION = "0.3.0";
+    public static final String VERSION = "0.4.0";
     /**
      * The default api base url.
      */

@@ -104,7 +104,7 @@ class PublicationTests(unittest.TestCase):
                     # Evaluate the actual README install snippet, substituting only the release
                     # version so release-tag CI verifies the artifact it just built.
                     install = (ROOT / 'build/generated/examples/dependencies.gradle.kts').read_text()
-                    install = install.replace(':0.3.0"', ':' + ARGS.version + '"')
+                    install = install.replace(':0.4.0"', ':' + ARGS.version + '"')
                     (work / 'build.gradle.kts').write_text('''
 plugins { application }
 repositories { mavenLocal(); mavenCentral() }

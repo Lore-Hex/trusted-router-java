@@ -30,7 +30,7 @@ Gradle:
 
 ```kotlin
 dependencies {
-    implementation("com.trustedrouter:trusted-router:0.3.0")
+    implementation("com.trustedrouter:trusted-router:0.4.0")
 }
 ```
 
@@ -40,7 +40,7 @@ Maven:
 <dependency>
   <groupId>com.trustedrouter</groupId>
   <artifactId>trusted-router</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
