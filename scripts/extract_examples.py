@@ -64,7 +64,7 @@ def main():
                 assert xml.tag == 'dependency', origin
                 assert xml.findtext('groupId') == 'com.trustedrouter', origin
                 assert xml.findtext('artifactId') == 'trusted-router', origin
-                assert xml.findtext('version') == '0.3.0', origin
+                assert xml.findtext('version') == '0.4.0', origin
                 check = 'parsed and matched to published Maven coordinates'
             elif language in ('bash', 'sh'):
                 # Syntax-check shell snippets only where a POSIX bash exists: on Windows,

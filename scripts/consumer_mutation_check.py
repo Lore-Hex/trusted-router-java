@@ -25,7 +25,7 @@ def main():
         repo = Path(temporary) / 'maven'
         shutil.copytree(ROOT, work, ignore=shutil.ignore_patterns('.git', '.gradle', 'build', '__pycache__'))
         wrapper = 'gradlew.bat' if os.name == 'nt' else './gradlew'
-        gradle = [wrapper, '--offline', '--console=plain', '-PlocalPublication', '-PVERSION_NAME=0.3.0', '-Dmaven.repo.local=' + str(repo)]
+        gradle = [wrapper, '--offline', '--console=plain', '-PlocalPublication', '-PVERSION_NAME=0.4.0', '-Dmaven.repo.local=' + str(repo)]
         def run(command, name):
             result = subprocess.run(command, cwd=work, capture_output=True, text=True, timeout=300)
             (OUTPUT / (name + '.log')).write_text(result.stdout + result.stderr, encoding='utf-8')
@@ -37,7 +37,7 @@ def main():
         # Baseline records the installed Gradle binary used by the real scratch consumer.
         import re
         gradle_binary = re.search(r'Scratch command: (.*?gradle(?:\.bat)?) --offline', log).group(1).strip('"')
-        version = '0.3.0'
+        version = '0.4.0'
         artifacts = repo / 'com/trustedrouter/trusted-router' / version
         stem = 'trusted-router-' + version
         checker = [sys.executable, 'scripts/consumer_check.py', '--repository', str(repo),
@@ -143,7 +143,7 @@ def main():
             if name == 'root':
                 changed = changed.replace(b'</dependency>', b'</other>', 1)
             proof('xml-' + name, readme, changed, gradle + ['extractDocExamples'], 'AssertionError')
-        proof('wrong-xml-coordinate', readme, readme.read_bytes().replace(b'<version>0.3.0</version>', b'<version>9.0.0</version>', 1),
+        proof('wrong-xml-coordinate', readme, readme.read_bytes().replace(b'<version>0.4.0</version>', b'<version>9.0.0</version>', 1),
               gradle + ['extractDocExamples'], 'AssertionError')
         proof('broken-shell', readme, readme.read_bytes().replace(b'./gradlew clean check', b'if then ./gradlew clean check', 1),
               gradle + ['extractDocExamples'], 'syntax error')

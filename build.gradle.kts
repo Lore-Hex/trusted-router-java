@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.trustedrouter"
-version = providers.gradleProperty("VERSION_NAME").orElse("0.3.0").get()
+version = providers.gradleProperty("VERSION_NAME").orElse("0.4.0").get()
 description = "Java, Kotlin, and Android SDK for TrustedRouter"
 
 repositories {

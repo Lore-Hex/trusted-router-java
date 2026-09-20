@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-09-20
 
 - Signed inference receipt verification for compact and flattened JWS, strict duplicate-member
   JSON rejection, exact body and SSE hashing, typed fail-closed errors, GCP receipt-key attestation
@@ -15,6 +15,21 @@
   New `TrustedRouterOptions.Builder.telemetrySampleRate(double)`, `TrustedRouterClient.close()`
   (`Closeable`, one 2 s final flush), stream TTFT / `stream_broken` / `aborted` recording, and
   `TRUSTEDROUTER_TELEMETRY_DEBUG=1`. Opting out still disables the header and the beacon together.
+
+- Receipt-key attestation binding mode: compact receipts verify fully when the caller supplies the
+  attestation document pinned by `att_sha256` (`attestationDocument(byte[])`); the live-gateway path
+  is unchanged. Env-gated live production receipt smoke tests (`TRUSTEDROUTER_API_KEY`).
+- Boundary audit: unchecked casts and null dereferences on decoded JSON now throw a typed
+  `InvalidResponseException`; consumed fields are validated strictly while all metadata is retained in
+  `getRaw()`. The `/auth/keys` exchange requires only `key` and passes unknown fields through;
+  `/auth/userinfo` requires `data` to be an object and accepts the legacy null subject. Header access
+  is case-insensitive with repeated values preserved.
+- Consumer DX: every public type, method, field, and enum constant is documented (`-Xdoclint:all
+  -Werror`); `LICENSE` and `README.md` ship in `META-INF` of the binary, sources, and javadoc jars;
+  every README Java and Kotlin snippet compiles against the packaged jar; a Maven Local scratch
+  consumer is verified in CI. A plain `./gradlew check` no longer requires signing credentials.
+- Internal: Error Prone on production code (NullAway wired, disabled pending 345 sites), a shared
+  cross-SDK auth wire fixture, and a fails-without-fix mutation gate in CI.
 
 ## 0.3.0 — 2026-08-21
 
