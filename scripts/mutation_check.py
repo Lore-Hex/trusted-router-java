@@ -14,6 +14,12 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+def _newline_native(pattern: str, source: bytes) -> bytes:
+    """Encode a recorded pattern using the newline convention of the checkout (CRLF on Windows)."""
+    encoded = pattern.encode()
+    return encoded.replace(b'\n', b'\r\n') if b'\r\n' in source else encoded
+
 def run(work, tests, log):
     wrapper = 'gradlew.bat' if os.name == 'nt' else './gradlew'
     command = [wrapper, 'test', '--offline', '--console=plain', '-PmutationRuntime',
@@ -58,7 +64,7 @@ def main():
         # Check all patterns before spending time on Gradle; never silently skip stale records.
         for item in mutations:
             source = (work / item['file']).read_bytes()
-            count = source.count(item['before'].encode())
+            count = source.count(_newline_native(item['before'], source))
             if count != 1:
                 print(f"STALE {item['id']}: expected exactly one before pattern, found {count}", flush=True)
                 return 1
@@ -72,10 +78,10 @@ def main():
             began = time.monotonic()
             status = 'ERROR'
             try:
-                before = item['before'].encode()
+                before = _newline_native(item['before'], original)
                 if original.count(before) != 1:
                     raise ValueError(f"stale mutation {item['id']}")
-                path.write_bytes(original.replace(before, item['after'].encode(), 1))
+                path.write_bytes(original.replace(before, _newline_native(item['after'], original), 1))
                 code = run(work, [item['test']], output / (item['id'] + '.log'))
                 status = 'KILLED' if code and failed_test(work, item['test']) else ('SURVIVED' if code == 0 else 'ERROR')
             finally:
