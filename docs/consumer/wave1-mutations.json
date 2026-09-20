@@ -1,0 +1,179 @@
+{
+  "seconds": 428.194,
+  "results": [
+    {
+      "id": "object-envelope",
+      "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields",
+      "status": "KILLED",
+      "seconds": 3.984
+    },
+    {
+      "id": "string-kind",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 3.033
+    },
+    {
+      "id": "exchange-key",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 5.148
+    },
+    {
+      "id": "exchange-identity",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 6.955
+    },
+    {
+      "id": "exchange-data",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 6.6
+    },
+    {
+      "id": "userinfo-data",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 5.925
+    },
+    {
+      "id": "identity-sub",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 8.458
+    },
+    {
+      "id": "identity-email",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 5.969
+    },
+    {
+      "id": "pin-image_digest",
+      "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced",
+      "status": "KILLED",
+      "seconds": 5.638
+    },
+    {
+      "id": "pin-image_reference",
+      "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced",
+      "status": "KILLED",
+      "seconds": 3.35
+    },
+    {
+      "id": "pin-arrays",
+      "test": "com.trustedrouter.RequestBuilderTest.releasePinsCannotBeCoerced",
+      "status": "KILLED",
+      "seconds": 6.205
+    },
+    {
+      "id": "chat-consumed",
+      "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields",
+      "status": "KILLED",
+      "seconds": 8.337
+    },
+    {
+      "id": "catalog-consumed",
+      "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields",
+      "status": "KILLED",
+      "seconds": 16.612
+    },
+    {
+      "id": "metadata-projection",
+      "test": "com.trustedrouter.RequestBuilderTest.metadataPassesThroughWithoutCoercion",
+      "status": "KILLED",
+      "seconds": 13.792
+    },
+    {
+      "id": "raw-retention",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 18.979
+    },
+    {
+      "id": "fixture-invented-data",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 15.257
+    },
+    {
+      "id": "status-shape",
+      "test": "com.trustedrouter.EndpointSurfaceTest.malformedStatusAndModelBodiesHaveTypedErrors",
+      "status": "KILLED",
+      "seconds": 20.253
+    },
+    {
+      "id": "model-typed-error",
+      "test": "com.trustedrouter.EndpointSurfaceTest.malformedStatusAndModelBodiesHaveTypedErrors",
+      "status": "KILLED",
+      "seconds": 40.791
+    },
+    {
+      "id": "sse-type",
+      "test": "com.trustedrouter.StreamingTest.malformedConsumedEventTypeIsTypedFailure",
+      "status": "KILLED",
+      "seconds": 48.967
+    },
+    {
+      "id": "error-message",
+      "test": "com.trustedrouter.EndpointSurfaceTest.malformedErrorMetadataKeepsStatusAndRawPayload",
+      "status": "KILLED",
+      "seconds": 13.036
+    },
+    {
+      "id": "error-metadata",
+      "test": "com.trustedrouter.EndpointSurfaceTest.malformedErrorMetadataKeepsStatusAndRawPayload",
+      "status": "KILLED",
+      "seconds": 8.916
+    },
+    {
+      "id": "header-repeats",
+      "test": "com.trustedrouter.RequestBuilderTest.headerMergePreservesRepeatsAndOverridesIgnoringCase",
+      "status": "KILLED",
+      "seconds": 14.283
+    },
+    {
+      "id": "header-case",
+      "test": "com.trustedrouter.RequestBuilderTest.headerMergePreservesRepeatsAndOverridesIgnoringCase",
+      "status": "KILLED",
+      "seconds": 16.54
+    },
+    {
+      "id": "expiry-number",
+      "test": "com.trustedrouter.AttestationVerifierTest.expirationMustBeAnExactNumericInteger",
+      "status": "KILLED",
+      "seconds": 24.017
+    },
+    {
+      "id": "expiry-exact",
+      "test": "com.trustedrouter.AttestationVerifierTest.expirationMustBeAnExactNumericInteger",
+      "status": "KILLED",
+      "seconds": 28.691
+    },
+    {
+      "id": "trust-string",
+      "test": "com.trustedrouter.AttestationVerifierTest.trustStringsAndArraysCannotBeCoercedOrFiltered",
+      "status": "KILLED",
+      "seconds": 24.796
+    },
+    {
+      "id": "trust-array-member",
+      "test": "com.trustedrouter.AttestationVerifierTest.trustStringsAndArraysCannotBeCoercedOrFiltered",
+      "status": "KILLED",
+      "seconds": 14.313
+    },
+    {
+      "id": "array-shape",
+      "test": "com.trustedrouter.RequestBuilderTest.modelBoundaryRejectsMalformedConsumedFields",
+      "status": "KILLED",
+      "seconds": 10.887
+    },
+    {
+      "id": "nullable-identity",
+      "test": "com.trustedrouter.OAuthTest.sharedAuthWireFixturesUseRealClientParsing",
+      "status": "KILLED",
+      "seconds": 15.189
+    }
+  ]
+}

@@ -44,25 +44,98 @@ public final class TrustedRouterOptions {
         this.asyncExecutor = builder.asyncExecutor;
     }
 
+    /**
+     * Creates a builder for this value.
+     *
+     * @return a new builder
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Returns api key.
+     *
+     * @return the api key
+     */
     public String getApiKey() { return apiKey; }
+    /**
+     * Returns base url.
+     *
+     * @return the base url
+     */
     public String getBaseUrl() { return baseUrl; }
+    /**
+     * Returns control base url.
+     *
+     * @return the control base url
+     */
     public String getControlBaseUrl() { return controlBaseUrl; }
+    /**
+     * Returns status url.
+     *
+     * @return the status url
+     */
     public String getStatusUrl() { return statusUrl; }
+    /**
+     * Returns trust release url.
+     *
+     * @return the trust release url
+     */
     public String getTrustReleaseUrl() { return trustReleaseUrl; }
+    /**
+     * Returns http client.
+     *
+     * @return the http client
+     */
     public OkHttpClient getHttpClient() { return httpClient; }
+    /**
+     * Returns timeout millis.
+     *
+     * @return the timeout millis
+     */
     public Long getTimeoutMillis() { return timeoutMillis; }
+    /**
+     * Returns headers.
+     *
+     * @return the headers
+     */
     public Map<String, String> getHeaders() { return headers; }
+    /**
+     * Returns workspace id.
+     *
+     * @return the workspace id
+     */
     public String getWorkspaceId() { return workspaceId; }
+    /**
+     * Returns max retries.
+     *
+     * @return the max retries
+     */
     public int getMaxRetries() { return maxRetries; }
+    /**
+     * Returns regional failover.
+     *
+     * @return the regional failover
+     */
     public boolean isRegionalFailover() { return regionalFailover; }
-    /** Tri-state client-telemetry override; null means resolve from env and hosts. */
+    /**
+     * Tri-state client-telemetry override; null means resolve from env and hosts.
+     *
+     * @return the telemetry
+     */
     public Boolean getTelemetry() { return telemetry; }
-    /** Random sampling rate for healthy first-attempt successes in the beacon channel. */
+    /**
+     * Random sampling rate for healthy first-attempt successes in the beacon channel.
+     *
+     * @return the telemetry sample rate
+     */
     public double getTelemetrySampleRate() { return telemetrySampleRate; }
+    /**
+     * Returns async executor.
+     *
+     * @return the async executor
+     */
     public Executor getAsyncExecutor() { return asyncExecutor; }
 
     private static String normalizeBaseUrl(String value, String fallback) {
@@ -95,42 +168,89 @@ public final class TrustedRouterOptions {
 
         private Builder() {}
 
+        /**
+         * Sets api key.
+         *
+         * @param value the api key
+         * @return this builder
+         */
         public Builder apiKey(String value) {
             this.apiKey = value;
             return this;
         }
 
+        /**
+         * Sets base url.
+         *
+         * @param value the base url
+         * @return this builder
+         */
         public Builder baseUrl(String value) {
             this.baseUrl = value;
             return this;
         }
 
+        /**
+         * Sets control base url.
+         *
+         * @param value the control base url
+         * @return this builder
+         */
         public Builder controlBaseUrl(String value) {
             this.controlBaseUrl = value;
             return this;
         }
 
+        /**
+         * Sets status url.
+         *
+         * @param value the status url
+         * @return this builder
+         */
         public Builder statusUrl(String value) {
             this.statusUrl = value;
             return this;
         }
 
+        /**
+         * Sets trust release url.
+         *
+         * @param value the trust release url
+         * @return this builder
+         */
         public Builder trustReleaseUrl(String value) {
             this.trustReleaseUrl = value;
             return this;
         }
 
+        /**
+         * Sets http client.
+         *
+         * @param value the http client
+         * @return this builder
+         */
         public Builder httpClient(OkHttpClient value) {
             this.httpClient = value;
             return this;
         }
 
+        /**
+         * Sets timeout.
+         *
+         * @param value the timeout
+         * @return this builder
+         */
         public Builder timeout(Duration value) {
             this.timeoutMillis = Long.valueOf(TrustedRouter.timeoutMillis(value));
             return this;
         }
 
-        /** Sets the SDK call timeout in milliseconds without requiring {@link Duration}. */
+        /**
+         * Sets the SDK call timeout in milliseconds without requiring {@link Duration}.
+         *
+         * @param value the timeout millis
+         * @return this builder
+         */
         public Builder timeoutMillis(long value) {
             if (value < 0L) {
                 throw new IllegalArgumentException("timeout must be non-negative");
@@ -139,17 +259,34 @@ public final class TrustedRouterOptions {
             return this;
         }
 
-        /** Disables the SDK timeout. The caller's OkHttp timeouts still apply. */
+        /**
+         * Disables the SDK timeout. The caller's OkHttp timeouts still apply.
+         *
+         * @return this builder
+         */
         public Builder noTimeout() {
             this.timeoutMillis = null;
             return this;
         }
 
+        /**
+         * Sets header.
+         *
+         * @param name the name
+         * @param value the header
+         * @return this builder
+         */
         public Builder header(String name, String value) {
             this.headers.put(name, value);
             return this;
         }
 
+        /**
+         * Sets headers.
+         *
+         * @param values the values
+         * @return this builder
+         */
         public Builder headers(Map<String, String> values) {
             this.headers.clear();
             if (values != null) {
@@ -158,11 +295,23 @@ public final class TrustedRouterOptions {
             return this;
         }
 
+        /**
+         * Sets workspace id.
+         *
+         * @param value the workspace id
+         * @return this builder
+         */
         public Builder workspaceId(String value) {
             this.workspaceId = value;
             return this;
         }
 
+        /**
+         * Sets max retries.
+         *
+         * @param value the max retries
+         * @return this builder
+         */
         public Builder maxRetries(int value) {
             if (value < 0) {
                 throw new IllegalArgumentException("maxRetries must be non-negative");
@@ -171,6 +320,12 @@ public final class TrustedRouterOptions {
             return this;
         }
 
+        /**
+         * Sets regional failover.
+         *
+         * @param value the regional failover
+         * @return this builder
+         */
         public Builder regionalFailover(boolean value) {
             this.regionalFailover = value;
             return this;
@@ -190,6 +345,9 @@ public final class TrustedRouterOptions {
          * URL, its raw hostname is reduced to the {@code unknown} enum. Set
          * {@code TRUSTEDROUTER_TELEMETRY_DEBUG=1} to echo every batch to
          * stderr before it is sent.
+         *
+         * @param value the telemetry
+         * @return this builder
          */
         public Builder telemetry(Boolean value) {
             this.telemetry = value;
@@ -202,6 +360,9 @@ public final class TrustedRouterOptions {
          * retried or failed-over calls, and calls slower than 30 s are always
          * retained, and the exact per-minute counters are never sampled. The
          * control plane may lower the rate but never raise it.
+         *
+         * @param value the telemetry sample rate
+         * @return this builder
          */
         public Builder telemetrySampleRate(double value) {
             if (!(value >= 0.0d && value <= 1.0d)) {
@@ -211,11 +372,22 @@ public final class TrustedRouterOptions {
             return this;
         }
 
+        /**
+         * Sets async executor.
+         *
+         * @param value the async executor
+         * @return this builder
+         */
         public Builder asyncExecutor(Executor value) {
             this.asyncExecutor = value;
             return this;
         }
 
+        /**
+         * Builds the configured value.
+         *
+         * @return the configured value
+         */
         public TrustedRouterOptions build() {
             return new TrustedRouterOptions(this);
         }

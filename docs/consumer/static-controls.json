@@ -1,0 +1,61 @@
+{
+  "seconds": 29.309,
+  "results": [
+    {
+      "rule": "DecodedCast",
+      "rejected": true
+    },
+    {
+      "rule": "JsonExtraction",
+      "rejected": true
+    },
+    {
+      "rule": "InputLaundering",
+      "rejected": true
+    },
+    {
+      "rule": "HeaderMapOperation",
+      "rejected": true
+    },
+    {
+      "rule": "BroadCatch",
+      "rejected": true
+    },
+    {
+      "rule": "OptionalGet",
+      "rejected": true
+    },
+    {
+      "rule": "WireSwitch",
+      "rejected": true
+    },
+    {
+      "rule": "UnusedVariable",
+      "rejected": true
+    },
+    {
+      "rule": "MissingCasesInEnumSwitch",
+      "rejected": true
+    },
+    {
+      "rule": "ReturnValueIgnored",
+      "rejected": true
+    },
+    {
+      "rule": "FutureReturnValueIgnored",
+      "rejected": true
+    },
+    {
+      "rule": "CatchAndPrintStackTrace",
+      "rejected": true
+    },
+    {
+      "rule": "EmptyCatch",
+      "rejected": true
+    },
+    {
+      "rule": "ClassCanBeStatic",
+      "rejected": true
+    }
+  ]
+}

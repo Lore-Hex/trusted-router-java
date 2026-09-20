@@ -22,7 +22,13 @@ import okhttp3.ResponseBody;
 public final class ErrorClassifier {
     private ErrorClassifier() {}
 
-    /** Decodes a JSON body, raising the typed error for non-2xx responses. */
+    /**
+     * Decodes a JSON body, raising the typed error for non-2xx responses.
+     *
+     * @param response the response
+     * @return the decode json
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public static JsonElement decodeJson(Response response) throws TrustedRouterException {
         try {
             ResponseBody body = response.body();
@@ -44,7 +50,12 @@ public final class ErrorClassifier {
         }
     }
 
-    /** Raises the typed error for non-2xx responses, leaving 2xx bodies open. */
+    /**
+     * Raises the typed error for non-2xx responses, leaving 2xx bodies open.
+     *
+     * @param response the response
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public static void requireSuccess(Response response) throws TrustedRouterException {
         if (response.isSuccessful()) {
             return;
@@ -62,7 +73,15 @@ public final class ErrorClassifier {
         throw error;
     }
 
-    /** Maps a status to the typed exception, preserving the raw payload. */
+    /**
+     * Maps a status to the typed exception, preserving the raw payload.
+     *
+     * @param status the status
+     * @param message the message
+     * @param payload the payload
+     * @param response the response
+     * @return the classify
+     */
     public static TrustedRouterException classify(
             int status, String message, JsonElement payload, Response response) {
         if (status == 401) {
@@ -103,6 +122,9 @@ public final class ErrorClassifier {
      * Parses the server's requested wait in seconds, or null when it did not
      * say. Read from live headers only, so it must run BEFORE the response is
      * closed by the engine.
+     *
+     * @param response the response
+     * @return the retry after seconds
      */
     public static Double retryAfterSeconds(Response response) {
         // retry-after-ms wins when both are present: it is the more precise of

@@ -21,10 +21,40 @@ public final class ReceiptUpstreamClaims {
         this.certificateSha256 = certificateSha256;
     }
 
+    /**
+     * Returns tier.
+     *
+     * @return the tier
+     */
     public String getTier() { return tier; }
+    /**
+     * Returns policy.
+     *
+     * @return the policy
+     */
     public String getPolicy() { return policy; }
+    /**
+     * Returns verified at.
+     *
+     * @return the verified at
+     */
     public Long getVerifiedAt() { return verifiedAt; }
+    /**
+     * Returns verification expires at.
+     *
+     * @return the verification expires at
+     */
     public Long getVerificationExpiresAt() { return verificationExpiresAt; }
+    /**
+     * Returns certificate sha256.
+     *
+     * @return the certificate sha256
+     */
     public String getCertificateSha256() { return certificateSha256; }
+    /**
+     * Returns cert sha256.
+     *
+     * @return the cert sha256
+     */
     public String getCertSha256() { return certificateSha256; }
 }

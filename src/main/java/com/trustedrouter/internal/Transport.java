@@ -87,7 +87,13 @@ import okhttp3.Response;
  */
 public final class Transport {
     /** Which base URL family a request routes through. */
-    public enum Plane { INFERENCE, CONTROL }
+    public enum Plane { /**
+     * The inference.
+     */
+    INFERENCE, /**
+     * The control.
+     */
+    CONTROL }
 
     private static final ThreadLocal<CancellationToken> CANCELLATION =
             new ThreadLocal<CancellationToken>();
@@ -97,6 +103,9 @@ public final class Transport {
         private final AtomicBoolean cancelled = new AtomicBoolean();
         private final AtomicReference<Call> call = new AtomicReference<Call>();
 
+        /**
+         * Performs the cancel operation.
+         */
         public void cancel() {
             cancelled.set(true);
             Call active = call.get();
@@ -122,7 +131,11 @@ public final class Transport {
         public void clear() { call.set(null); }
     }
 
-    /** Binds a token to requests made on the current worker thread. */
+    /**
+     * Binds a token to requests made on the current worker thread.
+     *
+     * @param token the token
+     */
     public static void bindCancellation(CancellationToken token) {
         CANCELLATION.set(token);
     }
@@ -146,10 +159,20 @@ public final class Transport {
             this.recorder = recorder;
         }
 
+        /**
+         * Performs the response operation.
+         *
+         * @return the response
+         */
         public Response response() {
             return response;
         }
 
+        /**
+         * Performs the recorder operation.
+         *
+         * @return the recorder
+         */
         public RequestRecorder recorder() {
             return recorder;
         }
@@ -157,6 +180,8 @@ public final class Transport {
         /**
          * Finishes the recorder for a stream the caller could not wrap:
          * the attempt becomes {@code stream_broken} with the given cause.
+         *
+         * @param failure the failure
          */
         public void abandon(IOException failure) {
             if (recorder != null) {
@@ -188,6 +213,11 @@ public final class Transport {
     private final Object telemetryLock = new Object();
     private volatile TelemetryReporter reporter;
 
+    /**
+     * Creates a Transport.
+     *
+     * @param options the options
+     */
     public Transport(TrustedRouterOptions options) {
         this.options = options;
         this.baseUrl = options.getBaseUrl();
@@ -201,15 +231,31 @@ public final class Transport {
         this.sleeper = new JitterSleeper();
     }
 
+    /**
+     * Returns base url.
+     *
+     * @return the base url
+     */
     public String getBaseUrl() {
         return baseUrl;
     }
 
+    /**
+     * Returns control base url.
+     *
+     * @return the control base url
+     */
     public String getControlBaseUrl() {
         return controlBaseUrl;
     }
 
-    /** Delegates to {@link CandidateUrls#inferenceBaseUrls}; kept for existing imports. */
+    /**
+     * Delegates to {@link CandidateUrls#inferenceBaseUrls}; kept for existing imports.
+     *
+     * @param primaryBaseUrl the primary base url
+     * @param regionalFailover the regional failover
+     * @return the inference base urls
+     */
     public static List<String> inferenceBaseUrls(
             String primaryBaseUrl, boolean regionalFailover) {
         return CandidateUrls.inferenceBaseUrls(primaryBaseUrl, regionalFailover);
@@ -219,6 +265,15 @@ public final class Transport {
      * Executes one logical call and finishes its telemetry record as soon as
      * the attempt loop returns. Streaming callers that want TTFT, mid-body
      * failure, and abort facts use {@link #executeStream} instead.
+     *
+     * @param plane the plane
+     * @param method the method
+     * @param path the path
+     * @param body the body
+     * @param options the options
+     * @param streaming the streaming
+     * @return the execute
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
      */
     public Response execute(
             Plane plane,
@@ -238,6 +293,14 @@ public final class Transport {
      * Opens a stream. A non-2xx open finishes the record here (the caller
      * classifies the status); a 2xx hands the live recorder to the stream
      * wrapper, which finishes it on [DONE], mid-body failure, or close.
+     *
+     * @param plane the plane
+     * @param method the method
+     * @param path the path
+     * @param body the body
+     * @param options the options
+     * @return the execute stream
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
      */
     public OpenedStream executeStream(
             Plane plane,
@@ -330,7 +393,11 @@ public final class Transport {
         return current;
     }
 
-    /** The beacon reporter once an inference call was recorded, else null. */
+    /**
+     * The beacon reporter once an inference call was recorded, else null.
+     *
+     * @return the telemetry reporter
+     */
     public TelemetryReporter telemetryReporter() {
         return reporter;
     }
@@ -394,6 +461,15 @@ public final class Transport {
         return false;
     }
 
+    /**
+     * Performs the execute absolute operation.
+     *
+     * @param url the url
+     * @param method the method
+     * @param streaming the streaming
+     * @return the execute absolute
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public Response executeAbsolute(String url, String method, boolean streaming)
             throws TrustedRouterException {
         // A singleton URL list: the structural gate below makes failover
@@ -404,7 +480,16 @@ public final class Transport {
                 true, false, null);
     }
 
-    /** Executes a credential-free, single-origin control-plane request. */
+    /**
+     * Executes a credential-free, single-origin control-plane request.
+     *
+     * @param method the method
+     * @param path the path
+     * @param body the body
+     * @param streaming the streaming
+     * @return the execute credential free control
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public Response executeCredentialFreeControl(
             String method, String path, JsonElement body, boolean streaming)
             throws TrustedRouterException {
@@ -523,12 +608,23 @@ public final class Transport {
         }
     }
 
-    /** Delegates to {@link ErrorClassifier#decodeJson}; kept for existing imports. */
+    /**
+     * Delegates to {@link ErrorClassifier#decodeJson}; kept for existing imports.
+     *
+     * @param response the response
+     * @return the decode json
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public static JsonElement decodeJson(Response response) throws TrustedRouterException {
         return ErrorClassifier.decodeJson(response);
     }
 
-    /** Delegates to {@link ErrorClassifier#requireSuccess}; kept for existing imports. */
+    /**
+     * Delegates to {@link ErrorClassifier#requireSuccess}; kept for existing imports.
+     *
+     * @param response the response
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public static void requireSuccess(Response response) throws TrustedRouterException {
         ErrorClassifier.requireSuccess(response);
     }

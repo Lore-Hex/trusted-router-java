@@ -17,6 +17,9 @@ public interface TelemetrySink {
      * Receives one finished call: the unsampled event (the reporter decides
      * sampling) and its exact counter increments — one request-level row
      * plus one attempt-level row per attempt (&sect;5.4).
+     *
+     * @param event the event
+     * @param counters the counters
      */
     void onRequest(RequestRecorder.Event event, List<RequestRecorder.CounterUpdate> counters);
 }

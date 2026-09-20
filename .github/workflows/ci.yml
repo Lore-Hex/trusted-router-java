@@ -32,7 +32,7 @@ jobs:
         run: ./gradlew clean compileJava
       - name: Verify
         shell: bash
-        run: ./gradlew check javadoc
+        run: ./gradlew check javadoc -PlocalPublication
       - name: Boundary mutation gate
         run: python3 scripts/mutation_check.py
       - name: Static gate negative controls
@@ -55,5 +55,10 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
       - name: Validate publication metadata
-        run: ./gradlew generatePomFileForMavenPublication
+        run: ./gradlew consumerCheck -PlocalPublication
+      - name: Consumer negative controls
+        run: python3 scripts/consumer_mutation_check.py

@@ -30,13 +30,27 @@ import okio.BufferedSource;
  * leave the attempt as the response recorded it, exactly as the Python
  * reference. There is no reconnect path: the engine never retries after the
  * first surfaced body byte.
+ *
+ * @param <T> the decoded event type
  */
 public final class EventStream<T> implements Closeable {
     /** Maximum bytes in one SSE line or one not-yet-delimited frame. */
     public static final int MAXIMUM_FRAME_BYTES = 1_048_576;
 
-    /** Converts one SSE frame into a typed value. Return null to skip the frame. */
+    /**
+     * Converts one SSE frame into a typed value. Return null to skip the frame.
+     *
+     * @param <T> the decoded event type
+     */
     public interface Mapper<T> {
+        /**
+         * Decodes one named SSE event.
+         *
+         * @param event the event
+         * @param data the data
+         * @return the decoded event, or null to skip it
+         * @throws IOException if reading or writing the stream fails
+         */
         T map(String event, JsonObject data) throws IOException;
     }
 
@@ -48,6 +62,13 @@ public final class EventStream<T> implements Closeable {
     private boolean bodyStarted;
     private boolean telemetryFinished;
 
+    /**
+     * Creates a EventStream.
+     *
+     * @param response the response
+     * @param mapper the mapper
+     * @throws IOException if reading or writing the stream fails
+     */
     public EventStream(Response response, Mapper<T> mapper) throws IOException {
         this(response, mapper, null);
     }
@@ -55,6 +76,11 @@ public final class EventStream<T> implements Closeable {
     /**
      * Wraps an opened stream, driving the engine's telemetry recorder (may
      * be null) to completion as the stream is consumed.
+     *
+     * @param response the response
+     * @param mapper the mapper
+     * @param recorder the recorder
+     * @throws IOException if reading or writing the stream fails
      */
     public EventStream(Response response, Mapper<T> mapper, RequestRecorder recorder)
             throws IOException {
@@ -72,7 +98,12 @@ public final class EventStream<T> implements Closeable {
         this.mapper = mapper;
     }
 
-    /** Reads the next typed event, or null after {@code [DONE]}. Unexpected EOF fails closed. */
+    /**
+     * Reads the next typed event, or null after {@code [DONE]}. Unexpected EOF fails closed.
+     *
+     * @return the next event, or null after the completion marker
+     * @throws IOException if reading or writing the stream fails
+     */
     public T read() throws IOException {
         try {
             while (!finished) {
@@ -125,6 +156,11 @@ public final class EventStream<T> implements Closeable {
         }
     }
 
+    /**
+     * Returns whether the stream has finished or been closed.
+     *
+     * @return the finished
+     */
     public boolean isFinished() {
         return finished;
     }

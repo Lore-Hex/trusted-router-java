@@ -4,5 +4,10 @@ package com.trustedrouter.receipts;
 public final class MissingAttestationException extends ReceiptAttestationException {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Creates a MissingAttestationException.
+     *
+     * @param message the message
+     */
     public MissingAttestationException(String message) { super(message); }
 }

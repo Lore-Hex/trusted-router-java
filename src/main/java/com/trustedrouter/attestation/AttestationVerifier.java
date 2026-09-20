@@ -25,11 +25,23 @@ import okhttp3.ResponseBody;
 
 /** Verifies Google-signed Confidential Space JWTs and all TrustedRouter pins. */
 public final class AttestationVerifier {
+    /**
+     * The gcp issuer.
+     */
     public static final String GCP_ISSUER = "https://confidentialcomputing.googleapis.com";
+    /**
+     * The gcp jwks url.
+     */
     public static final String GCP_JWKS_URL =
             "https://www.googleapis.com/service_accounts/v1/metadata/jwk/"
                     + "signer@confidentialspace-sign.iam.gserviceaccount.com";
+    /**
+     * The exporter label.
+     */
     public static final String EXPORTER_LABEL = "EXPORTER-Channel-Binding";
+    /**
+     * The exporter length.
+     */
     public static final int EXPORTER_LENGTH = 32;
     private static final String PRODUCTION_DEBUG_STATUS = "disabled-since-boot";
 
@@ -40,6 +52,14 @@ public final class AttestationVerifier {
 
     private AttestationVerifier() {}
 
+    /**
+     * Performs the verify operation.
+     *
+     * @param document the document
+     * @param options the options
+     * @return the verify
+     * @throws AttestationVerificationException if the operation cannot be completed
+     */
     public static GatewayAttestation verify(
             byte[] document, AttestationVerificationOptions options)
             throws AttestationVerificationException {
@@ -57,6 +77,11 @@ public final class AttestationVerifier {
      * durable receipt key rather than a connection. The Google signature, issuer, expiry,
      * production posture, Confidential Space platform, audience, and supplied image pins are
      * still checked.
+     *
+     * @param document the document
+     * @param commitment the commitment
+     * @param options the options
+     * @throws AttestationVerificationException if the operation cannot be completed
      */
     public static void verifyReceiptKeyCommitment(
             byte[] document,

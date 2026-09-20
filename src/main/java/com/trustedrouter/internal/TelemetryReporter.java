@@ -80,18 +80,48 @@ import okio.BufferedSource;
 public final class TelemetryReporter implements TelemetrySink {
     /** Clock seam: monotonic nanoseconds for ages and schedules, wall millis for {@code sent_at_ms}. */
     public interface Clock {
+        /**
+         * Performs the monotonic nanos operation.
+         *
+         * @return the monotonic nanos
+         */
         long monotonicNanos();
 
+        /**
+         * Performs the wall millis operation.
+         *
+         * @return the wall millis
+         */
         long wallMillis();
     }
 
     /** What one single-shot POST observed. */
     public static final class SendResult {
+        /**
+         * The status.
+         */
         public final int status;
+        /**
+         * The retry after.
+         */
         public final String retryAfter;
+        /**
+         * The telemetry header.
+         */
         public final String telemetryHeader;
+        /**
+         * The body.
+         */
         public final String body;
 
+        /**
+         * Creates a SendResult.
+         *
+         * @param status the status
+         * @param retryAfter the retry after
+         * @param telemetryHeader the telemetry header
+         * @param body the body
+         */
         public SendResult(int status, String retryAfter, String telemetryHeader, String body) {
             this.status = status;
             this.retryAfter = retryAfter;
@@ -106,9 +136,22 @@ public final class TelemetryReporter implements TelemetrySink {
      * reporter backs off — it never retries.
      */
     public interface Sender {
+        /**
+         * Performs the send operation.
+         *
+         * @param url the url
+         * @param headers the headers
+         * @param body the body
+         * @param timeoutMs the timeout ms
+         * @return the send
+         * @throws IOException if reading or writing the stream fails
+         */
         SendResult send(String url, Map<String, String> headers, byte[] body, Long timeoutMs)
                 throws IOException;
 
+        /**
+         * Performs the close operation.
+         */
         void close();
     }
 
@@ -211,31 +254,67 @@ public final class TelemetryReporter implements TelemetrySink {
 
         private Builder() {}
 
+        /**
+         * Sets control base url.
+         *
+         * @param value the control base url
+         * @return this builder
+         */
         public Builder controlBaseUrl(String value) {
             this.controlBaseUrl = value;
             return this;
         }
 
+        /**
+         * Sets api key.
+         *
+         * @param value the api key
+         * @return this builder
+         */
         public Builder apiKey(Supplier<String> value) {
             this.apiKey = value;
             return this;
         }
 
+        /**
+         * Sets workspace id.
+         *
+         * @param value the workspace id
+         * @return this builder
+         */
         public Builder workspaceId(String value) {
             this.workspaceId = value;
             return this;
         }
 
+        /**
+         * Sets sdk identity.
+         *
+         * @param value the sdk identity
+         * @return this builder
+         */
         public Builder sdkIdentity(JsonObject value) {
             this.sdkIdentity = value;
             return this;
         }
 
+        /**
+         * Sets success sample rate.
+         *
+         * @param value the success sample rate
+         * @return this builder
+         */
         public Builder successSampleRate(double value) {
             this.successSampleRate = value;
             return this;
         }
 
+        /**
+         * Sets flush interval ms.
+         *
+         * @param value the flush interval ms
+         * @return this builder
+         */
         public Builder flushIntervalMs(long value) {
             this.flushIntervalMs = value;
             return this;
@@ -247,23 +326,45 @@ public final class TelemetryReporter implements TelemetrySink {
             return this;
         }
 
+        /**
+         * Sets sender.
+         *
+         * @param value the sender
+         * @return this builder
+         */
         public Builder sender(Sender value) {
             this.sender = value;
             return this;
         }
 
+        /**
+         * Sets clock.
+         *
+         * @param value the clock
+         * @return this builder
+         */
         public Builder clock(Clock value) {
             this.clock = value;
             return this;
         }
 
-        /** The sampling source; tests inject a scripted one. */
+        /**
+         * The sampling source; tests inject a scripted one.
+         *
+         * @param value the random
+         * @return this builder
+         */
         public Builder random(Random value) {
             this.random = value;
             return this;
         }
 
-        /** Forces the stderr batch echo on or off instead of reading the environment. */
+        /**
+         * Forces the stderr batch echo on or off instead of reading the environment.
+         *
+         * @param value the debug
+         * @return this builder
+         */
         public Builder debug(Boolean value) {
             this.debug = value;
             return this;
@@ -275,6 +376,11 @@ public final class TelemetryReporter implements TelemetrySink {
             return this;
         }
 
+        /**
+         * Builds the configured value.
+         *
+         * @return the configured value
+         */
         public TelemetryReporter build() {
             return new TelemetryReporter(this);
         }
@@ -413,6 +519,11 @@ public final class TelemetryReporter implements TelemetrySink {
     private boolean closed;
     private boolean stop;
 
+    /**
+     * Creates a builder for this value.
+     *
+     * @return a new builder
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -440,7 +551,12 @@ public final class TelemetryReporter implements TelemetrySink {
         this.instanceId = hex(8);
     }
 
-    /** Whether {@code TRUSTEDROUTER_TELEMETRY_DEBUG=1} asks for the stderr batch echo (&sect;6.3). */
+    /**
+     * Whether {@code TRUSTEDROUTER_TELEMETRY_DEBUG=1} asks for the stderr batch echo (&sect;6.3).
+     *
+     * @param environ the environ
+     * @return the debug from environment
+     */
     public static boolean debugFromEnvironment(Map<String, String> environ) {
         String value = environ == null ? null : environ.get("TRUSTEDROUTER_TELEMETRY_DEBUG");
         return value != null && "1".equals(value.trim());
@@ -462,6 +578,12 @@ public final class TelemetryReporter implements TelemetrySink {
 
     // ---- recording (caller thread, bounded bookkeeping only) ----------------
 
+    /**
+     * Performs the on request operation.
+     *
+     * @param event the event
+     * @param counters the counters
+     */
     @Override
     public void onRequest(
             RequestRecorder.Event event, List<RequestRecorder.CounterUpdate> counters) {
@@ -932,7 +1054,11 @@ public final class TelemetryReporter implements TelemetrySink {
 
     // ---- flushing ---------------------------------------------------------
 
-    /** Synchronously attempts one flush; intended for deterministic tests. Never throws. */
+    /**
+     * Synchronously attempts one flush; intended for deterministic tests. Never throws.
+     *
+     * @return the flush now
+     */
     public boolean flushNow() {
         try {
             return flushOnce(null);
@@ -1220,6 +1346,8 @@ public final class TelemetryReporter implements TelemetrySink {
      * Stops recording, makes one final single-shot flush bounded by
      * {@code timeoutMs} (the process-exit bound is 2 s), and stops the
      * worker. Idempotent; never throws; never blocks longer than the bound.
+     *
+     * @param timeoutMs the timeout ms
      */
     public void close(long timeoutMs) {
         long timeout = Math.max(0L, timeoutMs);
@@ -1313,6 +1441,11 @@ public final class TelemetryReporter implements TelemetrySink {
 
     // ---- observation (tests and diagnostics) --------------------------------
 
+    /**
+     * Returns disabled.
+     *
+     * @return the disabled
+     */
     public boolean isDisabled() {
         lock.lock();
         try {
@@ -1322,6 +1455,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
+    /**
+     * Returns closed.
+     *
+     * @return the closed
+     */
     public boolean isClosed() {
         lock.lock();
         try {
@@ -1331,23 +1469,47 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
-    /** The worker thread once started on the first record, else null. */
+    /**
+     * The worker thread once started on the first record, else null.
+     *
+     * @return the worker thread
+     */
     public Thread workerThread() {
         return workerThread;
     }
 
+    /**
+     * Performs the instance id operation.
+     *
+     * @return the instance id
+     */
     public String instanceId() {
         return instanceId;
     }
 
+    /**
+     * Performs the success sample rate operation.
+     *
+     * @return the success sample rate
+     */
     public double successSampleRate() {
         return successSampleRate;
     }
 
+    /**
+     * Performs the flush interval ms operation.
+     *
+     * @return the flush interval ms
+     */
     public long flushIntervalMs() {
         return flushIntervalMs;
     }
 
+    /**
+     * Performs the dropped since last operation.
+     *
+     * @return the dropped since last
+     */
     public long droppedSinceLast() {
         lock.lock();
         try {
@@ -1357,6 +1519,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
+    /**
+     * Performs the retained window bytes operation.
+     *
+     * @return the retained window bytes
+     */
     public long retainedWindowBytes() {
         lock.lock();
         try {
@@ -1366,6 +1533,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
+    /**
+     * Performs the seq operation.
+     *
+     * @return the seq
+     */
     public long seq() {
         lock.lock();
         try {
@@ -1375,7 +1547,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
-    /** Copies of the buffered wire events (age 0), oldest first. */
+    /**
+     * Copies of the buffered wire events (age 0), oldest first.
+     *
+     * @return the buffered events
+     */
     public List<JsonObject> bufferedEvents() {
         lock.lock();
         try {
@@ -1389,7 +1565,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
-    /** A copy of the open minute window's rows, in insertion order. */
+    /**
+     * A copy of the open minute window's rows, in insertion order.
+     *
+     * @return the current counters
+     */
     public Map<RequestRecorder.CounterKey, RequestRecorder.CounterIncrement> currentCounters() {
         lock.lock();
         try {
@@ -1405,7 +1585,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
-    /** The start offsets (reporter-monotonic ms) of the retained closed windows, oldest first. */
+    /**
+     * The start offsets (reporter-monotonic ms) of the retained closed windows, oldest first.
+     *
+     * @return the closed window starts ms
+     */
     public List<Long> closedWindowStartsMs() {
         lock.lock();
         try {
@@ -1419,7 +1603,11 @@ public final class TelemetryReporter implements TelemetrySink {
         }
     }
 
-    /** The open window's start offset (reporter-monotonic ms), or null before the first record. */
+    /**
+     * The open window's start offset (reporter-monotonic ms), or null before the first record.
+     *
+     * @return the current window start ms
+     */
     public Long currentWindowStartMs() {
         lock.lock();
         try {

@@ -1,0 +1,56 @@
+> Task :clean
+
+> Task :boundaryCheck
+Boundary source gate passed (110 reviewed operations).
+
+> Task :compileJava
+Caught exception: Could not start the FSEvents stream: /private/tmp/claude-501/-Users-jperla-josh/733bc505-7008-406e-bff3-ff2a10df6555/scratchpad/wt/java2
+
+> Task :extractDocExamples
+Extracted/validated 25 documentation fences
+
+> Task :processResources
+> Task :classes
+> Task :jar
+> Task :compileExamplesJava
+> Task :compileKotlinExamples
+> Task :sourcesJar
+> Task :generateMetadataFileForMavenPublication
+> Task :generatePomFileForMavenPublication
+> Task :javadoc
+> Task :plainJavadocJar
+> Task :signMavenPublication SKIPPED
+> Task :publishMavenPublicationToMavenLocal
+> Task :publishToMavenLocal
+
+> Task :consumerCheck
+test_archive_inventory (__main__.PublicationTests) ... ok
+test_module_and_bytecode (__main__.PublicationTests) ... ok
+test_pom_metadata (__main__.PublicationTests) ... ok
+test_scratch_consumer (__main__.PublicationTests) ... Scratch directory: /var/folders/th/1hvz8frd3p551wg24zytym940000gn/T/trusted-router-consumer-ny7n3qth
+Scratch command: /private/tmp/tr-java-gradle/wrapper/dists/gradle-9.4.1-bin/arn2x92ynaizyzdaamcbpbhtj/gradle-9.4.1/bin/gradle --offline --no-daemon --console=plain -Dmaven.repo.local=/private/tmp/java2-maven run --args=http://127.0.0.1:61193/v1 resolveEditorArtifacts
+ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 5.758s
+
+OK
+
+> Task :compileTestJava
+> Task :processTestResources
+> Task :testClasses
+> Task :test
+> Task :jacocoTestCoverageVerification
+> Task :check
+> Task :jacocoTestReport
+
+[Incubating] Problems report is available at: file:///private/tmp/claude-501/-Users-jperla-josh/733bc505-7008-406e-bff3-ff2a10df6555/scratchpad/wt/java2/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 53s
+20 actionable tasks: 20 executed

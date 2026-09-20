@@ -1,0 +1,315 @@
+{
+  "seconds": 81.359,
+  "results": [
+    {
+      "id": "stray-source-set-resource",
+      "status": "KILLED",
+      "evidence": "publication file list drift"
+    },
+    {
+      "id": "missing-publication-artifact",
+      "status": "KILLED",
+      "evidence": "missing publication artifact"
+    },
+    {
+      "id": "stray-publication-classifier",
+      "status": "KILLED",
+      "evidence": "unexpected publication artifact"
+    },
+    {
+      "id": "stray-binary",
+      "status": "KILLED",
+      "evidence": "publication file list drift"
+    },
+    {
+      "id": "license-content-binary",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "readme-content-binary",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "stray-sources",
+      "status": "KILLED",
+      "evidence": "publication file list drift"
+    },
+    {
+      "id": "license-content-sources",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "readme-content-sources",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "stray-javadoc",
+      "status": "KILLED",
+      "evidence": "publication file list drift"
+    },
+    {
+      "id": "license-content-javadoc",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "readme-content-javadoc",
+      "status": "KILLED",
+      "evidence": "FAIL: test_archive_inventory"
+    },
+    {
+      "id": "module-name",
+      "status": "KILLED",
+      "evidence": "FAIL: test_module_and_bytecode"
+    },
+    {
+      "id": "java-floor",
+      "status": "KILLED",
+      "evidence": "FAIL: test_module_and_bytecode"
+    },
+    {
+      "id": "pom-groupId",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-artifactId",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-version",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-name",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-description",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-url",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-licenses-license-name",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-licenses-license-url",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-scm-url",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-scm-connection",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-scm-developerConnection",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-developers-developer-id",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-developers-developer-name",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-developers-developer-url",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-properties-maven.compiler.release",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-properties-documentation.url",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-properties-keywords",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "pom-dependencies-dependency-version",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "gradle-java-floor-apiElements",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "gradle-java-floor-runtimeElements",
+      "status": "KILLED",
+      "evidence": "FAIL: test_pom_metadata"
+    },
+    {
+      "id": "readme-java",
+      "status": "KILLED",
+      "evidence": "cannot find symbol"
+    },
+    {
+      "id": "readme-kotlin",
+      "status": "KILLED",
+      "evidence": "doesNotExist"
+    },
+    {
+      "id": "readme-install",
+      "status": "KILLED",
+      "evidence": "Unresolved reference"
+    },
+    {
+      "id": "docs-java",
+      "status": "KILLED",
+      "evidence": "cannot find symbol"
+    },
+    {
+      "id": "unhandled-fence",
+      "status": "KILLED",
+      "evidence": "unhandled code language"
+    },
+    {
+      "id": "broken-json",
+      "status": "KILLED",
+      "evidence": "JSONDecodeError"
+    },
+    {
+      "id": "broken-xml",
+      "status": "KILLED",
+      "evidence": "ParseError"
+    },
+    {
+      "id": "xml-root",
+      "status": "KILLED",
+      "evidence": "AssertionError"
+    },
+    {
+      "id": "xml-group",
+      "status": "KILLED",
+      "evidence": "AssertionError"
+    },
+    {
+      "id": "xml-artifact",
+      "status": "KILLED",
+      "evidence": "AssertionError"
+    },
+    {
+      "id": "wrong-xml-coordinate",
+      "status": "KILLED",
+      "evidence": "AssertionError"
+    },
+    {
+      "id": "broken-shell",
+      "status": "KILLED",
+      "evidence": "syntax error"
+    },
+    {
+      "id": "unclosed-fence",
+      "status": "KILLED",
+      "evidence": "unclosed code fence"
+    },
+    {
+      "id": "standalone-java",
+      "status": "KILLED",
+      "evidence": "doesNotExist"
+    },
+    {
+      "id": "standalone-kotlin",
+      "status": "KILLED",
+      "evidence": "doesNotExist"
+    },
+    {
+      "id": "doclint-missing",
+      "status": "KILLED",
+      "evidence": "warning: no comment"
+    },
+    {
+      "id": "doclint-malformed",
+      "status": "KILLED",
+      "evidence": "error: unknown tag"
+    },
+    {
+      "id": "scratch-result",
+      "status": "KILLED",
+      "evidence": "Unexpected reply: PONG"
+    },
+    {
+      "id": "scratch-outside-checkout",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-stdout-marker",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-artifact-origin",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-request-count",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-request-path",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-request-auth",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-request-model",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "scratch-request-messages",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "editor-sources",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    },
+    {
+      "id": "editor-javadoc",
+      "status": "KILLED",
+      "evidence": "FAIL: test_scratch_consumer"
+    }
+  ]
+}

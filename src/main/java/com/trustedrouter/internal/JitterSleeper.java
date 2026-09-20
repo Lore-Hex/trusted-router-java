@@ -17,7 +17,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * ({@code ShouldRetryHeaderTest.retryAfterMsIsHonoredAndBeatsRetryAfter}).
  */
 public final class JitterSleeper implements Sleeper {
-    /** Computes the jittered delay without sleeping; exposed for tests. */
+    /**
+     * Computes the jittered delay without sleeping; exposed for tests.
+     *
+     * @param attempt the attempt
+     * @param retryAfterSeconds the retry after seconds
+     * @return the delay millis
+     */
     public long delayMillis(int attempt, Double retryAfterSeconds) {
         int bounded = Math.min(RetryPolicy.MAX_BACKOFF_EXPONENT, Math.max(0, attempt));
         long ceiling = Math.min(
@@ -37,6 +43,13 @@ public final class JitterSleeper implements Sleeper {
         return Math.min(delay, (long) (ErrorClassifier.MAX_RETRY_AFTER_SECONDS * 1000.0d));
     }
 
+    /**
+     * Performs the sleep operation.
+     *
+     * @param attempt the attempt
+     * @param retryAfterSeconds the retry after seconds
+     * @throws InternalException if the operation cannot be completed
+     */
     @Override
     public void sleep(int attempt, Double retryAfterSeconds) throws InternalException {
         try {

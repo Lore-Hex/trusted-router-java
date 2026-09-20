@@ -44,6 +44,10 @@ Maven:
 </dependency>
 ```
 
+API reference: [Javadocs](https://javadoc.io/doc/com.trustedrouter/trusted-router).
+Maven also publishes source and Javadoc JARs for IDE navigation and hover documentation.
+The JPMS automatic module name is `com.trustedrouter.sdk`.
+
 The JVM artifact requires JDK 17. Ed25519 entered the standard JDK provider in JDK 15; the project
 uses its existing JDK 17 build toolchain as the published runtime floor instead of adding a second
 cryptography provider. Android consumers need a platform/toolchain that supplies the same
@@ -76,7 +80,8 @@ The complete compiling example is in [`examples/java/Quickstart.java`](examples/
 
 ## Kotlin
 
-The SDK has a normal Java API, so Kotlin needs no wrapper:
+The SDK has a normal Java API, so Kotlin needs no wrapper. This coroutine example
+also uses `org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2` in the application:
 
 ```kotlin
 import com.trustedrouter.TrustedRouterClient
@@ -122,11 +127,12 @@ OAuthAuthorization authorization = publicClient.createOAuthAuthorization(options
 // Open authorization.getUrl() in a Custom Tab and retain authorization securely.
 ```
 
-When Android returns to the app:
+When Android returns to the app, convert the Intent data to a `java.net.URI`
+named `callbackUri`:
 
 ```java
 OAuthCallback callback = OAuth.parseCallback(
-        intent.getData().toString(), authorization.getState());
+        callbackUri.toString(), authorization.getState());
 
 OAuthToken token = publicClient.exchangeOAuthKey(
         callback.getCode(),
@@ -195,6 +201,10 @@ ResponseObject response = client.responses(ResponsesRequest.builder()
 Streaming:
 
 ```java
+ResponsesRequest request = ResponsesRequest.builder()
+        .model("moonshotai/kimi-k3")
+        .input("Give me three names for a database migration tool")
+        .build();
 try (EventStream<ResponseEvent> events = client.responsesEvents(request)) {
     for (ResponseEvent event = events.read(); event != null; event = events.read()) {
         if ("response.output_text.delta".equals(event.getEvent())) {
@@ -519,11 +529,15 @@ absolute URL. Status and trust metadata have dedicated credential-free absolute 
 ## Build
 
 ```bash
-./gradlew clean check javadoc
+./gradlew clean check javadoc -PlocalPublication
 ```
 
 CI compiles with JDK 17 and emits Java 17 bytecode. It runs on Linux, macOS, and Windows, compiles
-the Java quickstart, checks Javadocs, and enforces the starting coverage floor.
+all Java and Kotlin examples against the built JAR, extracts README/docs code fences,
+checks Javadocs with full doclint and zero warnings, and enforces the starting coverage floor.
+`check` also publishes to Maven Local, asserts all publication file lists and metadata,
+and runs a temporary Gradle consumer against a loopback fake server.
+`-PlocalPublication` allows unsigned local verification; release publication still requires signing.
 
 The credential-free production trust smoke verifies public status, release metadata, and a fresh
 gateway attestation:

@@ -1,0 +1,27 @@
+PASS  java        success                            29714 ms
+PASS  java        retry-503                          18492 ms
+PASS  java        verdict-false                      44524 ms
+PASS  java        verdict-true                      146984 ms
+PASS  java        retry-exhausted                    58756 ms
+PASS  java        transport-disconnect               91571 ms
+PASS  java        telemetry-retry                    56359 ms
+PASS  java        reserved-header-opt-out            48675 ms
+PASS  java        retry-500                          28605 ms
+PASS  java        retry-429                          49165 ms
+PASS  java        terminal-401                       24327 ms
+PASS  java        sse-truncated                      24762 ms
+PASS  java        sse-malformed                      25741 ms
+PASS  java        cross-origin-redirect              18971 ms
+PASS  java        generated-idempotency              16995 ms
+PASS  java        generated-idempotency-disconnect   17089 ms
+PASS  java        unsafe-post-disconnect             20066 ms
+PASS  java        body-timeout                       19453 ms
+PASS  java        caller-cancellation                15576 ms
+PASS  java        oauth-no-credentials               15400 ms
+PASS  java        oauth-cross-origin-redirect        15755 ms
+PASS  java        chat-model-preservation            13681 ms
+PASS  java        responses-model-preservation       13230 ms
+PASS  java        retry-truncated-error              11549 ms
+PASS  java        retry-stalled-error-body           10828 ms
+
+25 checks: 25 passed, 0 failed, 0 skipped

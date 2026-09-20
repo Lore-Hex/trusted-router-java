@@ -1,0 +1,2373 @@
+{
+  "protocol_version": 1,
+  "metadata": {
+    "generated_at_utc": "2026-09-20T17:31:07Z",
+    "harness": {
+      "path": "/private/tmp/claude-501/-Users-jperla-josh/733bc505-7008-406e-bff3-ff2a10df6555/scratchpad/conf-venv/lib/python3.12/site-packages/trusted_router_conformance/_data",
+      "exists": true,
+      "git": {
+        "is_repository": false,
+        "sha": null,
+        "dirty": null
+      }
+    },
+    "sdks": {
+      "java": {
+        "path": "/private/tmp/claude-501/-Users-jperla-josh/733bc505-7008-406e-bff3-ff2a10df6555/scratchpad/wt/java2",
+        "exists": true,
+        "git": {
+          "is_repository": true,
+          "sha": "8b9637a03e167a6baef2afdb9f07d95e49e6399e",
+          "dirty": true
+        }
+      }
+    },
+    "environment": {
+      "os": {
+        "system": "Darwin",
+        "release": "23.6.0",
+        "version": "Darwin Kernel Version 23.6.0: Mon Jul 29 21:16:46 PDT 2024; root:xnu-10063.141.2~1/RELEASE_ARM64_T8112",
+        "machine": "arm64",
+        "platform": "macOS-14.6.1-arm64-arm-64bit"
+      },
+      "python": {
+        "implementation": "CPython",
+        "version": "3.12.3",
+        "executable": "/private/tmp/claude-501/-Users-jperla-josh/733bc505-7008-406e-bff3-ff2a10df6555/scratchpad/conf-venv/bin/python"
+      },
+      "toolchains": {
+        "git": {
+          "available": true,
+          "path": "/usr/bin/git",
+          "version": "git version 2.39.5 (Apple Git-154)"
+        },
+        "node": {
+          "available": true,
+          "path": "/Users/jperla/.nvm/versions/node/v20.20.2/bin/node",
+          "version": "v20.20.2"
+        },
+        "npm": {
+          "available": true,
+          "path": "/Users/jperla/.nvm/versions/node/v20.20.2/bin/npm",
+          "version": "10.8.2"
+        },
+        "go": {
+          "available": true,
+          "path": "/opt/homebrew/bin/go",
+          "version": "go version go1.23.4 darwin/arm64"
+        },
+        "rustc": {
+          "available": true,
+          "path": "/opt/homebrew/bin/rustc",
+          "version": "rustc 1.97.1 (8bab26f4f 2026-07-14) (Homebrew)"
+        },
+        "cargo": {
+          "available": true,
+          "path": "/opt/homebrew/bin/cargo",
+          "version": "cargo 1.97.1 (c980f4866 2026-06-30) (Homebrew)"
+        },
+        "java": {
+          "available": true,
+          "path": "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home/bin/java",
+          "version": "openjdk version \"17.0.20.1\" 2026-08-18 OpenJDK Runtime Environment Homebrew (build 17.0.20.1+0) OpenJDK 64-Bit Server VM Homebrew (build 17.0.20.1+0, mixed mode, sharing)"
+        },
+        "javac": {
+          "available": true,
+          "path": "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home/bin/javac",
+          "version": "javac 17.0.20.1"
+        },
+        "swift": {
+          "available": true,
+          "path": "/usr/bin/swift",
+          "version": "Apple Swift version 6.0.3 (swiftlang-6.0.3.1.10 clang-1600.0.30.1) Target: arm64-apple-macosx14.0"
+        }
+      }
+    }
+  },
+  "summary": {
+    "pass": 25,
+    "fail": 0,
+    "skip": 0
+  },
+  "skip_policy_failures": [],
+  "results": [
+    {
+      "sdk": "java",
+      "scenario": "success",
+      "status": "pass",
+      "duration_ms": 29714,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "success",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "x-conformance-case": [
+                "success"
+              ],
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-success"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "69"
+              ],
+              "host": [
+                "api.trustedrouter.com:59475"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50IjoiY29uZm9ybWFuY2UifV19",
+            "body_text": "{\"model\":\"auto\",\"messages\":[{\"role\":\"user\",\"content\":\"conformance\"}]}",
+            "body_json": {
+              "model": "auto",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "conformance"
+                }
+              ]
+            },
+            "received_at_ns": 1031706626980041
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"success\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-503",
+      "status": "pass",
+      "duration_ms": 18492,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-503",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "x-conformance-case": [
+                "retry-503"
+              ],
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-503"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59544"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031724680167125
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "x-conformance-case": [
+                "retry-503"
+              ],
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-503"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59544"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031724840198041
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-503\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "verdict-false",
+      "status": "pass",
+      "duration_ms": 44524,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "verdict-false",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "already spent",
+          "status_code": 503,
+          "body": {
+            "error": {
+              "message": "already spent",
+              "type": "server_error"
+            }
+          }
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-verdict-false"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59602"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031769454296916
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"verdict-false\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"already spent\",\"status_code\":503,\"body\":{\"error\":{\"message\":\"already spent\",\"type\":\"server_error\"}}}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "verdict-true",
+      "status": "pass",
+      "duration_ms": 146984,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "verdict-true",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-verdict-true"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59677"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031915975606083
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-verdict-true"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59677"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031916364501250
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"verdict-true\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-exhausted",
+      "status": "pass",
+      "duration_ms": 58756,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-exhausted",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "three",
+          "status_code": 503,
+          "body": {
+            "error": {
+              "message": "three"
+            }
+          }
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-exhausted"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59803"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031973694101125
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-exhausted"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59803"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031974279466958
+          },
+          {
+            "index": 2,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-exhausted"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:59803"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1031974623116166
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-exhausted\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"three\",\"status_code\":503,\"body\":{\"error\":{\"message\":\"three\"}}}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "transport-disconnect",
+      "status": "pass",
+      "duration_ms": 91571,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "transport-disconnect",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-disconnect"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60071"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032066442951208
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-disconnect"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60071"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032066716793875
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"transport-disconnect\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "telemetry-retry",
+      "status": "pass",
+      "duration_ms": 56359,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "telemetry-retry",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-telemetry"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60284"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ],
+              "x-tr-client": [
+                "v=1;a=0;s=0"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032120062274625
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-telemetry"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60284"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ],
+              "x-tr-client": [
+                "v=1;a=1;po=http_error;pc=none;ph=apex;pm=606;sm=1059;s=0;fo=0"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032120559410666
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"telemetry-retry\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "reserved-header-opt-out",
+      "status": "pass",
+      "duration_ms": 48675,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "reserved-header-opt-out",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-reserved"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60361"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032171952225250
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"reserved-header-opt-out\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-500",
+      "status": "pass",
+      "duration_ms": 28605,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-500",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-500"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60474"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032200018187375
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-500"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60474"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032200354221083
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-500\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-429",
+      "status": "pass",
+      "duration_ms": 49165,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-429",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-429"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60676"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032249403722250
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-retry-429"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60676"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032249499831833
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-429\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "terminal-401",
+      "status": "pass",
+      "duration_ms": 24327,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "terminal-401",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "AuthenticationException",
+          "message": "invalid key",
+          "status_code": 401,
+          "body": {
+            "error": {
+              "message": "invalid key",
+              "type": "authentication_error"
+            }
+          }
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-terminal-401"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:60725"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032274012389333
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"terminal-401\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"AuthenticationException\",\"message\":\"invalid key\",\"status_code\":401,\"body\":{\"error\":{\"message\":\"invalid key\",\"type\":\"authentication_error\"}}}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "sse-truncated",
+      "status": "pass",
+      "duration_ms": 24762,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "sse-truncated",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "TrustedRouter stream ended before [DONE]",
+          "status_code": 502
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-8465625709e3400fb4cc128fb32ae52f"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "123"
+              ],
+              "host": [
+                "api.trustedrouter.com:60769"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50IjoiY29uZm9ybWFuY2UifV0sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6dHJ1ZSwic3RyZWFtX29wdGlvbnMiOnsiaW5jbHVkZV91c2FnZSI6dHJ1ZX19",
+            "body_text": "{\"messages\":[{\"role\":\"user\",\"content\":\"conformance\"}],\"model\":\"auto\",\"stream\":true,\"stream_options\":{\"include_usage\":true}}",
+            "body_json": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "conformance"
+                }
+              ],
+              "model": "auto",
+              "stream": true,
+              "stream_options": {
+                "include_usage": true
+              }
+            },
+            "received_at_ns": 1032298409837125
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"sse-truncated\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"TrustedRouter stream ended before [DONE]\",\"status_code\":502}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "sse-malformed",
+      "status": "pass",
+      "duration_ms": 25741,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "sse-malformed",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "Malformed TrustedRouter SSE JSON",
+          "status_code": 502
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-dcb3d3fcf06242b1baf363d8b0ffca6b"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "84"
+              ],
+              "host": [
+                "api.trustedrouter.com:60818"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W10sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6dHJ1ZSwic3RyZWFtX29wdGlvbnMiOnsiaW5jbHVkZV91c2FnZSI6dHJ1ZX19",
+            "body_text": "{\"messages\":[],\"model\":\"auto\",\"stream\":true,\"stream_options\":{\"include_usage\":true}}",
+            "body_json": {
+              "messages": [],
+              "model": "auto",
+              "stream": true,
+              "stream_options": {
+                "include_usage": true
+              }
+            },
+            "received_at_ns": 1032324539521541
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"sse-malformed\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"Malformed TrustedRouter SSE JSON\",\"status_code\":502}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "cross-origin-redirect",
+      "status": "pass",
+      "duration_ms": 18971,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "cross-origin-redirect",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "TrustedRouterException",
+          "message": "TrustedRouter error",
+          "status_code": 307
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "x-conformance-secret": [
+                "must-not-cross-origin"
+              ],
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-redirect"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "64"
+              ],
+              "host": [
+                "api.trustedrouter.com:60878"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ],
+              "x-tr-client": [
+                "v=1;a=0;s=0"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50Ijoic2VjcmV0In1dfQ==",
+            "body_text": "{\"model\":\"auto\",\"messages\":[{\"role\":\"user\",\"content\":\"secret\"}]}",
+            "body_json": {
+              "model": "auto",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "secret"
+                }
+              ]
+            },
+            "received_at_ns": 1032340913363708
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"cross-origin-redirect\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"TrustedRouterException\",\"message\":\"TrustedRouter error\",\"status_code\":307}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "generated-idempotency",
+      "status": "pass",
+      "duration_ms": 16995,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "generated-idempotency",
+        "outcome": "success",
+        "value": {
+          "id": "chatcmpl-idempotent",
+          "object": "chat.completion",
+          "created": 1,
+          "model": "auto",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "ok"
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 1,
+            "completion_tokens": 1,
+            "total_tokens": 2
+          }
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-88568cbef2cb40e4a0e2814b4836bb72"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "78"
+              ],
+              "host": [
+                "api.trustedrouter.com:60922"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50IjoicmV0cnkifV0sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6ZmFsc2V9",
+            "body_text": "{\"messages\":[{\"role\":\"user\",\"content\":\"retry\"}],\"model\":\"auto\",\"stream\":false}",
+            "body_json": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "retry"
+                }
+              ],
+              "model": "auto",
+              "stream": false
+            },
+            "received_at_ns": 1032360078978833
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-88568cbef2cb40e4a0e2814b4836bb72"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "78"
+              ],
+              "host": [
+                "api.trustedrouter.com:60922"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50IjoicmV0cnkifV0sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6ZmFsc2V9",
+            "body_text": "{\"messages\":[{\"role\":\"user\",\"content\":\"retry\"}],\"model\":\"auto\",\"stream\":false}",
+            "body_json": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "retry"
+                }
+              ],
+              "model": "auto",
+              "stream": false
+            },
+            "received_at_ns": 1032360334102666
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"generated-idempotency\",\"outcome\":\"success\",\"value\":{\"id\":\"chatcmpl-idempotent\",\"object\":\"chat.completion\",\"created\":1,\"model\":\"auto\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"ok\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1,\"completion_tokens\":1,\"total_tokens\":2}},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "generated-idempotency-disconnect",
+      "status": "pass",
+      "duration_ms": 17089,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "generated-idempotency-disconnect",
+        "outcome": "success",
+        "value": {
+          "id": "chatcmpl-after-disconnect",
+          "object": "chat.completion",
+          "created": 1,
+          "model": "auto",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "ok"
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-f1d3e5f0742e4a76bf3578ecda9edd95"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "45"
+              ],
+              "host": [
+                "api.trustedrouter.com:60959"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W10sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6ZmFsc2V9",
+            "body_text": "{\"messages\":[],\"model\":\"auto\",\"stream\":false}",
+            "body_json": {
+              "messages": [],
+              "model": "auto",
+              "stream": false
+            },
+            "received_at_ns": 1032376898391250
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-f1d3e5f0742e4a76bf3578ecda9edd95"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "45"
+              ],
+              "host": [
+                "api.trustedrouter.com:60959"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W10sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6ZmFsc2V9",
+            "body_text": "{\"messages\":[],\"model\":\"auto\",\"stream\":false}",
+            "body_json": {
+              "messages": [],
+              "model": "auto",
+              "stream": false
+            },
+            "received_at_ns": 1032377428467250
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"generated-idempotency-disconnect\",\"outcome\":\"success\",\"value\":{\"id\":\"chatcmpl-after-disconnect\",\"object\":\"chat.completion\",\"created\":1,\"model\":\"auto\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"ok\"},\"finish_reason\":\"stop\"}]},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "unsafe-post-disconnect",
+      "status": "pass",
+      "duration_ms": 20066,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "unsafe-post-disconnect",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "TrustedRouter endpoint unavailable: Connection reset",
+          "status_code": 503
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/arbitrary-mutation",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "19"
+              ],
+              "host": [
+                "api.trustedrouter.com:60992"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtdXRhdGlvbiI6Im9uY2UifQ==",
+            "body_text": "{\"mutation\":\"once\"}",
+            "body_json": {
+              "mutation": "once"
+            },
+            "received_at_ns": 1032397775928208
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"unsafe-post-disconnect\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"TrustedRouter endpoint unavailable: Connection reset\",\"status_code\":503}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "body-timeout",
+      "status": "pass",
+      "duration_ms": 19453,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "body-timeout",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "InternalException",
+          "message": "TrustedRouter response read failed: timeout",
+          "status_code": 503
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-body-timeout"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61005"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032417090214416
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"body-timeout\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"InternalException\",\"message\":\"TrustedRouter response read failed: timeout\",\"status_code\":503}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "caller-cancellation",
+      "status": "pass",
+      "duration_ms": 15576,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "caller-cancellation",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "CancellationException",
+          "message": "CancellationException"
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-cancel"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61019"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032431131044666
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"caller-cancellation\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"CancellationException\",\"message\":\"CancellationException\"}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "oauth-no-credentials",
+      "status": "pass",
+      "duration_ms": 15400,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "oauth-no-credentials",
+        "outcome": "success",
+        "value": {
+          "key": "tr-delegated-conformance",
+          "user_id": "user-conformance"
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/auth/keys",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "x-conformance-default": [
+                "public-client"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "146"
+              ],
+              "host": [
+                "api.trustedrouter.com:61043"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJjb2RlIjoiY29uZm9ybWFuY2UtY29kZSIsImNvZGVfdmVyaWZpZXIiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1Njc4OS0uX35hYmMiLCJjb2RlX2NoYWxsZW5nZV9tZXRob2QiOiJTMjU2In0=",
+            "body_text": "{\"code\":\"conformance-code\",\"code_verifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~abc\",\"code_challenge_method\":\"S256\"}",
+            "body_json": {
+              "code": "conformance-code",
+              "code_verifier": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~abc",
+              "code_challenge_method": "S256"
+            },
+            "received_at_ns": 1032448024934458
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"oauth-no-credentials\",\"outcome\":\"success\",\"value\":{\"key\":\"tr-delegated-conformance\",\"user_id\":\"user-conformance\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "oauth-cross-origin-redirect",
+      "status": "pass",
+      "duration_ms": 15755,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "oauth-cross-origin-redirect",
+        "outcome": "error",
+        "value": null,
+        "error": {
+          "type": "TrustedRouterException",
+          "message": "TrustedRouter error",
+          "status_code": 307
+        }
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/auth/keys",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "115"
+              ],
+              "host": [
+                "api.trustedrouter.com:61054"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJjb2RlIjoiY29uZm9ybWFuY2UtY29kZSIsImNvZGVfdmVyaWZpZXIiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1Njc4OS0uX35hYmMifQ==",
+            "body_text": "{\"code\":\"conformance-code\",\"code_verifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~abc\"}",
+            "body_json": {
+              "code": "conformance-code",
+              "code_verifier": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~abc"
+            },
+            "received_at_ns": 1032463883765500
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"oauth-cross-origin-redirect\",\"outcome\":\"error\",\"value\":null,\"error\":{\"type\":\"TrustedRouterException\",\"message\":\"TrustedRouter error\",\"status_code\":307}}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "chat-model-preservation",
+      "status": "pass",
+      "duration_ms": 13681,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "chat-model-preservation",
+        "outcome": "success",
+        "value": {
+          "id": "chatcmpl-models",
+          "object": "chat.completion",
+          "created": 1,
+          "model": "auto",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "reasoning": "tool required",
+                "tool_calls": [
+                  {
+                    "id": "call-weather",
+                    "type": "function",
+                    "function": {
+                      "name": "weather",
+                      "arguments": "{\"city\":\"Athens\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            },
+            {
+              "index": 1,
+              "message": {
+                "role": "assistant",
+                "content": "fallback"
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 5,
+            "completion_tokens": 7,
+            "total_tokens": 12
+          }
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-89b909c95e764851984c1161b3ec0b82"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "78"
+              ],
+              "host": [
+                "api.trustedrouter.com:61067"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtZXNzYWdlcyI6W3sicm9sZSI6InVzZXIiLCJjb250ZW50IjoidG9vbHMifV0sIm1vZGVsIjoiYXV0byIsInN0cmVhbSI6ZmFsc2V9",
+            "body_text": "{\"messages\":[{\"role\":\"user\",\"content\":\"tools\"}],\"model\":\"auto\",\"stream\":false}",
+            "body_json": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "tools"
+                }
+              ],
+              "model": "auto",
+              "stream": false
+            },
+            "received_at_ns": 1032477477079416
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"chat-model-preservation\",\"outcome\":\"success\",\"value\":{\"id\":\"chatcmpl-models\",\"object\":\"chat.completion\",\"created\":1,\"model\":\"auto\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"reasoning\":\"tool required\",\"tool_calls\":[{\"id\":\"call-weather\",\"type\":\"function\",\"function\":{\"name\":\"weather\",\"arguments\":\"{\\\"city\\\":\\\"Athens\\\"}\"}}]},\"finish_reason\":\"tool_calls\"},{\"index\":1,\"message\":{\"role\":\"assistant\",\"content\":\"fallback\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":7,\"total_tokens\":12}},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "responses-model-preservation",
+      "status": "pass",
+      "duration_ms": 13230,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "responses-model-preservation",
+        "outcome": "success",
+        "value": {
+          "id": "resp-models",
+          "object": "response",
+          "created_at": 1,
+          "status": "completed",
+          "model": "auto",
+          "output": [
+            {
+              "id": "msg-models",
+              "type": "message",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "preserved",
+                  "annotations": []
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 3,
+            "output_tokens": 4,
+            "total_tokens": 7
+          },
+          "error": null,
+          "details": {
+            "provider": "conformance"
+          }
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/responses",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-req-40d7b6de94b246ec86c58569fa8fdf19"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "53"
+              ],
+              "host": [
+                "api.trustedrouter.com:61087"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJpbnB1dCI6ImNvbmZvcm1hbmNlIiwic3RyZWFtIjpmYWxzZX0=",
+            "body_text": "{\"model\":\"auto\",\"input\":\"conformance\",\"stream\":false}",
+            "body_json": {
+              "model": "auto",
+              "input": "conformance",
+              "stream": false
+            },
+            "received_at_ns": 1032490717325291
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"responses-model-preservation\",\"outcome\":\"success\",\"value\":{\"id\":\"resp-models\",\"object\":\"response\",\"created_at\":1,\"status\":\"completed\",\"model\":\"auto\",\"output\":[{\"id\":\"msg-models\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"preserved\",\"annotations\":[]}]}],\"usage\":{\"input_tokens\":3,\"output_tokens\":4,\"total_tokens\":7},\"error\":null,\"details\":{\"provider\":\"conformance\"}},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-truncated-error",
+      "status": "pass",
+      "duration_ms": 11549,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-truncated-error",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-truncated-error"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61107"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032501733386666
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-truncated-error"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61107"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032502145493041
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-truncated-error\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "sdk": "java",
+      "scenario": "retry-stalled-error-body",
+      "status": "pass",
+      "duration_ms": 10828,
+      "failures": [],
+      "driver_result": {
+        "protocol_version": 1,
+        "sdk": "java",
+        "scenario": "retry-stalled-error-body",
+        "outcome": "success",
+        "value": {
+          "ok": true
+        },
+        "error": null
+      },
+      "transcript": {
+        "protocol_version": 1,
+        "requests": [
+          {
+            "index": 0,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-stalled-error"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61122"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032512036018875
+          },
+          {
+            "index": 1,
+            "method": "POST",
+            "target": "/v1/chat/completions",
+            "http_version": "HTTP/1.1",
+            "headers": {
+              "user-agent": [
+                "trusted-router-java/0.3.0 java/17.0.20.1"
+              ],
+              "idempotency-key": [
+                "tr-conformance-stalled-error"
+              ],
+              "authorization": [
+                "Bearer tr-conformance-key"
+              ],
+              "content-type": [
+                "application/json; charset=utf-8"
+              ],
+              "content-length": [
+                "30"
+              ],
+              "host": [
+                "api.trustedrouter.com:61122"
+              ],
+              "connection": [
+                "Keep-Alive"
+              ],
+              "accept-encoding": [
+                "gzip"
+              ]
+            },
+            "body_base64": "eyJtb2RlbCI6ImF1dG8iLCJtZXNzYWdlcyI6W119",
+            "body_text": "{\"model\":\"auto\",\"messages\":[]}",
+            "body_json": {
+              "model": "auto",
+              "messages": []
+            },
+            "received_at_ns": 1032512973414750
+          }
+        ],
+        "beacons": [],
+        "server_errors": []
+      },
+      "stdout": "{\"protocol_version\":1,\"sdk\":\"java\",\"scenario\":\"retry-stalled-error-body\",\"outcome\":\"success\",\"value\":{\"ok\":true},\"error\":null}\n",
+      "stderr": ""
+    }
+  ]
+}

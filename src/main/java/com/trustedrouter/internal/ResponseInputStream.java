@@ -20,17 +20,35 @@ public final class ResponseInputStream extends FilterInputStream {
     private boolean bodyStarted;
     private boolean telemetryFinished;
 
+    /**
+     * Creates a ResponseInputStream.
+     *
+     * @param response the response
+     * @param input the input
+     */
     public ResponseInputStream(Response response, InputStream input) {
         this(response, input, null);
     }
 
-    /** Wraps a raw body, driving the engine's telemetry recorder (may be null). */
+    /**
+     * Wraps a raw body, driving the engine's telemetry recorder (may be null).
+     *
+     * @param response the response
+     * @param input the input
+     * @param recorder the recorder
+     */
     public ResponseInputStream(Response response, InputStream input, RequestRecorder recorder) {
         super(input);
         this.response = response;
         this.recorder = recorder;
     }
 
+    /**
+     * Performs the read operation.
+     *
+     * @return the read
+     * @throws IOException if reading or writing the stream fails
+     */
     @Override public int read() throws IOException {
         try {
             int value = super.read();
@@ -42,6 +60,15 @@ public final class ResponseInputStream extends FilterInputStream {
         }
     }
 
+    /**
+     * Performs the read operation.
+     *
+     * @param buffer the buffer
+     * @param offset the offset
+     * @param length the length
+     * @return the read
+     * @throws IOException if reading or writing the stream fails
+     */
     @Override public int read(byte[] buffer, int offset, int length) throws IOException {
         try {
             int count = super.read(buffer, offset, length);
@@ -53,6 +80,11 @@ public final class ResponseInputStream extends FilterInputStream {
         }
     }
 
+    /**
+     * Performs the close operation.
+     *
+     * @throws IOException if reading or writing the stream fails
+     */
     @Override public void close() throws IOException {
         try {
             super.close();
