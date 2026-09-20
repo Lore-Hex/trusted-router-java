@@ -6,7 +6,11 @@ import com.google.gson.JsonObject;
 public abstract class JsonModel {
     private transient JsonObject raw;
 
-    /** Returns a defensive copy of the full response object, including unknown fields. */
+    /**
+     * Returns a defensive copy of the full response object, including unknown fields.
+     *
+     * @return the raw
+     */
     public final JsonObject getRaw() {
         return raw == null ? new JsonObject() : raw.deepCopy();
     }

@@ -10,6 +10,16 @@ public final class OAuthCallback {
         this.state = state;
     }
 
+    /**
+     * Returns code.
+     *
+     * @return the code
+     */
     public String getCode() { return code; }
+    /**
+     * Returns state.
+     *
+     * @return the state
+     */
     public String getState() { return state; }
 }

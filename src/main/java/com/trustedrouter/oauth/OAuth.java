@@ -17,7 +17,18 @@ public final class OAuth {
     private static final SecureRandom RANDOM = new SecureRandom();
     private OAuth() {}
 
+    /**
+     * Generates cryptographically random, URL-safe callback state.
+     *
+     * @return the random state
+     */
     public static String randomState() { return randomState(16); }
+    /**
+     * Generates cryptographically random, URL-safe callback state.
+     *
+     * @param byteLength the byte length
+     * @return the random state
+     */
     public static String randomState(int byteLength) {
         if (byteLength <= 0) { throw new IllegalArgumentException("byteLength must be positive"); }
         byte[] data = new byte[byteLength];
@@ -25,7 +36,18 @@ public final class OAuth {
         return base64Url(data);
     }
 
+    /**
+     * Creates an S256 PKCE verifier and challenge pair.
+     *
+     * @return the verifier and its SHA-256 challenge
+     */
     public static OAuthPkcePair createPkcePair() { return createPkcePair(null); }
+    /**
+     * Creates an S256 PKCE verifier and challenge pair.
+     *
+     * @param verifier the verifier
+     * @return the verifier and its SHA-256 challenge
+     */
     public static OAuthPkcePair createPkcePair(String verifier) {
         String value = verifier;
         if (value == null) {
@@ -48,6 +70,13 @@ public final class OAuth {
         }
     }
 
+    /**
+     * Performs the authorize url operation.
+     *
+     * @param controlBaseUrl the control base url
+     * @param options the options
+     * @return the authorize url
+     */
     public static String authorizeUrl(String controlBaseUrl, OAuthAuthorizeOptions options) {
         if (options.getCodeChallengeMethod() != null && options.getCodeChallenge() == null) {
             throw new IllegalArgumentException(
@@ -70,6 +99,14 @@ public final class OAuth {
         return url.build().toString();
     }
 
+    /**
+     * Performs the create authorization operation.
+     *
+     * @param controlBaseUrl the control base url
+     * @param source the source
+     * @param codeVerifier the code verifier
+     * @return the create authorization
+     */
     public static OAuthAuthorization createAuthorization(
             String controlBaseUrl,
             OAuthAuthorizeOptions source,
@@ -90,7 +127,13 @@ public final class OAuth {
         return new OAuthAuthorization(pkce, state, authorizeUrl(controlBaseUrl, options));
     }
 
-    /** Validates state and extracts a one-time code from an Android or desktop callback URI. */
+    /**
+     * Validates state and extracts a one-time code from an Android or desktop callback URI.
+     *
+     * @param callbackUrl the callback url
+     * @param expectedState the expected state
+     * @return the validated callback code and state
+     */
     public static OAuthCallback parseCallback(String callbackUrl, String expectedState) {
         if (callbackUrl == null || callbackUrl.trim().isEmpty()) {
             throw new IllegalArgumentException("callback URL is required");

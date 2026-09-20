@@ -61,7 +61,14 @@ public final class ReceiptVerifier {
 
     private ReceiptVerifier() {}
 
-    /** Verify a compact JWS string or flattened JWS JSON string. */
+    /**
+     * Verify a compact JWS string or flattened JWS JSON string.
+     *
+     * @param receipt the receipt
+     * @param options the options
+     * @return the authenticated receipt claims after all requested binding checks pass
+     * @throws ReceiptVerificationException if the receipt, signature, issuer, traffic bindings, or attestation fails verification
+     */
     public static ReceiptClaims verifyReceipt(
             String receipt, ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
@@ -76,7 +83,14 @@ public final class ReceiptVerifier {
         return verifyClaimsAndInputs(envelope, header, options, expectedIssuer);
     }
 
-    /** Verify a previously parsed flattened JWS object. */
+    /**
+     * Verify a previously parsed flattened JWS object.
+     *
+     * @param receipt the receipt
+     * @param options the options
+     * @return the authenticated receipt claims after all requested binding checks pass
+     * @throws ReceiptVerificationException if the receipt, signature, issuer, traffic bindings, or attestation fails verification
+     */
     public static ReceiptClaims verifyReceipt(
             JsonObject receipt, ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
@@ -84,7 +98,14 @@ public final class ReceiptVerifier {
         return verifyReceipt(JsonSupport.GSON.toJson(receipt), options);
     }
 
-    /** Verify a compact or flattened ASCII JWS value. */
+    /**
+     * Verify a compact or flattened ASCII JWS value.
+     *
+     * @param receipt the receipt
+     * @param options the options
+     * @return the authenticated receipt claims after all requested binding checks pass
+     * @throws ReceiptVerificationException if the receipt, signature, issuer, traffic bindings, or attestation fails verification
+     */
     public static ReceiptClaims verifyReceipt(
             byte[] receipt, ReceiptVerificationOptions options)
             throws ReceiptVerificationException {

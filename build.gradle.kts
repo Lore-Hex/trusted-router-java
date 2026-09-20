@@ -55,7 +55,16 @@ tasks.named<JavaCompile>("compileTestJava") {
 
 tasks.withType<Javadoc>().configureEach {
     options.encoding = "UTF-8"
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:all,-missing", "-quiet")
+    (options as StandardJavadocDocletOptions).addBooleanOption("Xdoclint:all", true)
+    (options as StandardJavadocDocletOptions).addBooleanOption("Werror", true)
+    (options as StandardJavadocDocletOptions).addBooleanOption("notimestamp", true)
+}
+
+// Add notices only to the three SDK artifacts, not publication transport bundles.
+tasks.withType<Zip>().matching {
+    it.name in setOf("jar", "sourcesJar", "plainJavadocJar")
+}.configureEach {
+    from(files("LICENSE", "README.md")) { into("META-INF") }
 }
 
 tasks.jar {
@@ -108,34 +117,68 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
-val compileJavaExamples by tasks.registering(JavaCompile::class) {
-    dependsOn(tasks.classes)
-    source(fileTree("examples/java") { include("**/*.java") })
-    classpath = sourceSets.main.get().runtimeClasspath
-    destinationDirectory.set(layout.buildDirectory.dir("examples/java"))
-    options.release.set(17)
-    options.encoding = "UTF-8"
-    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+val extractDocExamples by tasks.registering(Exec::class) {
+    commandLine("python3", "scripts/extract_examples.py")
+    inputs.files(file("README.md"), fileTree("docs") { include("**/*.md") }, file("scripts/extract_examples.py"))
+    outputs.dir(layout.buildDirectory.dir("generated/examples"))
+}
+
+val examples by sourceSets.creating {
+    java.srcDirs("examples/java", layout.buildDirectory.dir("generated/examples/java"))
+    // No source-tree classes: consumers must use the packaged SDK.
+    compileClasspath = files(tasks.jar) + configurations.runtimeClasspath.get()
+    runtimeClasspath = output + compileClasspath
+}
+val compileJavaExamples = tasks.named<JavaCompile>(examples.compileJavaTaskName) {
+    dependsOn(tasks.jar, extractDocExamples)
+    options.errorprone.isEnabled.set(false)
+}
+
+// Preserve the original example task name for existing contributors.
+tasks.register("compileJavaExamples") { dependsOn(compileJavaExamples) }
+
+val kotlinExampleCompiler by configurations.creating
+val kotlinExampleLibraries by configurations.creating
+
+dependencies {
+    kotlinExampleCompiler("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.2.21")
+    kotlinExampleLibraries("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
+}
+
+val compileKotlinExamples by tasks.registering(JavaExec::class) {
+    dependsOn(tasks.jar, extractDocExamples)
+    classpath = kotlinExampleCompiler
+    mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
+    inputs.files(fileTree("examples/kotlin"), layout.buildDirectory.dir("generated/examples/kotlin"),
+        tasks.jar, configurations.runtimeClasspath, kotlinExampleLibraries)
+    outputs.dir(layout.buildDirectory.dir("examples/kotlin"))
+    doFirst {
+        args = listOf("-no-stdlib", "-no-reflect", "-Werror", "-jvm-target", "17",
+            "-classpath", (files(tasks.jar) + configurations.runtimeClasspath.get() + kotlinExampleLibraries).asPath,
+            "-d", layout.buildDirectory.dir("examples/kotlin").get().asFile.absolutePath) +
+            fileTree("examples/kotlin").matching { include("**/*.kt") }.files.map { it.absolutePath } +
+            fileTree(layout.buildDirectory.dir("generated/examples/kotlin")).matching { include("**/*.kt") }.files.map { it.absolutePath }
+    }
 }
 
 tasks.register<JavaExec>("runPublicTrustSmoke") {
     dependsOn(compileJavaExamples)
     classpath = files(compileJavaExamples.map { it.destinationDirectory }) +
-        sourceSets.main.get().runtimeClasspath
+        examples.runtimeClasspath
     mainClass.set("PublicTrustSmoke")
 }
 
 tasks.register<JavaExec>("runQuickstart") {
     dependsOn(compileJavaExamples)
     classpath = files(compileJavaExamples.map { it.destinationDirectory }) +
-        sourceSets.main.get().runtimeClasspath
+        examples.runtimeClasspath
     mainClass.set("Quickstart")
 }
 
 tasks.register<JavaExec>("runAuthenticatedSmoke") {
     dependsOn(compileJavaExamples)
     classpath = files(compileJavaExamples.map { it.destinationDirectory }) +
-        sourceSets.main.get().runtimeClasspath
+        examples.runtimeClasspath
     mainClass.set("AuthenticatedSmoke")
 }
 
@@ -147,7 +190,7 @@ val boundaryCheck by tasks.registering(Exec::class) {
 tasks.named("compileJava") { dependsOn(boundaryCheck) }
 
 tasks.check {
-    dependsOn(tasks.jacocoTestCoverageVerification, compileJavaExamples)
+    dependsOn(tasks.jacocoTestCoverageVerification, compileJavaExamples, compileKotlinExamples, "consumerCheck")
 }
 
 mavenPublishing {
@@ -160,6 +203,11 @@ mavenPublishing {
         name.set("TrustedRouter Java SDK")
         description.set("Java, Kotlin, and Android SDK for TrustedRouter")
         inceptionYear.set("2026")
+        properties.putAll(mapOf(
+            "maven.compiler.release" to "17",
+            "documentation.url" to "https://javadoc.io/doc/com.trustedrouter/trusted-router",
+            "keywords" to "trustedrouter,ai,llm,java,kotlin,android,sdk"
+        ))
         url.set("https://trustedrouter.com")
         licenses {
             license {
@@ -180,5 +228,23 @@ mavenPublishing {
             connection.set("scm:git:git://github.com/Lore-Hex/trusted-router-java.git")
             developerConnection.set("scm:git:ssh://git@github.com/Lore-Hex/trusted-router-java.git")
         }
+    }
+}
+
+// Signing is required only when release credentials are configured (release.yml supplies
+// signingInMemoryKey); local and CI consumer checks publish unsigned to Maven Local, so a
+// plain `gradlew check` works for every contributor. -PlocalPublication forces the same.
+extensions.configure<SigningExtension> {
+    isRequired = providers.gradleProperty("signingInMemoryKey").isPresent &&
+        !providers.gradleProperty("localPublication").isPresent
+}
+
+val consumerCheck by tasks.registering(Exec::class) {
+    dependsOn("publishToMavenLocal", compileJavaExamples, compileKotlinExamples)
+    doFirst {
+        commandLine("python3", "scripts/consumer_check.py",
+            "--repository", System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository"),
+            "--version", project.version.toString(),
+            "--gradle", gradle.gradleHomeDir!!.resolve("bin/gradle" + if (System.getProperty("os.name").startsWith("Windows")) ".bat" else "").absolutePath)
     }
 }

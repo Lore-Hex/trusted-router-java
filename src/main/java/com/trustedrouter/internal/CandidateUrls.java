@@ -31,6 +31,10 @@ public final class CandidateUrls {
      * passed a base URL of their own — a private deployment, a test server, a
      * regional pin — gets exactly that; silently redirecting their traffic to
      * a public alias would be worse than failing.
+     *
+     * @param primaryBaseUrl the primary base url
+     * @param regionalFailover the regional failover
+     * @return the inference base urls
      */
     public static List<String> inferenceBaseUrls(
             String primaryBaseUrl, boolean regionalFailover) {
@@ -52,7 +56,13 @@ public final class CandidateUrls {
         return Collections.unmodifiableList(urls);
     }
 
-    /** Joins one path onto every candidate, validating before a byte is sent. */
+    /**
+     * Joins one path onto every candidate, validating before a byte is sent.
+     *
+     * @param baseUrls the base urls
+     * @param path the path
+     * @return the join all
+     */
     public static List<String> joinAll(List<String> baseUrls, String path) {
         List<String> urls = new ArrayList<String>(baseUrls.size());
         for (String base : baseUrls) {
@@ -63,7 +73,13 @@ public final class CandidateUrls {
         return urls;
     }
 
-    /** Joins a relative path onto a base URL, rejecting absolute targets. */
+    /**
+     * Joins a relative path onto a base URL, rejecting absolute targets.
+     *
+     * @param base the base
+     * @param path the path
+     * @return the join url
+     */
     public static String joinUrl(String base, String path) {
         if (path == null || path.trim().isEmpty()) {
             throw new IllegalArgumentException("API path is required");

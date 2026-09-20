@@ -11,20 +11,41 @@ import java.io.Reader;
 
 /** Shared strict-enough JSON handling. */
 public final class JsonSupport {
+    /**
+     * The gson.
+     */
     public static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
 
     private JsonSupport() {}
 
+    /**
+     * Performs the parse operation.
+     *
+     * @param value the parse
+     * @return the parse
+     */
     public static JsonElement parse(String value) {
         return JsonParser.parseString(value);
     }
 
+    /**
+     * Performs the parse operation.
+     *
+     * @param value the parse
+     * @return the parse
+     */
     public static JsonElement parse(Reader value) {
         return JsonParser.parseReader(value);
     }
 
+    /**
+     * Performs the parse or null operation.
+     *
+     * @param value the parse or null
+     * @return the parse or null
+     */
     public static JsonElement parseOrNull(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -36,6 +57,12 @@ public final class JsonSupport {
         }
     }
 
+    /**
+     * Performs the error message operation.
+     *
+     * @param payload the payload
+     * @return the error message
+     */
     public static String errorMessage(JsonElement payload) {
         if (payload == null || !payload.isJsonObject()) {
             return "TrustedRouter error";

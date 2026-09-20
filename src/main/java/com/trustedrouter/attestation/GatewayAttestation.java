@@ -25,12 +25,52 @@ public final class GatewayAttestation {
         this.audience = audience;
         this.rawClaims = rawClaims.deepCopy();
     }
+    /**
+     * Returns cert sha256.
+     *
+     * @return the cert sha256
+     */
     public String getCertSha256() { return certSha256; }
+    /**
+     * Returns image digest.
+     *
+     * @return the image digest
+     */
     public String getImageDigest() { return imageDigest; }
+    /**
+     * Returns image reference.
+     *
+     * @return the image reference
+     */
     public String getImageReference() { return imageReference; }
+    /**
+     * Returns nonce.
+     *
+     * @return the nonce
+     */
     public String getNonce() { return nonce; }
+    /**
+     * Returns expires at.
+     *
+     * @return the expires at
+     */
     public Long getExpiresAt() { return expiresAt; }
+    /**
+     * Returns issuer.
+     *
+     * @return the issuer
+     */
     public String getIssuer() { return issuer; }
+    /**
+     * Returns audience.
+     *
+     * @return the audience
+     */
     public String getAudience() { return audience; }
+    /**
+     * Returns raw claims.
+     *
+     * @return the raw claims
+     */
     public JsonObject getRawClaims() { return rawClaims.deepCopy(); }
 }

@@ -1,0 +1,25 @@
+README.md:31	kotlin	evaluated in scratch Gradle consumer
+README.md:39	xml	parsed and matched to published Maven coordinates
+README.md:61	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:86	kotlin	Kotlin compiler against built JAR
+README.md:115	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:133	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:153	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:168	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:191	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:203	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:224	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:255	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:287	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:309	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:320	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:330	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:338	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:354	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:408	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:432	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:454	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:465	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:489	java	javac --release 17 -Xlint:all -Werror against built JAR
+README.md:531	bash	shell syntax checked; Gradle tasks exercised by CI (live smoke separate)
+README.md:545	bash	shell syntax checked; Gradle tasks exercised by CI (live smoke separate)

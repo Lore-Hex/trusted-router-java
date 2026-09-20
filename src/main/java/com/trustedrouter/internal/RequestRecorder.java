@@ -32,11 +32,29 @@ import okhttp3.Response;
 public final class RequestRecorder {
     /** One attempt's facts; mutable internal data, never exposed publicly. */
     public static final class AttemptRecord {
+        /**
+         * The index.
+         */
         public int index;
+        /**
+         * The host.
+         */
         public String host;
+        /**
+         * The outcome.
+         */
         public String outcome;
+        /**
+         * The error class.
+         */
         public String errorClass;
+        /**
+         * The elapsed ms.
+         */
         public long elapsedMs;
+        /**
+         * The moved.
+         */
         public boolean moved;
         /** HTTP status when a response arrived (&sect;5.3), else null. */
         public Integer httpStatus;
@@ -44,6 +62,9 @@ public final class RequestRecorder {
         public String errorSource;
         /** {@code true}, {@code false}, or {@code absent} — x-should-retry as observed. */
         public String shouldRetry = "absent";
+        /**
+         * The retry after ms.
+         */
         public Long retryAfterMs;
         /** Milliseconds until response headers, else null. */
         public Long ttfbMs;
@@ -70,6 +91,11 @@ public final class RequestRecorder {
 
     /** Monotonic clock seam so tests can pin durations; production uses nanoTime. */
     public interface NanoClock {
+        /**
+         * Performs the nanos operation.
+         *
+         * @return the nanos
+         */
         long nanos();
     }
 
@@ -89,6 +115,14 @@ public final class RequestRecorder {
         private final Long callMs;
         private final Long sdkMs;
 
+        /**
+         * Creates a ConfiguredTimeouts.
+         *
+         * @param connectMs the connect ms
+         * @param readMs the read ms
+         * @param callMs the call ms
+         * @param sdkMs the sdk ms
+         */
         public ConfiguredTimeouts(Long connectMs, Long readMs, Long callMs, Long sdkMs) {
             this.connectMs = connectMs;
             this.readMs = readMs;
@@ -96,7 +130,12 @@ public final class RequestRecorder {
             this.sdkMs = sdkMs;
         }
 
-        /** The configured timeout for a phase in {@code [1, 3600000]}, or null. */
+        /**
+         * The configured timeout for a phase in {@code [1, 3600000]}, or null.
+         *
+         * @param phase the phase
+         * @return the for phase
+         */
         public Long forPhase(String phase) {
             Long value;
             if ("connect".equals(phase)) {
@@ -117,18 +156,57 @@ public final class RequestRecorder {
 
     /** One finished logical call, as handed to the sink (the Python {@code _finish} event). */
     public static final class Event {
+        /**
+         * The endpoint.
+         */
         public final String endpoint;
+        /**
+         * The method.
+         */
         public final String method;
+        /**
+         * The streaming.
+         */
         public final boolean streaming;
+        /**
+         * The provider pinned.
+         */
         public final boolean providerPinned;
+        /**
+         * The model.
+         */
         public final String model;
+        /**
+         * The attempts.
+         */
         public final List<AttemptRecord> attempts;
+        /**
+         * The final outcome.
+         */
         public final String finalOutcome;
+        /**
+         * The final http status.
+         */
         public final Integer finalHttpStatus;
+        /**
+         * The total ms.
+         */
         public final long totalMs;
+        /**
+         * The ttft ms.
+         */
         public final Long ttftMs;
+        /**
+         * The failover used.
+         */
         public final boolean failoverUsed;
+        /**
+         * The timeout phase.
+         */
         public final String timeoutPhase;
+        /**
+         * The configured timeout ms.
+         */
         public final Long configuredTimeoutMs;
 
         Event(
@@ -168,17 +246,61 @@ public final class RequestRecorder {
      * Python tuple order.
      */
     public static final class CounterKey {
+        /**
+         * The level.
+         */
         public final String level;
+        /**
+         * The endpoint.
+         */
         public final String endpoint;
+        /**
+         * The streaming.
+         */
         public final boolean streaming;
+        /**
+         * The host.
+         */
         public final String host;
+        /**
+         * The outcome.
+         */
         public final String outcome;
+        /**
+         * The error class.
+         */
         public final String errorClass;
+        /**
+         * The http status class.
+         */
         public final String httpStatusClass;
+        /**
+         * The timeout phase.
+         */
         public final String timeoutPhase;
+        /**
+         * The timeout floor met.
+         */
         public final boolean timeoutFloorMet;
+        /**
+         * The provider pinned.
+         */
         public final boolean providerPinned;
 
+        /**
+         * Creates a CounterKey.
+         *
+         * @param level the level
+         * @param endpoint the endpoint
+         * @param streaming the streaming
+         * @param host the host
+         * @param outcome the outcome
+         * @param errorClass the error class
+         * @param httpStatusClass the http status class
+         * @param timeoutPhase the timeout phase
+         * @param timeoutFloorMet the timeout floor met
+         * @param providerPinned the provider pinned
+         */
         public CounterKey(
                 String level,
                 String endpoint,
@@ -202,26 +324,46 @@ public final class RequestRecorder {
             this.providerPinned = providerPinned;
         }
 
-        /** The same key with a different error class (the first fold rung). */
+        /**
+         * The same key with a different error class (the first fold rung).
+         *
+         * @param value the with error class
+         * @return the with error class
+         */
         public CounterKey withErrorClass(String value) {
             return new CounterKey(level, endpoint, streaming, host, outcome, value,
                     httpStatusClass, timeoutPhase, timeoutFloorMet, providerPinned);
         }
 
-        /** The same key with a different endpoint (the second fold rung). */
+        /**
+         * The same key with a different endpoint (the second fold rung).
+         *
+         * @param value the with endpoint
+         * @return the with endpoint
+         */
         public CounterKey withEndpoint(String value) {
             return new CounterKey(level, value, streaming, host, outcome, errorClass,
                     httpStatusClass, timeoutPhase, timeoutFloorMet, providerPinned);
         }
 
-        /** Equality on every field except the error class. */
+        /**
+         * Equality on every field except the error class.
+         *
+         * @param other the other
+         * @return the matches except error class
+         */
         public boolean matchesExceptErrorClass(CounterKey other) {
             return level.equals(other.level)
                     && endpoint.equals(other.endpoint)
                     && matchesEndpointFree(other);
         }
 
-        /** Equality on every field except the endpoint and the error class. */
+        /**
+         * Equality on every field except the endpoint and the error class.
+         *
+         * @param other the other
+         * @return the matches except endpoint and error class
+         */
         public boolean matchesExceptEndpointAndErrorClass(CounterKey other) {
             return level.equals(other.level) && matchesEndpointFree(other);
         }
@@ -236,6 +378,12 @@ public final class RequestRecorder {
                     && providerPinned == other.providerPinned;
         }
 
+        /**
+         * Performs the equals operation.
+         *
+         * @param other the other
+         * @return the equals
+         */
         @Override
         public boolean equals(Object other) {
             if (!(other instanceof CounterKey that)) {
@@ -246,6 +394,11 @@ public final class RequestRecorder {
                             : errorClass.equals(that.errorClass));
         }
 
+        /**
+         * Performs the hash code operation.
+         *
+         * @return the hash code
+         */
         @Override
         public int hashCode() {
             int result = level.hashCode();
@@ -261,6 +414,11 @@ public final class RequestRecorder {
             return result;
         }
 
+        /**
+         * Performs the to string operation.
+         *
+         * @return the to string
+         */
         @Override
         public String toString() {
             return "(" + level + ", " + endpoint + ", " + streaming + ", " + host + ", "
@@ -271,15 +429,44 @@ public final class RequestRecorder {
 
     /** Counts and histograms for one counter key (&sect;5.4); mutable merge target. */
     public static final class CounterIncrement {
+        /**
+         * The requests.
+         */
         public long requests;
+        /**
+         * The attempts.
+         */
         public long attempts;
+        /**
+         * The failover used.
+         */
         public long failoverUsed;
+        /**
+         * The first attempt success.
+         */
         public long firstAttemptSuccess;
+        /**
+         * The total ms hist.
+         */
         public final Map<String, Long> totalMsHist = new LinkedHashMap<String, Long>();
+        /**
+         * The first event ms hist.
+         */
         public final Map<String, Long> firstEventMsHist = new LinkedHashMap<String, Long>();
 
+        /**
+         * Creates a CounterIncrement.
+         */
         public CounterIncrement() {}
 
+        /**
+         * Creates a CounterIncrement.
+         *
+         * @param requests the requests
+         * @param attempts the attempts
+         * @param failoverUsed the failover used
+         * @param firstAttemptSuccess the first attempt success
+         */
         public CounterIncrement(
                 long requests, long attempts, long failoverUsed, long firstAttemptSuccess) {
             this.requests = requests;
@@ -288,13 +475,24 @@ public final class RequestRecorder {
             this.firstAttemptSuccess = firstAttemptSuccess;
         }
 
-        /** Adds one observation to a histogram. */
+        /**
+         * Adds one observation to a histogram.
+         *
+         * @param histogram the histogram
+         * @param bucket the bucket
+         * @return the bucket
+         */
         public CounterIncrement bucket(Map<String, Long> histogram, String bucket) {
             Long current = histogram.get(bucket);
             histogram.put(bucket, Long.valueOf(current == null ? 1L : current.longValue() + 1L));
             return this;
         }
 
+        /**
+         * Performs the copy operation.
+         *
+         * @return the copy
+         */
         public CounterIncrement copy() {
             CounterIncrement copy = new CounterIncrement(
                     requests, attempts, failoverUsed, firstAttemptSuccess);
@@ -303,6 +501,11 @@ public final class RequestRecorder {
             return copy;
         }
 
+        /**
+         * Performs the to string operation.
+         *
+         * @return the to string
+         */
         @Override
         public String toString() {
             return "{requests=" + requests + ", attempts=" + attempts + ", failover_used="
@@ -314,9 +517,21 @@ public final class RequestRecorder {
 
     /** One counter key with its increment, as emitted by {@link #finish()}. */
     public static final class CounterUpdate {
+        /**
+         * The key.
+         */
         public final CounterKey key;
+        /**
+         * The increment.
+         */
         public final CounterIncrement increment;
 
+        /**
+         * Creates a CounterUpdate.
+         *
+         * @param key the key
+         * @param increment the increment
+         */
         public CounterUpdate(CounterKey key, CounterIncrement increment) {
             this.key = key;
             this.increment = increment;
@@ -351,12 +566,21 @@ public final class RequestRecorder {
     private boolean exhausted;
     private boolean finished;
 
-    /** Header-only recorder (no sink): nothing is emitted on finish. */
+    /**
+     * Header-only recorder (no sink): nothing is emitted on finish.
+     *
+     * @param streaming the streaming
+     */
     public RequestRecorder(boolean streaming) {
         this(streaming, SYSTEM_CLOCK);
     }
 
-    /** Header-only recorder with an injected clock. */
+    /**
+     * Header-only recorder with an injected clock.
+     *
+     * @param streaming the streaming
+     * @param clock the clock
+     */
     public RequestRecorder(boolean streaming, NanoClock clock) {
         this(null, "inference_other", "POST", streaming, false, null, null, clock);
     }
@@ -372,6 +596,9 @@ public final class RequestRecorder {
      *     ({@code provider.allow_fallbacks == false}, as in Python)
      * @param model the body's model, sent only when in grammar
      * @param timeouts the call's configured timeouts by phase
+     *
+     * @param streaming the streaming
+     * @param clock the clock
      */
     public RequestRecorder(
             TelemetrySink sink,
@@ -393,7 +620,11 @@ public final class RequestRecorder {
         this.clock = clock == null ? SYSTEM_CLOCK : clock;
     }
 
-    /** Marks the start of the next attempt against the given candidate URL. */
+    /**
+     * Marks the start of the next attempt against the given candidate URL.
+     *
+     * @param url the url
+     */
     public void beginAttempt(String url) {
         try {
             long startedNanos = clock.nanos();
@@ -419,6 +650,8 @@ public final class RequestRecorder {
      * attempt host (&sect;3.2: a self-hosted gateway is not TrustedRouter's
      * to measure), before any attempt began, or if any value fails the
      * anchored grammar or the 160-byte cap. Never throws.
+     *
+     * @return the header value
      */
     public String headerValue() {
         try {
@@ -493,7 +726,11 @@ public final class RequestRecorder {
         }
     }
 
-    /** Records an attempt that produced an HTTP response, headers unknown. */
+    /**
+     * Records an attempt that produced an HTTP response, headers unknown.
+     *
+     * @param statusCode the status code
+     */
     public void onResponse(int statusCode) {
         onResponse(statusCode, null);
     }
@@ -503,6 +740,9 @@ public final class RequestRecorder {
      * {@code x-should-retry} verdict, the retry-after hint, and the
      * enclave's {@code x-request-id} from the live headers (&sect;3.3/&sect;5.3).
      * Must run before the engine closes the response.
+     *
+     * @param statusCode the status code
+     * @param response the response
      */
     public void onResponse(int statusCode, Response response) {
         try {
@@ -548,6 +788,8 @@ public final class RequestRecorder {
      * (&sect;6.1). A hostile exception subtype (throwing {@code getCause()}
      * or {@code getMessage()}) must not replace the engine's retry decision,
      * so the whole hook fails open.
+     *
+     * @param error the error
      */
     public void onTransportError(IOException error) {
         onTransportError(error, false, false);
@@ -564,6 +806,8 @@ public final class RequestRecorder {
      *
      * @param responseOpened whether response headers had arrived
      * @param bodyStarted whether the first body event had been surfaced
+     *
+     * @param error the error
      */
     public void onTransportError(Throwable error, boolean responseOpened, boolean bodyStarted) {
         try {
@@ -654,6 +898,8 @@ public final class RequestRecorder {
      * Marks that the engine gave up with retry budget spent (&sect;5.3
      * {@code exhausted}): set by the engine when a replayable attempt beyond
      * the first ended retryable but no retries remained.
+     *
+     * @param value the mark exhausted
      */
     public void markExhausted(boolean value) {
         exhausted = value;
@@ -678,20 +924,38 @@ public final class RequestRecorder {
         }
     }
 
+    /**
+     * Returns finished.
+     *
+     * @return the finished
+     */
     public boolean isFinished() {
         return finished;
     }
 
-    /** The attempts recorded so far; internal mutable state, used by tests. */
+    /**
+     * The attempts recorded so far; internal mutable state, used by tests.
+     *
+     * @return the attempts
+     */
     public List<AttemptRecord> attempts() {
         return attempts;
     }
 
+    /**
+     * Returns failover used.
+     *
+     * @return the failover used
+     */
     public boolean isFailoverUsed() {
         return failoverUsed;
     }
 
-    /** Milliseconds from the first attempt to the first stream event, or null. */
+    /**
+     * Milliseconds from the first attempt to the first stream event, or null.
+     *
+     * @return the ttft ms
+     */
     public Long ttftMs() {
         return ttftMs;
     }

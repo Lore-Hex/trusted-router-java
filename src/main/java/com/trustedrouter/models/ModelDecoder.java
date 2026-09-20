@@ -23,6 +23,11 @@ public final class ModelDecoder {
     /**
      * Decodes consumed fields strictly and retains all metadata in {@link JsonModel#getRaw()}.
      * @throws InvalidResponseException if the envelope or a consumed field is malformed
+     *
+     * @param <T> the result type
+     * @param json the json
+     * @param type the type
+     * @return the decode
      */
     public static <T extends JsonModel> T decode(JsonElement json, Class<T> type) {
         JsonObject object = WireShape.object(json);

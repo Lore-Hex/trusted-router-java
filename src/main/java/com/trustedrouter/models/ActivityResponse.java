@@ -7,6 +7,11 @@ import java.util.List;
 /** Metadata-only request activity. */
 public final class ActivityResponse extends JsonModel {
     private List<JsonObject> activities;
+    /**
+     * Returns activities.
+     *
+     * @return the activities
+     */
     public List<JsonObject> getActivities() {
         return activities == null
                 ? Collections.<JsonObject>emptyList() : Collections.unmodifiableList(activities);

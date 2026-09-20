@@ -4,5 +4,10 @@ package com.trustedrouter.receipts;
 public final class UnsupportedAttestationException extends ReceiptAttestationException {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Creates a UnsupportedAttestationException.
+     *
+     * @param message the message
+     */
     public UnsupportedAttestationException(String message) { super(message); }
 }

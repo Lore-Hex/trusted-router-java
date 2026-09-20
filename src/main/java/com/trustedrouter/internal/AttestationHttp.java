@@ -31,14 +31,24 @@ import okhttp3.ResponseBody;
 public final class AttestationHttp {
     private AttestationHttp() {}
 
-    /** Generates a random 16-byte nonce as lowercase hex. */
+    /**
+     * Generates a random 16-byte nonce as lowercase hex.
+     *
+     * @return the random nonce hex
+     */
     public static String randomNonceHex() {
         byte[] nonceBytes = new byte[16];
         new SecureRandom().nextBytes(nonceBytes);
         return hex(nonceBytes);
     }
 
-    /** Builds the attestation URL from the API base, trimming a /v1 suffix. */
+    /**
+     * Builds the attestation URL from the API base, trimming a /v1 suffix.
+     *
+     * @param baseUrl the base url
+     * @param nonceHex the nonce hex
+     * @return the attestation url
+     */
     public static String attestationUrl(String baseUrl, String nonceHex) {
         String root = baseUrl;
         if (root.endsWith("/v1")) {
@@ -51,7 +61,15 @@ public final class AttestationHttp {
         return url;
     }
 
-    /** Fetches the raw attestation document bytes. */
+    /**
+     * Fetches the raw attestation document bytes.
+     *
+     * @param transport the transport
+     * @param baseUrl the base url
+     * @param nonceHex the nonce hex
+     * @return the fetch attestation
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     */
     public static byte[] fetchAttestation(Transport transport, String baseUrl, String nonceHex)
             throws TrustedRouterException {
         Response response = transport.executeAbsolute(
@@ -70,6 +88,14 @@ public final class AttestationHttp {
     /**
      * Fetches a fresh attestation and verifies it against the TLS leaf
      * certificate from the exact OkHttp connection that returned the JWT.
+     *
+     * @param transport the transport
+     * @param baseUrl the base url
+     * @param policy the policy
+     * @param nonceHex the nonce hex
+     * @return the verify gateway attestation
+     * @throws TrustedRouterException if the request or response fails validation, or the service returns an error
+     * @throws GeneralSecurityException if the operation cannot be completed
      */
     public static GatewayAttestation verifyGatewayAttestation(
             Transport transport, String baseUrl, AttestationPolicy policy, String nonceHex)

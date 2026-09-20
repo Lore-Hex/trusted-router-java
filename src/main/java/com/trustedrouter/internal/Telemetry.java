@@ -134,13 +134,37 @@ public final class Telemetry {
 
     /** Reporter bounds (&sect;6.2), mirroring the Python SDK's {@code _constants.py}. */
     public static final long FLUSH_INTERVAL_MS = 30_000L;
+    /**
+     * The max events.
+     */
     public static final int MAX_EVENTS = 1_000;
+    /**
+     * The max batch events.
+     */
     public static final int MAX_BATCH_EVENTS = 100;
+    /**
+     * The max batch counters.
+     */
     public static final int MAX_BATCH_COUNTERS = 200;
+    /**
+     * The max window keys.
+     */
     public static final int MAX_WINDOW_KEYS = 256;
+    /**
+     * The retention ms.
+     */
     public static final long RETENTION_MS = 86_400_000L;
+    /**
+     * The retention bytes.
+     */
     public static final long RETENTION_BYTES = 524_288L;
+    /**
+     * The backoff min ms.
+     */
     public static final long BACKOFF_MIN_MS = 60_000L;
+    /**
+     * The backoff max ms.
+     */
     public static final long BACKOFF_MAX_MS = 600_000L;
     /** Longest {@code Retry-After} the beacon honours, in milliseconds (&sect;6.2). */
     public static final long MAX_RETRY_AFTER_MS = 600_000L;
@@ -198,6 +222,9 @@ public final class Telemetry {
      * must both match the constant, mirroring the Python SDK's
      * {@code host_enum}; anything unparseable or unrecognised is
      * {@code custom} and never appears on the wire.
+     *
+     * @param baseUrl the base url
+     * @return the host enum
      */
     public static String hostEnum(String baseUrl) {
         HttpUrl url = parse(baseUrl);
@@ -229,6 +256,9 @@ public final class Telemetry {
      * Whether a URL is the TrustedRouter control plane: https and
      * {@code trustedrouter.com} or a subdomain of it. Mirrors the Python
      * SDK's {@code _control_host}.
+     *
+     * @param url the url
+     * @return the control host
      */
     public static boolean isControlHost(String url) {
         HttpUrl parsed = parse(url);
@@ -248,6 +278,11 @@ public final class Telemetry {
      * {@code SecurityManager} can veto {@code System.getenv()}) as empty
      * rather than ever letting telemetry resolution fail client
      * construction (&sect;2.2).
+     *
+     * @param explicit the explicit
+     * @param baseUrl the base url
+     * @param controlBaseUrl the control base url
+     * @return the resolve enabled
      */
     public static boolean resolveEnabled(
             Boolean explicit, String baseUrl, String controlBaseUrl) {
@@ -274,6 +309,10 @@ public final class Telemetry {
      * @param explicit the builder's tri-state {@code telemetry} option
      * @param environ an environment lookup, injected so tests never mutate
      *     process env; production passes {@code System.getenv()}
+     *
+     * @param baseUrl the base url
+     * @param controlBaseUrl the control base url
+     * @return the resolve enabled
      */
     public static boolean resolveEnabled(
             Boolean explicit,
@@ -325,6 +364,9 @@ public final class Telemetry {
      * request-path machinery this header-only phase deliberately avoids
      * (&sect;2.2). Pinned by
      * {@code ClientTelemetryHeaderTest.aStalledUploadClassifiesAsTimeout}.
+     *
+     * @param error the error
+     * @return the classify transport error
      */
     public static String classifyTransportError(Throwable error) {
         List<Throwable> chain = causeChain(error);
@@ -405,6 +447,9 @@ public final class Telemetry {
      * {@code okio.AsyncTimeout}) — OkHttp itself uses a plain
      * InterruptedIOException for thread interruption, which is an abort,
      * not a timeout.
+     *
+     * @param error the error
+     * @return the timeout
      */
     public static boolean isTimeout(Throwable error) {
         for (Throwable item : causeChain(error)) {
@@ -428,6 +473,9 @@ public final class Telemetry {
      * independent check, so a value that reached the enforcer by any other
      * route cannot add a field, repeat a key, smuggle free text, or claim an
      * out-of-range semantic value.
+     *
+     * @param header the header
+     * @return the well formed header
      */
     public static boolean isWellFormedHeader(String header) {
         if (header == null || header.isEmpty() || header.length() > MAX_HEADER_BYTES) {
@@ -532,6 +580,9 @@ public final class Telemetry {
      * and everything else is {@code inference_other}. A missing leading
      * slash is normalised first because {@code CandidateUrls.joinUrl}
      * accepts either spelling for the same endpoint.
+     *
+     * @param path the path
+     * @return the endpoint enum
      */
     public static String endpointEnum(String path) {
         String value = path == null ? "" : path.trim();
@@ -573,7 +624,12 @@ public final class Telemetry {
         return "inference_other";
     }
 
-    /** The upper-bound-exclusive latency bucket for a duration (&sect;5.2). */
+    /**
+     * The upper-bound-exclusive latency bucket for a duration (&sect;5.2).
+     *
+     * @param millis the millis
+     * @return the latency bucket
+     */
     public static String latencyBucket(long millis) {
         long value = Math.max(0L, millis);
         for (int index = 0; index < LATENCY_UPPER_BOUNDS.length; index++) {
@@ -584,7 +640,12 @@ public final class Telemetry {
         return LATENCY_BUCKETS.get(LATENCY_BUCKETS.size() - 1);
     }
 
-    /** The HTTP status class for a counter key (&sect;5.2); null status is {@code none}. */
+    /**
+     * The HTTP status class for a counter key (&sect;5.2); null status is {@code none}.
+     *
+     * @param status the status
+     * @return the status class
+     */
     public static String statusClass(Integer status) {
         if (status == null) {
             return "none";
@@ -609,6 +670,10 @@ public final class Telemetry {
      * Whether the configured timeout for a phase meets the contract floor
      * (&sect;5.4: connect 10 s, first byte 60 s, idle 30 s); other phases
      * and an unconfigured timeout never do.
+     *
+     * @param phase the phase
+     * @param configuredMs the configured ms
+     * @return the timeout floor met
      */
     public static boolean timeoutFloorMet(String phase, Long configuredMs) {
         if (configuredMs == null || phase == null) {
@@ -636,6 +701,9 @@ public final class Telemetry {
      * OkHttp's whole-call timeout — which httpx has no equivalent for — is
      * {@code total}. Everything else is {@code none}. A stall after the
      * first body byte is re-phased to {@code idle} by the recorder.
+     *
+     * @param error the error
+     * @return the timeout phase
      */
     public static String timeoutPhase(Throwable error) {
         if (!isTimeout(error)) {
@@ -657,6 +725,8 @@ public final class Telemetry {
      * {@code sdk_identity} fallbacks: an out-of-grammar version becomes
      * {@code 0.0.0}, an out-of-grammar runtime token {@code java/0}. Never
      * throws, even under a {@code SecurityManager} that denies properties.
+     *
+     * @return the sdk identity
      */
     public static JsonObject sdkIdentity() {
         return sdkIdentity(
@@ -696,6 +766,10 @@ public final class Telemetry {
     /**
      * Maps {@code os.name} (and the VM/runtime description, which is how
      * Android identifies itself) to the closed OS vocabulary (&sect;5.1).
+     *
+     * @param osName the os name
+     * @param runtimeDescription the runtime description
+     * @return the os enum
      */
     public static String osEnum(String osName, String runtimeDescription) {
         String runtime = runtimeDescription == null
@@ -719,7 +793,12 @@ public final class Telemetry {
         return "other";
     }
 
-    /** Maps {@code os.arch} to the closed architecture vocabulary (&sect;5.1). */
+    /**
+     * Maps {@code os.arch} to the closed architecture vocabulary (&sect;5.1).
+     *
+     * @param osArch the os arch
+     * @return the arch enum
+     */
     public static String archEnum(String osArch) {
         String value = osArch == null ? "" : osArch.trim().toLowerCase(Locale.ROOT);
         if ("x86_64".equals(value) || "amd64".equals(value)) {
@@ -745,6 +824,9 @@ public final class Telemetry {
      * Re-validates a caller-supplied identity field by field against the
      * vocabulary, falling back to {@link #sdkIdentity()} per field, exactly
      * like the Python SDK's {@code _normalise_sdk_identity}.
+     *
+     * @param identity the identity
+     * @return the normalise sdk identity
      */
     public static JsonObject normaliseSdkIdentity(JsonObject identity) {
         JsonObject fallback = sdkIdentity();
@@ -772,12 +854,26 @@ public final class Telemetry {
         return result;
     }
 
-    /** Clamps a count or duration into {@code [minimum, maximum]}. */
+    /**
+     * Clamps a count or duration into {@code [minimum, maximum]}.
+     *
+     * @param value the bounded
+     * @param minimum the minimum
+     * @param maximum the maximum
+     * @return the bounded
+     */
     public static long bounded(long value, long minimum, long maximum) {
         return Math.min(maximum, Math.max(minimum, value));
     }
 
-    /** A value inside {@code [minimum, maximum]}, or null when absent or outside. */
+    /**
+     * A value inside {@code [minimum, maximum]}, or null when absent or outside.
+     *
+     * @param value the bounded or null
+     * @param minimum the minimum
+     * @param maximum the maximum
+     * @return the bounded or null
+     */
     public static Long boundedOrNull(Long value, long minimum, long maximum) {
         if (value == null || value.longValue() < minimum || value.longValue() > maximum) {
             return null;
@@ -825,6 +921,9 @@ public final class Telemetry {
      * {@code (nanoEnd - nanoStart) / 1_000_000L} never touches a double, so
      * JLS 5.1.3 double-to-long saturation can never manufacture a plausible
      * giant value here.
+     *
+     * @param millis the millis
+     * @return the clamp duration ms
      */
     public static long clampDurationMs(long millis) {
         if (millis < 0L) {

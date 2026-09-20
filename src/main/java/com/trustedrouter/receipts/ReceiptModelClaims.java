@@ -14,8 +14,28 @@ public final class ReceiptModelClaims {
         this.endpoint = endpoint;
     }
 
+    /**
+     * Returns requested.
+     *
+     * @return the requested
+     */
     public String getRequested() { return requested; }
+    /**
+     * Returns selected.
+     *
+     * @return the selected
+     */
     public String getSelected() { return selected; }
+    /**
+     * Returns provider.
+     *
+     * @return the provider
+     */
     public String getProvider() { return provider; }
+    /**
+     * Returns endpoint.
+     *
+     * @return the endpoint
+     */
     public String getEndpoint() { return endpoint; }
 }

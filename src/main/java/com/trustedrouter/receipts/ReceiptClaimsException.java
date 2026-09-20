@@ -4,6 +4,17 @@ package com.trustedrouter.receipts;
 public class ReceiptClaimsException extends ReceiptVerificationException {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Creates a ReceiptClaimsException.
+     *
+     * @param message the message
+     */
     public ReceiptClaimsException(String message) { super(message); }
+    /**
+     * Creates a ReceiptClaimsException.
+     *
+     * @param message the message
+     * @param cause the cause
+     */
     public ReceiptClaimsException(String message, Throwable cause) { super(message, cause); }
 }

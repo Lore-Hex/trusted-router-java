@@ -38,7 +38,18 @@ public final class AttestationPolicy {
         }
         allowDebug = b.allowDebug;
     }
+    /**
+     * Creates a builder for this value.
+     *
+     * @return a new builder
+     */
     public static Builder builder() { return new Builder(); }
+    /**
+     * Performs the from trust release operation.
+     *
+     * @param release the release
+     * @return the from trust release
+     */
     public static AttestationPolicy fromTrustRelease(TrustRelease release) {
         if (release == null) { throw new NullPointerException("release"); }
         AttestationPolicy policy = builder().expectedImageDigest(release.getImageDigest())
@@ -78,13 +89,51 @@ public final class AttestationPolicy {
                 || !expectedImageReferences.isEmpty()
                 || (expectedImageReference != null && !expectedImageReference.isEmpty());
     }
+    /**
+     * Returns audience.
+     *
+     * @return the audience
+     */
     public String getAudience() { return audience; }
+    /**
+     * Returns expected cert sha256.
+     *
+     * @return the expected cert sha256
+     */
     public String getExpectedCertSha256() { return expectedCertSha256; }
+    /**
+     * Returns expected image digest.
+     *
+     * @return the expected image digest
+     */
     public String getExpectedImageDigest() { return expectedImageDigest; }
+    /**
+     * Returns expected image digests.
+     *
+     * @return the expected image digests
+     */
     public List<String> getExpectedImageDigests() { return expectedImageDigests; }
+    /**
+     * Returns expected image reference.
+     *
+     * @return the expected image reference
+     */
     public String getExpectedImageReference() { return expectedImageReference; }
+    /**
+     * Returns expected image references.
+     *
+     * @return the expected image references
+     */
     public List<String> getExpectedImageReferences() { return expectedImageReferences; }
+    /**
+     * Returns debug allowed.
+     *
+     * @return the debug allowed
+     */
     public boolean isDebugAllowed() { return allowDebug; }
+    /**
+     * Represents builder.
+     */
     public static final class Builder {
         private String audience;
         private String expectedCertSha256;
@@ -94,20 +143,66 @@ public final class AttestationPolicy {
         private List<String> expectedImageReferences;
         private boolean allowDebug;
         private Builder() {}
+        /**
+         * Sets audience.
+         *
+         * @param value the audience
+         * @return this builder
+         */
         public Builder audience(String value) { audience = value; return this; }
+        /**
+         * Sets expected cert sha256.
+         *
+         * @param value the expected cert sha256
+         * @return this builder
+         */
         public Builder expectedCertSha256(String value) { expectedCertSha256 = value; return this; }
+        /**
+         * Sets expected image digest.
+         *
+         * @param value the expected image digest
+         * @return this builder
+         */
         public Builder expectedImageDigest(String value) { expectedImageDigest = value; return this; }
+        /**
+         * Sets expected image digests.
+         *
+         * @param values the values
+         * @return this builder
+         */
         public Builder expectedImageDigests(List<String> values) {
             expectedImageDigests = values;
             return this;
         }
+        /**
+         * Sets expected image reference.
+         *
+         * @param value the expected image reference
+         * @return this builder
+         */
         public Builder expectedImageReference(String value) { expectedImageReference = value; return this; }
+        /**
+         * Sets expected image references.
+         *
+         * @param values the values
+         * @return this builder
+         */
         public Builder expectedImageReferences(List<String> values) {
             expectedImageReferences = values;
             return this;
         }
-        /** Debug Confidential Space images are rejected unless explicitly allowed for development. */
+        /**
+         * Debug Confidential Space images are rejected unless explicitly allowed for development.
+         *
+         * @param value the allow debug
+         * @return this builder
+         */
         public Builder allowDebug(boolean value) { allowDebug = value; return this; }
+        /**
+         * Builds the configured value.
+         *
+         * @return the configured value
+         */
         public AttestationPolicy build() { return new AttestationPolicy(this); }
     }
 }

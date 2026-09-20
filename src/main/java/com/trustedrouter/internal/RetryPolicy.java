@@ -66,6 +66,11 @@ public final class RetryPolicy {
 
     private final int maxRetries;
 
+    /**
+     * Creates a RetryPolicy.
+     *
+     * @param maxRetries the max retries
+     */
     public RetryPolicy(int maxRetries) {
         this.maxRetries = maxRetries;
     }
@@ -74,6 +79,10 @@ public final class RetryPolicy {
      * Decides what the transport engine does after one attempt. This is the
      * ONLY component that may answer retry/failover questions; the engine
      * merely executes the decision.
+     *
+     * @param attempt the attempt
+     * @param facts the facts
+     * @return the decide
      */
     public RetryDecision decide(int attempt, AttemptFacts facts) {
         if (!facts.isReplayable()) {
@@ -115,6 +124,8 @@ public final class RetryPolicy {
      *
      * @param rawHeaderValue the raw {@code x-should-retry} header value, or
      *     null when the header was absent
+     *
+     * @return the should retry verdict
      */
     public static Boolean shouldRetryVerdict(String rawHeaderValue) {
         if (rawHeaderValue == null) {
@@ -137,6 +148,10 @@ public final class RetryPolicy {
      * 502/503/504, so pinning to one host ALSO stopped retrying the gateway
      * statuses entirely: one switch answering two questions. The flag now
      * governs only the destination.
+     *
+     * @param status the status
+     * @param verdict the verdict
+     * @return the retryable
      */
     public static boolean retryable(int status, Boolean verdict) {
         if (verdict != null) {
@@ -155,6 +170,10 @@ public final class RetryPolicy {
      * runs the work again: not a double charge to the caller, but a second
      * upstream generation TrustedRouter pays for, and possibly a different
      * answer. Only statuses that mean "nothing processed this" move hosts.
+     *
+     * @param status the status
+     * @param verdict the verdict
+     * @return the failoverable
      */
     public static boolean failoverable(int status, Boolean verdict) {
         if (Boolean.FALSE.equals(verdict)) {
@@ -193,7 +212,15 @@ public final class RetryPolicy {
             this.replayable = replayable;
         }
 
-        /** Facts for an attempt that produced an HTTP response. */
+        /**
+         * Facts for an attempt that produced an HTTP response.
+         *
+         * @param status the status
+         * @param rawShouldRetryHeader the raw should retry header
+         * @param retryAfterSeconds the retry after seconds
+         * @param failoverAllowed the failover allowed
+         * @return the http response
+         */
         public static AttemptFacts httpResponse(
                 int status,
                 String rawShouldRetryHeader,
@@ -203,7 +230,16 @@ public final class RetryPolicy {
                     status, rawShouldRetryHeader, retryAfterSeconds, failoverAllowed, true);
         }
 
-        /** Facts for an HTTP response, including whether replay is safe. */
+        /**
+         * Facts for an HTTP response, including whether replay is safe.
+         *
+         * @param status the status
+         * @param rawShouldRetryHeader the raw should retry header
+         * @param retryAfterSeconds the retry after seconds
+         * @param failoverAllowed the failover allowed
+         * @param replayable the replayable
+         * @return the http response
+         */
         public static AttemptFacts httpResponse(
                 int status,
                 String rawShouldRetryHeader,
@@ -219,21 +255,62 @@ public final class RetryPolicy {
                     replayable);
         }
 
-        /** Facts for an attempt where the HTTP client threw before a response. */
+        /**
+         * Facts for an attempt where the HTTP client threw before a response.
+         *
+         * @param failoverAllowed the failover allowed
+         * @return the io failure
+         */
         public static AttemptFacts ioFailure(boolean failoverAllowed) {
             return ioFailure(failoverAllowed, true);
         }
 
-        /** Facts for an I/O failure, including whether replay is safe. */
+        /**
+         * Facts for an I/O failure, including whether replay is safe.
+         *
+         * @param failoverAllowed the failover allowed
+         * @param replayable the replayable
+         * @return the io failure
+         */
         public static AttemptFacts ioFailure(boolean failoverAllowed, boolean replayable) {
             return new AttemptFacts(true, 0, null, null, failoverAllowed, replayable);
         }
 
+        /**
+         * Returns io failure.
+         *
+         * @return the io failure
+         */
         public boolean isIoFailure() { return ioFailure; }
+        /**
+         * Returns status.
+         *
+         * @return the status
+         */
         public int getStatus() { return status; }
+        /**
+         * Returns should retry verdict.
+         *
+         * @return the should retry verdict
+         */
         public Boolean getShouldRetryVerdict() { return shouldRetryVerdict; }
+        /**
+         * Returns retry after seconds.
+         *
+         * @return the retry after seconds
+         */
         public Double getRetryAfterSeconds() { return retryAfterSeconds; }
+        /**
+         * Returns failover allowed.
+         *
+         * @return the failover allowed
+         */
         public boolean isFailoverAllowed() { return failoverAllowed; }
+        /**
+         * Returns replayable.
+         *
+         * @return the replayable
+         */
         public boolean isReplayable() { return replayable; }
     }
 
@@ -245,7 +322,16 @@ public final class RetryPolicy {
      */
     public static final class RetryDecision {
         /** The three decision shapes. */
-        public enum Kind { RETURN_RESPONSE, THROW, RETRY }
+        public enum Kind { /**
+     * The return response.
+     */
+    RETURN_RESPONSE, /**
+     * The throw.
+     */
+    THROW, /**
+     * The retry.
+     */
+    RETRY }
 
         private static final RetryDecision RETURN_RESPONSE_DECISION =
                 new RetryDecision(Kind.RETURN_RESPONSE, false, null);
@@ -262,24 +348,52 @@ public final class RetryPolicy {
             this.retryAfterSeconds = retryAfterSeconds;
         }
 
-        /** Terminal: hand the response back for the caller to classify. */
+        /**
+         * Terminal: hand the response back for the caller to classify.
+         *
+         * @return the return response
+         */
         public static RetryDecision returnResponse() {
             return RETURN_RESPONSE_DECISION;
         }
 
-        /** Terminal: IO exhaustion; the engine throws unavailable. */
+        /**
+         * Terminal: IO exhaustion; the engine throws unavailable.
+         *
+         * @return the throw unavailable
+         */
         public static RetryDecision throwUnavailable() {
             return THROW_DECISION;
         }
 
-        /** Retry, optionally advancing the candidate index first. */
+        /**
+         * Retry, optionally advancing the candidate index first.
+         *
+         * @param moveHost the move host
+         * @param retryAfterSeconds the retry after seconds
+         * @return the retry
+         */
         public static RetryDecision retry(boolean moveHost, Double retryAfterSeconds) {
             return new RetryDecision(Kind.RETRY, moveHost, retryAfterSeconds);
         }
 
+        /**
+         * Returns kind.
+         *
+         * @return the kind
+         */
         public Kind getKind() { return kind; }
+        /**
+         * Returns move host.
+         *
+         * @return the move host
+         */
         public boolean isMoveHost() { return moveHost; }
-        /** Server-requested sleep floor in seconds, or null when it did not say. */
+        /**
+         * Server-requested sleep floor in seconds, or null when it did not say.
+         *
+         * @return the retry after seconds
+         */
         public Double getRetryAfterSeconds() { return retryAfterSeconds; }
     }
 }

@@ -14,11 +14,22 @@ public final class ReceiptCapture extends FilterInputStream {
     private final ByteArrayOutputStream captured = new ByteArrayOutputStream();
     private JsonObject receipt;
 
+    /**
+     * Creates a ReceiptCapture.
+     *
+     * @param source the source
+     */
     public ReceiptCapture(InputStream source) {
         super(source);
         if (source == null) { throw new NullPointerException("source"); }
     }
 
+    /**
+     * Performs the read operation.
+     *
+     * @return the read
+     * @throws IOException if reading or writing the stream fails
+     */
     @Override public int read() throws IOException {
         int value = in.read();
         if (value >= 0) {
@@ -28,6 +39,15 @@ public final class ReceiptCapture extends FilterInputStream {
         return value;
     }
 
+    /**
+     * Performs the read operation.
+     *
+     * @param value the read
+     * @param offset the offset
+     * @param length the length
+     * @return the read
+     * @throws IOException if reading or writing the stream fails
+     */
     @Override public int read(byte[] value, int offset, int length) throws IOException {
         int count = in.read(value, offset, length);
         if (count > 0) {
@@ -37,17 +57,31 @@ public final class ReceiptCapture extends FilterInputStream {
         return count;
     }
 
-    /** Returns a defensive copy of the flattened receipt, or null until one is captured. */
+    /**
+     * Returns a defensive copy of the flattened receipt, or null until one is captured.
+     *
+     * @return the receipt
+     */
     public JsonObject getReceipt() {
         return receipt == null ? null : receipt.deepCopy();
     }
 
-    /** Returns all bytes read through this wrapper without normalization. */
+    /**
+     * Returns all bytes read through this wrapper without normalization.
+     *
+     * @return the captured bytes
+     */
     public byte[] getCapturedBytes() {
         return captured.toByteArray();
     }
 
-    /** Verify the discovered receipt against every byte read through this wrapper. */
+    /**
+     * Verify the discovered receipt against every byte read through this wrapper.
+     *
+     * @param options the options
+     * @return the verify
+     * @throws ReceiptVerificationException if the operation cannot be completed
+     */
     public ReceiptClaims verify(ReceiptVerificationOptions options)
             throws ReceiptVerificationException {
         if (options == null) { throw new NullPointerException("options"); }

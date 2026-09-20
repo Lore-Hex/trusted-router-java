@@ -38,6 +38,11 @@ public final class RequestFactory {
     private final Map<String, String> headers;
     private final String workspaceId;
 
+    /**
+     * Creates a RequestFactory.
+     *
+     * @param options the options
+     */
     public RequestFactory(TrustedRouterOptions options) {
         this.apiKey = options.getApiKey();
         OkHttpClient configured = options.getHttpClient();
@@ -76,6 +81,9 @@ public final class RequestFactory {
      * caller did not supply one. Called once per logical call, before the
      * attempt loop, by exactly the endpoints that opt in today — stamping
      * GETs or control-plane reads would change pinned wire behaviour.
+     *
+     * @param options the options
+     * @return the ensure idempotency key
      */
     public static CallOptions ensureIdempotencyKey(CallOptions options) {
         CallOptions value = options == null ? CallOptions.NONE : options;
@@ -85,7 +93,11 @@ public final class RequestFactory {
         return value.toBuilder().idempotencyKey(newIdempotencyKey()).build();
     }
 
-    /** The single key-generator helper in this SDK. */
+    /**
+     * The single key-generator helper in this SDK.
+     *
+     * @return the new idempotency key
+     */
     public static String newIdempotencyKey() {
         return "tr-req-" + UUID.randomUUID().toString().replace("-", "");
     }
@@ -94,6 +106,10 @@ public final class RequestFactory {
      * Shapes timeouts for this call: buffered requests get a single call
      * timeout; stream-opens get per-phase connect/read/write timeouts with
      * the call timeout disabled so a long-lived stream is not killed.
+     *
+     * @param options the options
+     * @param streaming the streaming
+     * @return the request client
      */
     public OkHttpClient requestClient(CallOptions options, boolean streaming) {
         Long timeout = optionsTimeout(options);
@@ -116,6 +132,13 @@ public final class RequestFactory {
      * Assembles one request without engine telemetry. This is the public
      * pre-telemetry signature retained for source and binary compatibility;
      * only the package-private overload can mint the opaque engine stamp.
+     *
+     * @param url the url
+     * @param method the method
+     * @param body the body
+     * @param options the options
+     * @param includeCredentials the include credentials
+     * @return the build request
      */
     public Request buildRequest(
             String url,
