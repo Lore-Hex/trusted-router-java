@@ -3,7 +3,7 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     `java-library`
     jacoco
-    id("net.ltgt.errorprone") version "4.3.0"
+    id("net.ltgt.errorprone") version "5.1.1"
     id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
@@ -77,18 +77,18 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 }
 
 dependencies {
-    errorprone("com.google.errorprone:error_prone_core:2.42.0")
-    errorprone("com.uber.nullaway:nullaway:0.12.10")
+    errorprone("com.google.errorprone:error_prone_core:2.50.0")
+    errorprone("com.uber.nullaway:nullaway:0.14.1")
 
-    api("com.squareup.okhttp3:okhttp:5.3.0")
-    api("com.google.code.gson:gson:2.13.2")
+    api("com.squareup.okhttp3:okhttp:5.5.0")
+    api("com.google.code.gson:gson:2.14.0")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("com.squareup.okhttp3:mockwebserver:5.3.0")
-    testImplementation("com.squareup.okhttp3:okhttp-tls:5.3.0")
-    testImplementation("org.assertj:assertj-core:3.27.6")
+    testImplementation("com.squareup.okhttp3:mockwebserver:5.5.0")
+    testImplementation("com.squareup.okhttp3:okhttp-tls:5.5.0")
+    testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
 tasks.test {
@@ -141,8 +141,8 @@ val kotlinExampleCompiler by configurations.creating
 val kotlinExampleLibraries by configurations.creating
 
 dependencies {
-    kotlinExampleCompiler("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.2.21")
-    kotlinExampleLibraries("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
+    kotlinExampleCompiler("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.4.20")
+    kotlinExampleLibraries("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
 }
 
 val compileKotlinExamples by tasks.registering(JavaExec::class) {
