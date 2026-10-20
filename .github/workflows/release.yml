@@ -37,3 +37,23 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+  github-release:
+    needs: maven-central
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release page after package publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release page already exists: $RELEASE_TAG"
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" --verify-tag --generate-notes \
+            --title "TrustedRouter Java SDK $RELEASE_TAG" \
+            --notes "Published on Maven Central: https://central.sonatype.com/artifact/com.trustedrouter/trusted-router/${RELEASE_TAG#v}"

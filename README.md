@@ -26,6 +26,21 @@ silently falls back to the control plane.
 
 ## Install
 
+**Publication status:** v0.4.0 is a
+[source release](https://github.com/Lore-Hex/trusted-router-java/releases/tag/v0.4.0).
+It is not yet available from Maven Central. Publication is blocked on the repository's
+Maven Central credentials and signing key. Until those are configured, install the tagged
+source into your local Maven repository:
+
+```sh
+git clone --branch v0.4.0 --depth 1 https://github.com/Lore-Hex/trusted-router-java.git
+cd trusted-router-java
+./gradlew check publishToMavenLocal -PlocalPublication
+```
+
+The dependency coordinates below work with that local installation. Gradle consumers must
+include `mavenLocal()` in their repositories.
+
 Gradle:
 
 ```kotlin
@@ -44,8 +59,8 @@ Maven:
 </dependency>
 ```
 
-API reference: [Javadocs](https://javadoc.io/doc/com.trustedrouter/trusted-router).
-Maven also publishes source and Javadoc JARs for IDE navigation and hover documentation.
+Generate the API reference locally with `./gradlew javadoc -PlocalPublication`.
+The publication includes source and Javadoc JARs for IDE navigation and hover documentation.
 The JPMS automatic module name is `com.trustedrouter.sdk`.
 
 The JVM artifact requires JDK 17. Ed25519 entered the standard JDK provider in JDK 15; the project
